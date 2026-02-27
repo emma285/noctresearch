@@ -255,10 +255,15 @@ export default function IntakeForm() {
             {submitted ? "작성하신 내용을 바탕으로\n맞춤 코칭 방향을 준비할게요 😊".split("\n").map((l, i) => <span key={i}>{l}<br /></span>) : "제출 버튼을 눌러주세요."}
           </p>
           {!submitted && (
-            <button onClick={submit} disabled={loading}
-              className="px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 transition-all shadow-md disabled:opacity-50">
-              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "제출하기"}
-            </button>
+            <div className="flex flex-col items-center gap-4">
+              <button onClick={submit} disabled={loading}
+                className="px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 transition-all shadow-md disabled:opacity-50">
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "제출하기"}
+              </button>
+              <button onClick={prev} className="flex items-center gap-2 px-5 py-3 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all text-sm font-medium">
+                <ArrowLeft className="w-4 h-4" /> 이전으로 돌아가기
+              </button>
+            </div>
           )}
         </div>
       );
