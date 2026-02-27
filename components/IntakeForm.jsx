@@ -27,8 +27,10 @@ const SB = ({ n, name }) => (
 );
 
 // ─── Vertical Pill (single select) ───
+// @media(hover:hover) → 마우스 환경에서만 hover, 모바일에서 더블탭 방지
 const VPill = ({ label, sel, onClick, desc }) => (
-  <button onClick={onClick} className={`w-full px-5 py-4 rounded-2xl text-left text-[15px] font-medium transition-all border ${sel ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"}`}>
+  <button onClick={onClick} className={`w-full px-5 py-4 rounded-2xl text-left text-[15px] font-medium transition-all border active:scale-[0.98] ${sel ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-white text-gray-700 border-gray-200"}`}
+    style={{ WebkitTapHighlightColor: "transparent" }}>
     <span>{label}</span>
     {desc && <span className={`block text-xs mt-0.5 ${sel ? "text-blue-100" : "text-gray-400"}`}>{desc}</span>}
   </button>
@@ -36,7 +38,8 @@ const VPill = ({ label, sel, onClick, desc }) => (
 
 // ─── Checkbox Pill (multi select) ───
 const ChkPill = ({ label, chk, onClick }) => (
-  <button onClick={onClick} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-[15px] border transition-all text-left ${chk ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"}`}>
+  <button onClick={onClick} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-[15px] border transition-all text-left active:scale-[0.98] ${chk ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-200"}`}
+    style={{ WebkitTapHighlightColor: "transparent" }}>
     <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${chk ? "border-white bg-white/20" : "border-gray-300"}`}>
       {chk && <Check className="w-3 h-3 text-white" />}
     </span>
@@ -60,11 +63,22 @@ const TArea = ({ value, onChange, ph, rows = 3 }) => (
 const Dropdown = ({ value, onChange, options, placeholder }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const listRef = useRef(null);
   useEffect(() => {
     const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
+  // 드롭다운 열릴 때 선택값 위치로 스크롤
+  useEffect(() => {
+    if (open && listRef.current && value) {
+      const idx = options.indexOf(value);
+      if (idx > -1) {
+        const itemH = 44; // 대략적인 항목 높이
+        listRef.current.scrollTop = Math.max(0, idx * itemH - 80);
+      }
+    }
+  }, [open, value, options]);
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen(!open)} className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 text-left text-[15px] transition-all ${value ? "border-blue-400 bg-blue-50 text-gray-900" : "border-gray-200 bg-white text-gray-400"}`}>
@@ -72,7 +86,7 @@ const Dropdown = ({ value, onChange, options, placeholder }) => {
         <ChevronDown className={`w-5 h-5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div ref={listRef} className="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
           {options.map(o => (
             <button key={o} onClick={() => { onChange(o); setOpen(false); }} className={`w-full px-5 py-3 text-left text-sm hover:bg-blue-50 transition-colors ${value === o ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-700"}`}>
               {o}

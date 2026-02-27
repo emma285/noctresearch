@@ -280,6 +280,12 @@ function buildNotionContent(data) {
   blocks.push(h2("9. 수면 신념"));
   blocks.push(para(`파국적 사고: ${data.belief_catastrophe || "—"}/5 | 수면 불안: ${data.belief_worry || "—"}/5 | 모니터링: ${data.belief_monitor || "—"}/5`));
 
+  // 추가 메모 (요약)
+  if (data.additional_notes) {
+    blocks.push(h2("15. 추가 메모"));
+    blocks.push(para(data.additional_notes));
+  }
+
   // ─── 설문 원본 (질문 + 답변 그대로) ───
   blocks.push(divider());
   blocks.push(h2("📋 설문 원본 응답"));
@@ -425,6 +431,12 @@ function buildNotionContent(data) {
     if (val !== null && val !== undefined) {
       blocks.push(para(`${rdItems[i] || `항목 ${i+1}`}: ${val}/5`));
     }
+  }
+
+  // 15. 추가 메모
+  if (data.additional_notes) {
+    blocks.push(h3("PART 15. 추가 메모"));
+    blocks.push(para(data.additional_notes));
   }
 
   return blocks;

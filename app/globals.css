@@ -71,3 +71,11 @@ input:focus, textarea:focus, button:focus-visible {
 button, input, textarea {
   transition: all 0.2s ease;
 }
+
+/* 모바일 터치에서 hover 고스트 방지 — hover는 마우스 환경에서만 */
+@media (hover: none) {
+  button:hover {
+    background-color: inherit;
+    border-color: inherit;
+  }
+}
