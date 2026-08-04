@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const DB_ID = process.env.NOTION_DATABASE_ID;
+// 운동선수 전용 폼(/athlete) 응답은 별도 DB로 저장 (일반 코칭과 분리)
+const ATHLETE_DB_ID = process.env.NOTION_ATHLETE_DATABASE_ID || "02b71e35b98b4f92ba5f9ee4437c6832";
 
 // ─── 자동 분석 함수들 ───
 
@@ -171,6 +173,33 @@ function buildNotionProperties(data) {
   const readiness = calcReadiness(data);
   const sjl = calcSocialJetLag(data);
   const redFlags = detectRedFlags(data);
+
+  // 운동선수 폼: 운동선수 DB 스키마에 맞는 속성만
+  if (data.formType === "athlete") {
+    const ap = {
+      "이름": { title: [{ text: { content: data.name || "미입력" } }] },
+      "연락처": { phone_number: data.phone || null },
+      "성별": { select: data.gender ? { name: data.gender } : null },
+      "출생연도": { rich_text: [{ text: { content: data.birth_year || "" } }] },
+      "종목": { select: data.sport ? { name: data.sport === "기타" ? "기타" : data.sport } : null },
+      "경기수준": { select: data.athlete_level ? { name: data.athlete_level } : null },
+      "체중관리": { select: data.weight_mgmt ? { name: data.weight_mgmt } : null },
+      "시즌": { select: data.season_phase ? { name: data.season_phase } : null },
+      "Epworth 점수": { number: epworth },
+      "수면 효율": { number: se },
+      "사회적 시차": { number: sjl },
+      "준비도 평균": { number: readiness ? parseFloat(readiness) : null },
+      "크로노타입": { select: data.chronotype ? { name: data.chronotype } : null },
+      "주요 수면 문제": { multi_select: mapArr(data.sleep_problems, PROBLEM_MAP) },
+      "진단 질환": { multi_select: mapArr(data.diagnoses, DX_MAP) },
+      "레드플래그": { multi_select: redFlags.map(f => ({ name: f.substring(0, 100) })) },
+      "레드플래그 수": { number: redFlags.length },
+      "유입 경로": { select: data.referral ? { name: mapVal(data.referral, REFERRAL_MAP) } : null },
+      "작성일": { date: { start: new Date().toISOString().split("T")[0] } },
+    };
+    Object.keys(ap).forEach(k => { if (ap[k] === null || ap[k]?.select === null) delete ap[k]; });
+    return ap;
+  }
 
   const props = {
     "이름": { title: [{ text: { content: data.name || "미입력" } }] },
@@ -555,8 +584,9 @@ export async function POST(request) {
 
     // Notion API는 pages.create에 최대 100 블록만 허용
     // 초과분은 blocks.children.append로 추가
+    const targetDb = data.formType === "athlete" ? ATHLETE_DB_ID : DB_ID;
     const page = await notion.pages.create({
-      parent: { database_id: DB_ID },
+      parent: { database_id: targetDb },
       properties,
       children: children.slice(0, 100),
     });
