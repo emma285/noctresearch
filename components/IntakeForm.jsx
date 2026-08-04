@@ -1,13 +1,19 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Moon, ChevronDown, Check, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
-import { QUESTIONS, YEARS, HRS, MINS, hrLabel } from "../data/questions";
+import { QUESTIONS as DEFAULT_QUESTIONS, YEARS, HRS, MINS, hrLabel } from "../data/questions";
 
 // ─── Brand ───
-const Brand = () => (
-  <div className="fixed top-0 left-0 right-0 z-50 flex items-center gap-2 px-6 py-4 bg-white/90 backdrop-blur-md border-b border-gray-100">
-    <Moon className="w-5 h-5 text-blue-500" />
-    <span className="text-sm font-semibold tracking-widest text-gray-600 uppercase">noct research</span>
+const Brand = ({ athlete }) => (
+  <div className="fixed top-0 left-0 right-0 z-50 flex items-center gap-2 px-6 py-3.5 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    {athlete ? (
+      <img src="/noct-logo.png" alt="NOCT Research" className="h-5 w-auto" />
+    ) : (
+      <>
+        <Moon className="w-5 h-5 text-blue-500" />
+        <span className="text-sm font-semibold tracking-widest text-gray-600 uppercase">noct research</span>
+      </>
+    )}
   </div>
 );
 
@@ -69,16 +75,19 @@ const Dropdown = ({ value, onChange, options, placeholder }) => {
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
-  // 드롭다운 열릴 때 선택값 위치로 스크롤
+  // 드롭다운 열릴 때 선택값(또는 placeholder) 위치로 스크롤
   useEffect(() => {
-    if (open && listRef.current && value) {
-      const idx = options.indexOf(value);
-      if (idx > -1) {
-        const itemH = 44; // 대략적인 항목 높이
-        listRef.current.scrollTop = Math.max(0, idx * itemH - 80);
+    if (open && listRef.current) {
+      const target = value || placeholder;
+      if (target) {
+        const idx = options.indexOf(target);
+        if (idx > -1) {
+          const itemH = 44;
+          listRef.current.scrollTop = Math.max(0, idx * itemH - 80);
+        }
       }
     }
-  }, [open, value, options]);
+  }, [open, value, options, placeholder]);
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen(!open)} className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 text-left text-[15px] transition-all ${value ? "border-blue-400 bg-blue-50 text-gray-900" : "border-gray-200 bg-white text-gray-400"}`}>
@@ -139,14 +148,40 @@ const NavBtns = ({ idx, total, onPrev, onNext, loading }) => (
 );
 
 // ═══════════ MAIN COMPONENT ═══════════
-export default function IntakeForm() {
-  const [idx, setIdx] = useState(0);
-  const [data, setData] = useState({});
+export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, formType } = {}) {
+  const Q = questions;
+
+  // storageKey가 있으면 localStorage에 자동 저장/복원 (임시저장)
+  const loadSaved = () => {
+    if (!storageKey || typeof window === "undefined") return null;
+    try { return JSON.parse(localStorage.getItem(storageKey) || "null"); } catch { return null; }
+  };
+
+  const [idx, setIdx] = useState(() => {
+    const saved = loadSaved();
+    return saved && typeof saved.idx === "number" ? saved.idx : 0;
+  });
+  // def 값이 있는 질문은 초기값으로, 저장된 값이 있으면 복원
+  const [data, setData] = useState(() => {
+    const init = {};
+    Q.forEach(q => { if (q.def && q.k) init[q.k] = q.def; });
+    const saved = loadSaved();
+    return saved && saved.data ? { ...init, ...saved.data } : init;
+  });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [err, setErr] = useState("");
   const containerRef = useRef(null);
 
-  const Q = QUESTIONS;
+  // 답변을 건드리면 에러 문구 자동 해제
+  useEffect(() => { if (err) setErr(""); }, [data]); // eslint-disable-line
+
+  // data/idx 변경 시 자동 저장
+  useEffect(() => {
+    if (!storageKey || typeof window === "undefined") return;
+    try { localStorage.setItem(storageKey, JSON.stringify({ data, idx })); } catch {}
+  }, [data, idx, storageKey]);
+
   const q = Q[idx];
 
   const set = useCallback((k, v) => setData(p => ({ ...p, [k]: v })), []);
@@ -160,18 +195,57 @@ export default function IntakeForm() {
   }, []);
 
   const goTo = useCallback((i) => {
+    setErr("");
     setIdx(i);
     if (containerRef.current) containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const next = () => { if (idx < Q.length - 1) goTo(idx + 1); };
-  const prev = () => { if (idx > 0) goTo(idx - 1); };
+  // showIf 조건부 문항 스킵 (골프/합숙 분기)
+  const visible = useCallback((i) => { const qq = Q[i]; return !!qq && (!qq.showIf || qq.showIf(data)); }, [Q, data]);
+
+  // 전 문항 필수 — 답변 여부 검증 (optional 제외)
+  const isAnswered = (qq) => {
+    if (!qq || qq.optional || qq.type === "welcome" || qq.type === "complete") return true;
+    const d = data;
+    switch (qq.type) {
+      case "text": case "ta": case "dropdown": return !!(d[qq.k] && String(d[qq.k]).trim());
+      case "body": return !!(d.height && d.weight);
+      case "pills": case "pillsub": return !!d[qq.k];
+      case "multi": return Array.isArray(d[qq.k]) && d[qq.k].length > 0;
+      case "timegroup": return qq.fields.every(f => d[f.k + "_h"] !== null && d[f.k + "_h"] !== undefined);
+      case "epworth": return qq.sits.every((_, i) => d[`ep_${i}`] !== undefined);
+      case "beliefs": return qq.items.every(it => d[it.k] !== undefined);
+      case "readiness": return qq.items.every((_, i) => d[`r_${i}`] !== undefined);
+      default: return true;
+    }
+  };
+  const validate = (qq) => {
+    if (!isAnswered(qq)) return "이 질문에 답해 주세요.";
+    if (qq && qq.k === "phone") {
+      const v = String(data.phone || "").trim();
+      if (v && !/^01[016789]-?\d{3,4}-?\d{4}$/.test(v)) return "연락처 형식을 확인해 주세요. (예: 010-1234-5678)";
+    }
+    return "";
+  };
+
+  const next = () => {
+    // 운동선수 폼만 전 문항 필수 검증 (기존 코칭 폼은 원래대로 선택 허용)
+    if (formType === "athlete") {
+      const msg = validate(q);
+      if (msg) { setErr(msg); return; }
+    }
+    let i = idx + 1; while (i < Q.length && !visible(i)) i++; if (i <= Q.length - 1) goTo(i);
+  };
+  const prev = () => { let i = idx - 1; while (i > 0 && !visible(i)) i--; if (i >= 0) goTo(i); };
 
   const submit = async () => {
     setLoading(true);
     try {
       // 시간 데이터 정리 (h/m → 통합)
       const payload = { ...data };
+      if (formType) payload.formType = formType;
+      // 운동선수 폼: 출생연도 → 생년월일 속성으로 매핑
+      if (data.birth_year && !payload.birthdate) payload.birthdate = data.birth_year;
       ["wd_bed", "wd_sleep", "wd_wake", "we_bed", "we_sleep", "we_wake", "ideal_bed", "ideal_wake"].forEach(k => {
         const h = data[k + "_h"];
         const m = data[k + "_m"] || "00";
@@ -213,6 +287,7 @@ export default function IntakeForm() {
       const result = await res.json();
       if (result.success) {
         setSubmitted(true);
+        if (storageKey && typeof window !== "undefined") { try { localStorage.removeItem(storageKey); } catch {} }
         goTo(Q.length - 1);
       } else {
         alert("전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
@@ -233,10 +308,16 @@ export default function IntakeForm() {
     if (q.type === "welcome") {
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <Moon className="w-12 h-12 text-blue-500 mb-6" />
+          {formType === "athlete"
+            ? <span className="text-[11px] font-extrabold tracking-[0.22em] text-blue-600 mb-3">운동선수 전용</span>
+            : <Moon className="w-12 h-12 text-blue-500 mb-6" />}
           <h1 className="text-2xl font-bold text-gray-900 mb-3">수면 코칭 사전 질문지</h1>
-          <p className="text-gray-500 text-sm leading-relaxed mb-2">약 10~15분 정도 소요됩니다.<br />편하게 작성해 주세요.<br />모르거나 해당 없는 항목은 비워 두셔도 괜찮아요.</p>
-          <p className="text-xs text-amber-600 bg-amber-50 px-4 py-2 rounded-lg mt-4">⚠️ 임시 저장이 되지 않으니, 시간 여유가 있을 때 끝까지 작성해 주세요.</p>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            {formType === "athlete"
+              ? <>약 10~15분 정도 소요됩니다.<br />모든 항목에 답해 주세요.<br />해당 없으면 '없음'이라고 적어 주세요.</>
+              : <>약 10~15분 정도 소요됩니다.<br />편하게 작성해 주세요.<br />모르거나 해당 없는 항목은 비워 두셔도 괜찮아요.</>}
+          </p>
+          {!storageKey && <p className="text-xs text-amber-600 bg-amber-50 px-4 py-2 rounded-lg mt-4">⚠️ 임시 저장이 되지 않으니, 시간 여유가 있을 때 끝까지 작성해 주세요.</p>}
         </div>
       );
     }
@@ -461,19 +542,23 @@ export default function IntakeForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Brand />
+    <div className={`min-h-screen ${formType === "athlete" ? "noct-athlete bg-[#F2F3F6]" : "bg-gray-50"}`}>
+      <Brand athlete={formType === "athlete"} />
       <Progress current={idx} total={Q.length} />
       <div ref={containerRef} className="max-w-lg mx-auto px-6 pt-24 pb-12">
         {renderQ()}
+        {err && q.type !== "welcome" && q.type !== "complete" && (
+          <p className="mt-5 text-sm text-red-500 font-medium">{err}</p>
+        )}
         {q.type !== "welcome" && q.type !== "complete" && (
           <NavBtns idx={idx} total={Q.length} onPrev={prev} onNext={next} loading={loading} />
         )}
         {q.type === "welcome" && (
-          <div className="mt-12 flex justify-center">
+          <div className="mt-6 flex flex-col items-center gap-4">
             <button onClick={next} className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 transition-all shadow-md">
               시작하기 <ArrowRight className="w-5 h-5" />
             </button>
+            {storageKey && <p className="text-xs text-gray-400 text-center">작성 내용은 자동 저장돼요. 중간에 닫아도 이어서 작성할 수 있어요.</p>}
           </div>
         )}
       </div>

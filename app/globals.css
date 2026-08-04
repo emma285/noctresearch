@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,6 +26,26 @@ body {
 ::selection {
   background: rgba(59, 130, 246, 0.2);
 }
+
+/* ── 운동선수 전용 폼 테마 (지수님 대시보드 팔레트: 인디고 #4355B0 / 스카이 #7EC8E3) ──
+   기존 코칭 폼(/)은 건드리지 않고, /athlete 만 .noct-athlete 스코프로 리스타일 */
+.noct-athlete {
+  background: #F2F3F6;
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  letter-spacing: -0.02em;
+}
+.noct-athlete ::selection { background: rgba(67, 85, 176, 0.18); }
+.noct-athlete .bg-blue-50 { background-color: #eef0fb !important; }
+.noct-athlete .hover\:bg-blue-50:hover { background-color: #eef0fb !important; }
+.noct-athlete .bg-blue-500 { background-color: #4355B0 !important; }
+.noct-athlete .bg-blue-600 { background-color: #4355B0 !important; }
+.noct-athlete .hover\:bg-blue-700:hover { background-color: #37469b !important; }
+.noct-athlete .text-blue-100 { color: #cdd5f2 !important; }
+.noct-athlete .text-blue-600 { color: #4355B0 !important; }
+.noct-athlete .border-blue-400 { border-color: #7a88d3 !important; }
+.noct-athlete .border-blue-600 { border-color: #4355B0 !important; }
+.noct-athlete .focus\:border-blue-400:focus { border-color: #4355B0 !important; }
+.noct-athlete .hover\:border-blue-300:hover { border-color: #a6b0e4 !important; }
 
 /* Scrollbar */
 ::-webkit-scrollbar {

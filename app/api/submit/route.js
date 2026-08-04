@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const DB_ID = process.env.NOTION_DATABASE_ID;
+// 운동선수 전용 폼(/athlete) 응답은 별도 DB로 저장 (일반 코칭과 분리)
+const ATHLETE_DB_ID = process.env.NOTION_ATHLETE_DATABASE_ID || "02b71e35b98b4f92ba5f9ee4437c6832";
 
 // ─── 자동 분석 함수들 ───
 
@@ -172,6 +174,33 @@ function buildNotionProperties(data) {
   const sjl = calcSocialJetLag(data);
   const redFlags = detectRedFlags(data);
 
+  // 운동선수 폼: 운동선수 DB 스키마에 맞는 속성만
+  if (data.formType === "athlete") {
+    const ap = {
+      "이름": { title: [{ text: { content: data.name || "미입력" } }] },
+      "연락처": { phone_number: data.phone || null },
+      "성별": { select: data.gender ? { name: data.gender } : null },
+      "출생연도": { rich_text: [{ text: { content: data.birth_year || "" } }] },
+      "종목": { select: data.sport ? { name: data.sport === "기타" ? "기타" : data.sport } : null },
+      "경기수준": { select: data.athlete_level ? { name: data.athlete_level } : null },
+      "체중관리": { select: data.weight_mgmt ? { name: data.weight_mgmt } : null },
+      "시즌": { select: data.season_phase ? { name: data.season_phase } : null },
+      "Epworth 점수": { number: epworth },
+      "수면 효율": { number: se },
+      "사회적 시차": { number: sjl },
+      "준비도 평균": { number: readiness ? parseFloat(readiness) : null },
+      "크로노타입": { select: data.chronotype ? { name: data.chronotype } : null },
+      "주요 수면 문제": { multi_select: mapArr(data.sleep_problems, PROBLEM_MAP) },
+      "진단 질환": { multi_select: mapArr(data.diagnoses, DX_MAP) },
+      "레드플래그": { multi_select: redFlags.map(f => ({ name: f.substring(0, 100) })) },
+      "레드플래그 수": { number: redFlags.length },
+      "유입 경로": { select: data.referral ? { name: mapVal(data.referral, REFERRAL_MAP) } : null },
+      "작성일": { date: { start: new Date().toISOString().split("T")[0] } },
+    };
+    Object.keys(ap).forEach(k => { if (ap[k] === null || ap[k]?.select === null) delete ap[k]; });
+    return ap;
+  }
+
   const props = {
     "이름": { title: [{ text: { content: data.name || "미입력" } }] },
     "생년월일": { rich_text: [{ text: { content: data.birthdate || "" } }] },
@@ -209,7 +238,16 @@ function buildNotionProperties(data) {
 function buildNotionContent(data) {
   const blocks = [];
   const h2 = (text) => ({ object: "block", type: "heading_2", heading_2: { rich_text: [{ text: { content: text } }] } });
-  const para = (text) => ({ object: "block", type: "paragraph", paragraph: { rich_text: [{ text: { content: text || "—" } }] } });
+  // Notion rich_text 블록 당 2000자 제한 → 초과 시 여러 rich_text로 분할
+  const para = (text) => {
+    const s = text || "—";
+    if (s.length <= 2000) {
+      return { object: "block", type: "paragraph", paragraph: { rich_text: [{ text: { content: s } }] } };
+    }
+    const chunks = [];
+    for (let i = 0; i < s.length; i += 2000) chunks.push({ text: { content: s.slice(i, i + 2000) } });
+    return { object: "block", type: "paragraph", paragraph: { rich_text: chunks } };
+  };
   const divider = () => ({ object: "block", type: "divider", divider: {} });
 
   // 자동 분석 요약
@@ -229,6 +267,86 @@ function buildNotionContent(data) {
   }
 
   blocks.push(divider());
+
+  // ── 운동선수 폼 전용 본문 (formType==="athlete") ──
+  if (data.formType === "athlete") {
+    const arr = (a) => Array.isArray(a) ? (a.length ? a.join(", ") : "—") : (a || "—");
+    const withOther = (a, other) => {
+      const base = Array.isArray(a) ? a.filter(x => x !== "기타") : [];
+      if (other) base.push(`기타: ${other}`);
+      return base.length ? base.join(", ") : "—";
+    };
+
+    blocks.push(h2("1. 기본 정보"));
+    blocks.push(para(`이름: ${data.name || "—"} | 연락처: ${data.phone || "—"} | 출생연도: ${data.birth_year || "—"} | 성별: ${data.gender || "—"}`));
+    blocks.push(para(`생활 형태: ${arr(data.living_type)}`));
+
+    blocks.push(h2("2. 운동선수 프로필"));
+    blocks.push(para(`종목: ${data.sport === "기타" ? (data.sport_detail || "기타") : (data.sport || "—")} | 경기 수준: ${data.athlete_level || "—"} | 선수 경력: ${data.athlete_career || "—"}`));
+    blocks.push(para(`훈련 일수: ${data.train_days || "—"} | 훈련 시간대: ${arr(data.train_time)} | 시즌 시기: ${data.season_phase || "—"}`));
+    blocks.push(para(`원정 빈도: ${data.travel_freq || "—"} | 시차 이동: ${data.jetlag || "—"} | 원정지 수면: ${data.travel_sleep || "—"}`));
+    blocks.push(para(`부상/통증: ${data.injury || "—"}${data.injury_detail ? " → " + data.injury_detail : ""} | 체중 관리: ${data.weight_mgmt || "—"}`));
+    if (data.sport === "골프") blocks.push(para(`[골프] 티오프 시간: ${data.golf_teetime || "—"} | 이른 티오프 수면: ${data.golf_early_sleep || "—"}`));
+
+    blocks.push(h2("3. 건강 및 의료"));
+    blocks.push(para(`진단 질환: ${withOther(data.diagnoses, data.diagnoses_other)}`));
+    blocks.push(para(`복용 약물/영양제: ${data.medications || data.med || "—"}`));
+    blocks.push(para(`수면검사: ${data.sleep_study || "—"}${data.sleep_study_detail ? " → " + data.sleep_study_detail : ""}`));
+
+    blocks.push(h2("4. 현재 수면 고민"));
+    blocks.push(para(`주요 문제: ${withOther(data.sleep_problems, data.sleep_problems_other)}`));
+    blocks.push(para(`상세: ${data.problem_detail || "—"}`));
+    blocks.push(para(`시작 시기/계기: ${data.onset || "—"}`));
+    blocks.push(para(`훈련·일상 영향: ${data.daily_impact || "—"}`));
+
+    blocks.push(h2("5. 평소 수면 습관"));
+    blocks.push(para(`[훈련일] 취침: ${data.wd_bed || "—"} / 입면: ${data.wd_sleep || "—"} / 기상: ${data.wd_wake || "—"}`));
+    blocks.push(para(`[휴식일] 취침: ${data.we_bed || "—"} / 입면: ${data.we_sleep || "—"} / 기상: ${data.we_wake || "—"}`));
+    blocks.push(para(`야간 각성: ${data.night_wakings || "—"} | 재입면: ${data.back_to_sleep || "—"} | 총수면(밤): ${data.total_sleep || "—"} | 기상 방식: ${data.alarm || "—"}`));
+    blocks.push(para(`낮잠: ${data.nap || "—"}${data.nap_detail ? " → " + data.nap_detail : ""} | 크로노타입: ${data.chronotype || "—"} | 희망 취침/기상: ${data.ideal_bed || "—"} / ${data.ideal_wake || "—"}`));
+
+    blocks.push(h2("6. 수면 환경"));
+    blocks.push(para(`환경 조절 가능: ${data.env_control || "—"} | 합숙 제약: ${arr(data.dorm_constraints)}`));
+    blocks.push(para(`온도: ${data.env_temp || "—"} | 밝기: ${data.env_dark || "—"} | 소음: ${data.env_noise || "—"} | 매트리스: ${data.env_mattress || "—"}`));
+    blocks.push(para(`같이 자는 사람: ${arr(data.bed_partner)} | 침실 TV: ${data.tv_bedroom || "—"} | 수면 보조도구: ${data.sleep_aids || "—"}`));
+
+    blocks.push(h2("7. 수면 관련 증상"));
+    blocks.push(para(`입면/유지 어려움: ${withOther(data.symptoms_onset, data.symptoms_onset_other)}`));
+    blocks.push(para(`수면 중 증상: ${withOther(data.symptoms_sleep, data.symptoms_sleep_other)}`));
+
+    blocks.push(h2("8. 수면에 대한 생각 (DBAS)"));
+    blocks.push(para(`파국적 사고: ${data.belief_catastrophe ?? "—"}/5 | 수면 불안: ${data.belief_worry ?? "—"}/5 | 데이터 모니터링: ${data.belief_monitor ?? "—"}/5`));
+
+    blocks.push(h2("9. 생활 습관"));
+    blocks.push(para(`카페인: ${data.caffeine || "—"}`));
+    blocks.push(para(`음주: ${data.alcohol || "—"} | 훈련 외 운동: ${data.exercise || "—"} | 아침 햇빛: ${data.sunlight || "—"}`));
+    blocks.push(para(`취침 전 활동: ${data.pre_bed || "—"} | 식사 패턴: ${data.meals || "—"}`));
+
+    blocks.push(h2("10. 스트레스 및 감정"));
+    blocks.push(para(`스트레스 수준: ${data.stress_level || "—"} | 우울/불안: ${data.mood || "—"}${data.mood_detail ? " → " + data.mood_detail : ""}`));
+
+    blocks.push(h2("11. 수행·멘탈"));
+    blocks.push(para(`수면-경기력 연관 체감: ${data.perf_link || "—"} | 경기 전날 수면: ${data.precomp_sleep || "—"} | 경기일 밤 수면: ${data.postgame_arousal || "—"}`));
+    blocks.push(para(`경기·훈련 후 상태: ${data.postgame_detail || "—"}`));
+    blocks.push(para(`잠들 무렵 심리: ${withOther(data.mental_state, data.mental_state_other)}`));
+
+    blocks.push(h2("12. 기상 후 상태 & 꿈"));
+    blocks.push(para(`아침 컨디션: ${data.morning_state || "—"} | 꿈 빈도: ${data.dream_freq || "—"} | 꿈 특징: ${data.dream_char || "—"}`));
+
+    blocks.push(h2("13. 코칭 동기 및 기대"));
+    blocks.push(para(`유입 경로: ${data.referral || "—"}`));
+    blocks.push(para(`코칭 이유/기대: ${data.coaching_reason || "—"}`));
+    blocks.push(para(`이전 시도/효과: ${data.previous_attempts || data.prev_attempts || "—"}`));
+
+    blocks.push(h2("14. 변화 준비도 (TTM)"));
+    const rd = [0, 1, 2, 3, 4].map(i => data[`readiness_${i}`] ?? "—").join(" / ");
+    blocks.push(para(`준비도 문항(1~5): ${rd} | 평균: ${readiness || "—"}/5`));
+
+    blocks.push(h2("15. 마지막 한마디"));
+    blocks.push(para(data.additional_notes || "—"));
+
+    return blocks;
+  }
 
   // 기본 정보
   blocks.push(h2("1. 기본 정보"));
@@ -464,11 +582,22 @@ export async function POST(request) {
     const properties = buildNotionProperties(data);
     const children = buildNotionContent(data);
 
-    await notion.pages.create({
-      parent: { database_id: DB_ID },
+    // Notion API는 pages.create에 최대 100 블록만 허용
+    // 초과분은 blocks.children.append로 추가
+    const targetDb = data.formType === "athlete" ? ATHLETE_DB_ID : DB_ID;
+    const page = await notion.pages.create({
+      parent: { database_id: targetDb },
       properties,
-      children: children.slice(0, 100), // Notion API 블록 제한
+      children: children.slice(0, 100),
     });
+
+    // 100개 초과 블록을 100개씩 나눠 append
+    for (let i = 100; i < children.length; i += 100) {
+      await notion.blocks.children.append({
+        block_id: page.id,
+        children: children.slice(i, i + 100),
+      });
+    }
 
     return NextResponse.json({ success: true, message: "Notion 저장 완료" });
   } catch (error) {
