@@ -284,7 +284,7 @@ function buildNotionContent(data) {
     blocks.push(h2("2. 운동선수 프로필"));
     blocks.push(para(`종목: ${data.sport === "기타" ? (data.sport_detail || "기타") : (data.sport || "—")} | 경기 수준: ${data.athlete_level || "—"} | 선수 경력: ${data.athlete_career || "—"}`));
     blocks.push(para(`훈련 일수: ${data.train_days || "—"} | 훈련 시간대: ${arr(data.train_time)} | 시즌 시기: ${data.season_phase || "—"}`));
-    blocks.push(para(`원정 빈도: ${data.travel_freq || "—"} | 시차 이동: ${data.jetlag || "—"} | 원정지 수면: ${data.travel_sleep || "—"}`));
+    blocks.push(para(`원정 빈도: ${data.travel_freq || "—"} | 시차 이동: ${data.jetlag || "—"} | 시차·원정 적응: ${data.travel_adapt || "—"}`));
     blocks.push(para(`부상/통증: ${data.injury || "—"}${data.injury_detail ? " → " + data.injury_detail : ""} | 체중 관리: ${data.weight_mgmt || "—"}`));
     if (data.sport === "골프") blocks.push(para(`[골프] 티오프 시간: ${data.golf_teetime || "—"} | 이른 티오프 수면: ${data.golf_early_sleep || "—"}`));
 

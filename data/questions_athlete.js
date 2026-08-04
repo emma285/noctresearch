@@ -35,7 +35,7 @@ export const QUESTIONS = [
   { id: "season", type: "pills", title: "지금은 시즌의 어느 시기인가요?", k: "season_phase", opts: ["시즌 중 (경기 진행)", "시즌 직전 (대회 임박)", "비시즌/훈련기", "부상 재활 중", "휴식기"] },
   { id: "travel", type: "pills", title: "원정·이동은 얼마나 잦은가요?", k: "travel_freq", opts: ["거의 없음", "월 1~2회", "주 1회 이상", "장기 원정·합숙이 잦음"] },
   { id: "jetlag", type: "pills", title: "해외 원정처럼\n시차가 있는 이동이 있나요?", k: "jetlag", opts: ["없음", "가끔 있음", "자주 있음 (시차 적응이 힘듦)"] },
-  { id: "travelsl", type: "pills", title: "원정·낯선 곳에서 잘 때\n수면은 어떤가요?", k: "travel_sleep", opts: ["평소와 비슷하다", "첫날만 설친다", "원정 내내 잘 못 잔다", "원정이 거의 없다"] },
+  { id: "adapt", type: "pills", title: "원정·시차가 있을 때\n평소 리듬으로 적응하는 데\n얼마나 걸리나요?", k: "travel_adapt", opts: ["거의 바로 적응한다", "1~2일 걸린다", "3일 이상 걸린다", "원정 내내 적응 안 된다", "원정이 거의 없다"] },
   { id: "injury", type: "pillsub", title: "현재 부상이나 통증이 있나요?", k: "injury", opts: ["없음", "있음"], subOn: ["있음"], subL: "부위와 상태를 알려주세요", subPh: "예: 오른쪽 어깨 회전근개, 통증으로 밤에 자주 깸", subRows: 2 },
   { id: "weight", type: "pills", title: "요즘 체중 관리를 하고 있나요?", k: "weight_mgmt", opts: ["감량 중", "증량 중", "유지 중"] },
   // 골프 분기 (sport === "골프") — '이른 티오프 → 새벽 기상 압박' 축만. 긴장 축은 E섹션 precomp가 담당.
@@ -54,7 +54,7 @@ export const QUESTIONS = [
   { id: "imp", type: "ta", title: "수면 문제가 훈련·경기력과\n일상에 어떤 영향을 미치나요?", k: "daily_impact", ph: "예: 훈련 집중력 저하 / 경기 당일 컨디션 난조" },
 
   // 5 — 평소 수면 습관 (사회적시차 = 평일/주말 timegroup, 유지)
-  { id: "wd", type: "timegroup", sec: "평소 수면 습관", sn: 5, title: "훈련일 수면 시간을 알려주세요", sub: "최근 2주 훈련하는 날 기준으로 선택해 주세요", fields: [{ k: "wd_bed", label: "침대에 눕는 시간" }, { k: "wd_sleep", label: "실제 잠드는 시간 (체감)" }, { k: "wd_wake", label: "기상 시간" }] },
+  { id: "wd", type: "timegroup", sec: "평소 수면 습관", sn: 5, title: "훈련일 수면 시간을 알려주세요", sub: "가장 흔한 평소 훈련일 기준으로 적어주세요.\n원정·이동으로 달라지는 건 원정 문항에서 따로 물어요.", fields: [{ k: "wd_bed", label: "침대에 눕는 시간" }, { k: "wd_sleep", label: "실제 잠드는 시간 (체감)" }, { k: "wd_wake", label: "기상 시간" }] },
   { id: "we", type: "timegroup", title: "휴식일(비훈련일) 수면 시간을 알려주세요", sub: "최근 2주를 기준으로 선택해 주세요", fields: [{ k: "we_bed", label: "침대에 눕는 시간" }, { k: "we_sleep", label: "실제 잠드는 시간 (체감)" }, { k: "we_wake", label: "기상 시간" }] },
   { id: "nw", type: "pills", title: "밤에 보통 몇 번 깨시나요?", k: "night_wakings", opts: ["0회 (안 깸)", "1회", "2회", "3회", "4회 이상"] },
   { id: "bts", type: "pills", title: "깨면 다시 잠드는 데\n얼마나 걸리나요? (체감)", k: "back_to_sleep", opts: ["바로 잠듦", "5~10분", "10~20분", "20~30분", "30분~1시간", "1시간 이상", "다시 못 잠"] },
