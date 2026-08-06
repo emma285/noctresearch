@@ -4,6 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── NOCT 디자인 시스템 토큰 (shadcn 구조 + NOCT 색상, 단일 테마 소스) ──
+   기존 폼(/, /athlete)은 이 변수를 참조 안 하므로 영향 없음. 리포트·대시보드가 사용. */
+:root {
+  /* shadcn 토큰 = RGB 채널값 (정확한 NOCT hex, 투명도 modifier 작동) */
+  --background: 242 243 246;      /* #F2F3F6 */
+  --foreground: 11 14 20;         /* #0b0e14 */
+  --card: 255 255 255;
+  --card-foreground: 11 14 20;
+  --popover: 255 255 255;
+  --popover-foreground: 11 14 20;
+  --primary: 67 85 176;           /* #4355B0 NOCT 인디고 */
+  --primary-foreground: 255 255 255;
+  --secondary: 244 244 246;
+  --secondary-foreground: 63 68 83;
+  --muted: 244 244 246;
+  --muted-foreground: 107 114 128;
+  --accent: 126 200 227;          /* #7EC8E3 NOCT 스카이 */
+  --accent-foreground: 13 27 42;
+  --destructive: 220 38 38;       /* #dc2626 상태색(빨강) */
+  --destructive-foreground: 255 255 255;
+  --coral: 244 151 142;           /* #F4978E NOCT 코럴 */
+  --border: 230 231 235;
+  --input: 230 231 235;
+  --ring: 67 85 176;
+  --navy: 13 27 42;               /* #0D1B2A */
+  --success: 31 138 76;
+  --warning: 185 119 14;
+  --radius: 0.75rem;
+  /* Recharts용 원시 hex (SVG fill/stroke에 채널값은 못 씀) */
+  --c-fg: #0b0e14; --c-mut: #6b7280; --c-line: #e6e7eb;
+  --chart-1: #4355B0; --chart-2: #7EC8E3; --chart-3: #A0B0FF; --chart-4: #F4978E; --chart-5: #0D1B2A;
+}
+
 * {
   margin: 0;
   padding: 0;
