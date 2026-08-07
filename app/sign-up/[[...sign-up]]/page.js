@@ -81,7 +81,6 @@ export default function SignUpPage() {
         {step === "form" ? (
           <>
             <h1>회원가입</h1>
-            <p className="lead">이메일과 비밀번호로 나만의 코칭 공간을 만들어요.</p>
             <form onSubmit={onCreate}>
               {error && <div className="err">{error}</div>}
               <div>
