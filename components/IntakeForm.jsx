@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Moon, ChevronDown, Check, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { QUESTIONS as DEFAULT_QUESTIONS, YEARS, HRS, MINS, hrLabel } from "../data/questions";
+import { useUser } from "@clerk/nextjs";
 
 // ─── Brand ───
 const Brand = ({ athlete }) => (
@@ -53,9 +54,18 @@ const ChkPill = ({ label, chk, onClick }) => (
   </button>
 );
 
+// 연락처 자동 하이픈 (010-1234-5678). 숫자만 남기고 3-4-4로 끊음.
+const formatPhone = (v) => {
+  const d = String(v || "").replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+};
+
 // ─── Text Input ───
-const TInput = ({ value, onChange, ph, autoFocus }) => (
-  <input type="text" value={value || ""} onChange={e => onChange(e.target.value)} placeholder={ph || ""} autoFocus={autoFocus}
+const TInput = ({ value, onChange, ph, autoFocus, phone }) => (
+  <input type="text" inputMode={phone ? "numeric" : undefined} maxLength={phone ? 13 : undefined}
+    value={value || ""} onChange={e => onChange(e.target.value)} placeholder={ph || ""} autoFocus={autoFocus}
     className="w-full bg-white border-2 border-gray-200 focus:border-blue-400 text-gray-900 text-lg py-3 px-4 rounded-xl outline-none transition-colors placeholder:text-gray-300" />
 );
 
@@ -169,6 +179,7 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
   const [submitted, setSubmitted] = useState(false);
   const [err, setErr] = useState("");
   const containerRef = useRef(null);
+  const { user } = useUser();
 
   // 마운트 후 임시저장 복원 (클라 전용 → 서버 렌더와 불일치 없음)
   useEffect(() => {
@@ -179,6 +190,14 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
     }
     setRestored(true);
   }, []); // eslint-disable-line
+
+  // 로그인한 사용자면 이름 자동 채움 → 설문에서 이름 다시 안 묻는다(name 문항 showIf로 스킵).
+  // 이미 입력/복원된 이름이 있으면 존중.
+  useEffect(() => {
+    if (!user) return;
+    const nm = (user.unsafeMetadata?.name || user.fullName || user.firstName || "").trim();
+    if (nm) setData(prev => (prev.name && String(prev.name).trim()) ? prev : { ...prev, name: nm });
+  }, [user]);
 
   // 답변을 건드리면 에러 문구 자동 해제
   useEffect(() => { if (err) setErr(""); }, [data]); // eslint-disable-line
@@ -386,7 +405,8 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
 
     // Text
     if (q.type === "text") {
-      return <>{badge}{title}{sub}<TInput value={get(q.k)} onChange={v => set(q.k, v)} ph={q.ph} autoFocus /></>;
+      const isPhone = q.k === "phone";
+      return <>{badge}{title}{sub}<TInput value={get(q.k)} onChange={v => set(q.k, isPhone ? formatPhone(v) : v)} ph={q.ph} autoFocus phone={isPhone} /></>;
     }
 
     // Textarea
@@ -577,11 +597,15 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
       <div ref={containerRef} className="max-w-lg mx-auto px-6 pt-24 pb-12">
         {renderQ()}
         {err && q.type !== "welcome" && q.type !== "complete" && (
-          <button type="button" onClick={scrollToError}
-            className="mt-5 inline-flex items-center gap-1.5 text-sm text-red-500 font-medium hover:text-red-600 transition-colors">
+          <div className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-red-500 font-medium">
             <span>{err}</span>
-            <span className="text-red-400 underline underline-offset-2">위치로 이동 ↓</span>
-          </button>
+            {firstMissingId(q) && (
+              <button type="button" onClick={scrollToError}
+                className="text-red-400 underline underline-offset-2 whitespace-nowrap hover:text-red-600 transition-colors">
+                위치로 이동 ↓
+              </button>
+            )}
+          </div>
         )}
         {q.type !== "welcome" && q.type !== "complete" && (
           <NavBtns idx={idx} total={Q.length} onPrev={prev} onNext={next} loading={loading} />
