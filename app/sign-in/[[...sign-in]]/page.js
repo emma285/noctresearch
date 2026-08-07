@@ -10,6 +10,14 @@ import { useRouter } from "next/navigation";
 import AuthShell from "../../../components/auth/AuthShell";
 import { krError } from "../../../components/auth/clerkError";
 
+// 로그인 후 돌아갈 곳: 보호 링크(예: /coach/assign)로 왔으면 그곳으로, 아니면 포털.
+function getRedirect() {
+  if (typeof window === "undefined") return "/portal";
+  const p = new URLSearchParams(window.location.search).get("redirect_url");
+  // 외부 URL 방지 — 내부 경로만 허용
+  return p && p.startsWith("/") ? p : "/portal";
+}
+
 export default function SignInPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const { isSignedIn } = useAuth();
@@ -23,7 +31,7 @@ export default function SignInPage() {
 
   // 이미 로그인된 상태면 로그인 페이지 대신 허브로
   useEffect(() => {
-    if (isSignedIn) router.replace("/portal");
+    if (isSignedIn) router.replace(getRedirect());
   }, [isSignedIn, router]);
 
   // 2차 인증(이메일 코드) 준비 — 코드 발송 후 입력 화면으로
@@ -54,7 +62,7 @@ export default function SignInPage() {
       const res = await signIn.create({ identifier: email.trim(), password });
       if (res.status === "complete") {
         await setActive({ session: res.createdSessionId });
-        router.push("/portal");
+        router.push(getRedirect());
       } else if (res.status === "needs_second_factor") {
         await startSecondFactor(res);
       } else {
@@ -64,7 +72,7 @@ export default function SignInPage() {
     } catch (err) {
       // 이미 로그인된 세션이면 허브로
       if (err?.errors?.[0]?.code === "session_exists" || err?.errors?.[0]?.code === "identifier_already_signed_in") {
-        router.replace("/portal");
+        router.replace(getRedirect());
         return;
       }
       setError(krError(err, "이메일 또는 비밀번호를 확인해 주세요."));
@@ -84,7 +92,7 @@ export default function SignInPage() {
       });
       if (res.status === "complete") {
         await setActive({ session: res.createdSessionId });
-        router.push("/portal");
+        router.push(getRedirect());
       } else {
         setError("인증을 완료하지 못했어요. 코드를 다시 확인해 주세요.");
         setLoading(false);
