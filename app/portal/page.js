@@ -184,11 +184,13 @@ function ChartIcon() {
 export default async function PortalPage({ searchParams }) {
   const user = await currentUser();
   const clientName =
+    user?.unsafeMetadata?.name ||
     user?.firstName ||
     user?.username ||
     user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
     CLIENT.name;
-  const done = searchParams?.stage === "done"; // intake 완료 상태
+  // intake 완료 여부 = Clerk publicMetadata (제출 시 서버가 설정). ?stage=done 은 미리보기용
+  const done = user?.publicMetadata?.intakeDone === true || searchParams?.stage === "done";
   const JOURNEY = done ? JOURNEY_DONE : JOURNEY_PRE;
   const status = done ? "첫 세션 준비 중" : "시작 준비";
 

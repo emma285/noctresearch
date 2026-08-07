@@ -2,6 +2,7 @@
 // Notion API 연동 + 자동 분석 (수면효율, Epworth, 레드플래그)
 import { Client } from "@notionhq/client";
 import { NextResponse } from "next/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const DB_ID = process.env.NOTION_DATABASE_ID;
@@ -573,6 +574,19 @@ function h3(text) {
 export async function POST(request) {
   try {
     const data = await request.json();
+
+    // 로그인 상태로 제출하면 Clerk에 "질문지 완료" 표시 → 포털이 전/후 상태 전환
+    try {
+      const { userId } = auth();
+      if (userId) {
+        const cc = typeof clerkClient === "function" ? await clerkClient() : clerkClient;
+        await cc.users.updateUserMetadata(userId, {
+          publicMetadata: { intakeDone: true, intakeAt: new Date().toISOString() },
+        });
+      }
+    } catch (e) {
+      console.error("clerk metadata update failed:", e?.message);
+    }
 
     if (!process.env.NOTION_API_KEY || !process.env.NOTION_DATABASE_ID) {
       console.log("Notion API not configured. Data received:", JSON.stringify(data).substring(0, 200));

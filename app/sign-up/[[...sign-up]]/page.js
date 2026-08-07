@@ -13,6 +13,7 @@ export default function SignUpPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState("form"); // form | verify
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -29,7 +30,11 @@ export default function SignUpPage() {
     setLoading(true);
     setError("");
     try {
-      await signUp.create({ emailAddress: email.trim(), password });
+      await signUp.create({
+        emailAddress: email.trim(),
+        password,
+        unsafeMetadata: { name: name.trim() },
+      });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setStep("verify");
       setLoading(false);
@@ -79,6 +84,17 @@ export default function SignUpPage() {
             <p className="lead">이메일과 비밀번호로 나만의 코칭 공간을 만들어요.</p>
             <form onSubmit={onCreate}>
               {error && <div className="err">{error}</div>}
+              <div>
+                <label>이름</label>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  placeholder="선수 이름"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
               <div>
                 <label>이메일</label>
                 <input
