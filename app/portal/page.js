@@ -12,20 +12,17 @@
   ⚠️ 지금은 목업. 2단계에서 Clerk 로그인 + Notion(클라이언트 마스터, 상태=여정단계) 배선으로 교체.
 */
 
+import { currentUser } from "@clerk/nextjs/server";
+import LogoutButton from "../../components/portal/LogoutButton";
+
 const CLIENT = { name: "김프로", role: "선수", program: "운동선수 수면 코칭" };
 
 // ── intake 미완료 상태 데이터 ──
-const KPIS_PRE = [
-  { v: "68", u: "문항", k: "사전 질문지" },
-  { v: "15", u: "분", k: "예상 소요" },
-  { v: "1:1", u: "", k: "프리미엄 코칭" },
-  { v: "4", u: "주", k: "프로그램" },
-];
 const JOURNEY_PRE = [
-  { cls: "now", stage: "지금 할 일", tt: "사전 수면 질문지 작성", td: "68문항으로 지금 수면 상태를 네 영역으로 진단해요. 첫 세션은 이 결과로 시작돼요." },
-  { cls: "", stage: "이번 주 일요일 · 오전 10시", tt: "첫 코칭 세션", td: "진단 결과와 첫 수면 리포트를 같이 보면서 앞으로의 방향을 잡아요." },
+  { cls: "now", stage: "지금 할 일", tt: "사전 수면 질문지 작성", td: "68문항으로 지금 수면 상태를 네 영역으로 진단해요." },
+  { cls: "", stage: "이번 주 일요일(8월 9일) · 오전 10시", tt: "첫 코칭 세션", td: "진단 결과와 첫 수면 리포트를 같이 보면서 앞으로의 방향을 잡아요." },
   { cls: "", stage: "세션 후", tt: "매일 기록이 시작돼요", td: "수면 로그·루틴·워치 데이터 업로드가 열려요. 하루 한 번, 30초면 충분해요." },
-  { cls: "goal", stage: "다음 · 최종 목표", tt: "흔들리지 않는 나만의 회복 루틴", td: "첫 세션에서 목표를 함께 정하고, 이 자리에 나만의 목표가 하나씩 채워질 거예요." },
+  { cls: "", stage: "다음 · 최종 목표", tt: "흔들리지 않는 나만의 회복 루틴", td: "첫 세션에서 목표를 함께 정하고, 이 자리에 나만의 목표가 하나씩 채워질 거예요." },
 ];
 
 // ── intake 완료 상태 데이터 ──
@@ -37,9 +34,9 @@ const KPIS_DONE = [
 ];
 const JOURNEY_DONE = [
   { cls: "", stage: "시작 · 오늘", tt: "사전 질문지를 완료했어요", td: "68문항으로 지금 수면 상태를 네 영역으로 진단했어요. 코치가 결과를 살펴보고 있어요." },
-  { cls: "now", stage: "이번 주 일요일 · 오전 10시", tt: "첫 코칭 세션에서 리포트를 함께 봐요", td: "진단 결과와 첫 수면 리포트를 같이 보면서 앞으로의 방향을 잡아요." },
+  { cls: "now", stage: "이번 주 일요일(8월 9일) · 오전 10시", tt: "첫 코칭 세션에서 리포트를 함께 봐요", td: "진단 결과와 첫 수면 리포트를 같이 보면서 앞으로의 방향을 잡아요." },
   { cls: "", stage: "세션 후", tt: "매일 기록이 시작돼요", td: "세션이 끝나면 수면 로그·루틴·워치 데이터 업로드가 열려요. 하루 한 번, 30초면 충분해요." },
-  { cls: "goal", stage: "다음 · 최종 목표", tt: "흔들리지 않는 나만의 회복 루틴", td: "첫 세션에서 목표를 함께 정하고, 이 자리에 나만의 목표가 하나씩 채워질 거예요." },
+  { cls: "", stage: "다음 · 최종 목표", tt: "흔들리지 않는 나만의 회복 루틴", td: "첫 세션에서 목표를 함께 정하고, 이 자리에 나만의 목표가 하나씩 채워질 거예요." },
 ];
 
 // 세션 후 열리는 기능들 (지금은 전부 잠금)
@@ -72,6 +69,11 @@ const CSS = `
 .noct-hub .status{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#c4e7f5;
   background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.42);padding:7px 14px;border-radius:999px;white-space:nowrap;}
 .noct-hub .status .dot{width:8px;height:8px;border-radius:50%;background:#46d39a;box-shadow:0 0 0 3px rgba(70,211,154,.22);}
+.noct-hub .logout{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;
+  border-radius:50%;color:rgba(255,255,255,.55);background:transparent;border:1px solid rgba(255,255,255,.15);
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;position:relative;z-index:1;}
+.noct-hub .logout:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.92);border-color:rgba(255,255,255,.28);}
+.noct-hub .hero-status{margin-top:16px;position:relative;z-index:1;}
 .noct-hub .hero-name{font-size:33px;font-weight:800;letter-spacing:-0.9px;margin-top:18px;position:relative;z-index:1;}
 .noct-hub .hero-name span{color:rgba(255,255,255,.62);font-size:19px;font-weight:600;margin-left:4px;}
 .noct-hub .hero-coach{font-size:13.5px;color:rgba(255,255,255,.70);margin-top:9px;font-weight:500;position:relative;z-index:1;}
@@ -82,6 +84,9 @@ const CSS = `
 .noct-hub .kv{display:block;font-size:29px;font-weight:800;letter-spacing:-1px;color:#fff;line-height:1;font-variant-numeric:tabular-nums;}
 .noct-hub .kv i{font-style:normal;font-size:14px;font-weight:600;color:rgba(255,255,255,.66);margin-left:3px;}
 .noct-hub .kk{display:block;font-size:12.5px;color:rgba(255,255,255,.62);margin-top:8px;font-weight:500;}
+.noct-hub .hero-note{display:flex;align-items:center;gap:9px;margin-top:24px;position:relative;z-index:1;
+  border-top:1px solid rgba(255,255,255,.12);padding-top:20px;font-size:13px;font-weight:500;color:rgba(255,255,255,.66);line-height:1.5;}
+.noct-hub .hero-note svg{color:rgba(126,200,227,.9);flex-shrink:0;}
 
 /* Primary CTA (intake 작성) */
 .noct-hub .cta{display:grid;grid-template-columns:52px 1fr 34px;gap:18px;align-items:center;margin-top:22px;
@@ -168,10 +173,22 @@ function ArrowIcon() {
     </svg>
   );
 }
+function ChartIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m7 15 4-4 3 3 5-6" />
+    </svg>
+  );
+}
 
-export default function PortalPage({ searchParams }) {
+export default async function PortalPage({ searchParams }) {
+  const user = await currentUser();
+  const clientName =
+    user?.firstName ||
+    user?.username ||
+    user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
+    CLIENT.name;
   const done = searchParams?.stage === "done"; // intake 완료 상태
-  const KPIS = done ? KPIS_DONE : KPIS_PRE;
   const JOURNEY = done ? JOURNEY_DONE : JOURNEY_PRE;
   const status = done ? "첫 세션 준비 중" : "시작 준비";
 
@@ -184,18 +201,26 @@ export default function PortalPage({ searchParams }) {
         <div className="hero">
           <div className="hero-top">
             <img src="/noct-logo.png" className="logo" alt="NOCT RESEARCH" />
-            <div className="status"><span className="dot" />{status}</div>
+            <LogoutButton />
           </div>
-          <h1 className="hero-name">{CLIENT.name} <span>{CLIENT.role}</span></h1>
+          <h1 className="hero-name">{clientName} <span>{CLIENT.role}</span></h1>
           <div className="hero-coach">{CLIENT.program}</div>
-          <div className="kpis">
-            {KPIS.map((kpi) => (
-              <div className="kpi" key={kpi.k}>
-                <span className="kv">{kpi.v}{kpi.u && <i>{kpi.u}</i>}</span>
-                <span className="kk">{kpi.k}</span>
-              </div>
-            ))}
-          </div>
+          <div className="hero-status"><span className="status"><span className="dot" />{status}</span></div>
+          {done ? (
+            <div className="kpis">
+              {KPIS_DONE.map((kpi) => (
+                <div className="kpi" key={kpi.k}>
+                  <span className="kv">{kpi.v}{kpi.u && <i>{kpi.u}</i>}</span>
+                  <span className="kk">{kpi.k}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="hero-note">
+              <ChartIcon />
+              <span>사전 질문지를 작성하면 수면 지표가 업데이트 됩니다</span>
+            </div>
+          )}
         </div>
 
         {/* intake 미완료면: 작성 CTA */}
@@ -204,7 +229,7 @@ export default function PortalPage({ searchParams }) {
             <div className="cta-ic"><ClipboardIcon /></div>
             <div>
               <div className="cta-t">사전 수면 질문지 작성하기</div>
-              <div className="cta-d">68문항 · 약 15분 · 지금 수면 상태를 진단해요. 먼저 작성하면 첫 세션이 이 결과로 시작돼요.</div>
+              <div className="cta-d">68문항 · 약 15분 · 지금 수면 상태를 진단해요.</div>
             </div>
             <div className="cta-go"><ArrowIcon /></div>
           </a>
@@ -247,12 +272,6 @@ export default function PortalPage({ searchParams }) {
             ))}
           </div>
         </section>
-
-        {/* Footer */}
-        <div className="foot">
-          <span>NOCT RESEARCH · 운동선수 수면 코칭</span>
-          <span>{CLIENT.name} {CLIENT.role} 전용</span>
-        </div>
 
       </div>
     </div>

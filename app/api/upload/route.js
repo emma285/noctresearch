@@ -10,15 +10,8 @@ export async function POST(request) {
       body,
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => ({
-        allowedContentTypes: [
-          "image/png",
-          "image/jpeg",
-          "image/jpg",
-          "image/webp",
-          "image/heic",
-          "image/heif",
-        ],
-        maximumSizeInBytes: 25 * 1024 * 1024, // 장당 25MB
+        // 타입 제한 없이 이미지 전부 허용 (빈/특이 content-type로 거부되는 것 방지)
+        maximumSizeInBytes: 50 * 1024 * 1024, // 장당 50MB
         addRandomSuffix: true, // 파일명 충돌 방지 (접근 보호는 private 스토어가 담당)
         tokenPayload: clientPayload ?? null,
       }),

@@ -1,4 +1,5 @@
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata = {
   title: "수면 코칭 사전 질문지 | Noct Research",
@@ -8,8 +9,10 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ko">
-      <body className="bg-slate-950 antialiased">{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="ko">
+        <body className="bg-slate-950 antialiased">{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

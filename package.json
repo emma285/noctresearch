@@ -10,6 +10,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@clerk/nextjs": "^5.7.6",
     "@notionhq/client": "^2.2.14",
     "@vercel/blob": "^2.6.1",
     "class-variance-authority": "^0.7.1",
