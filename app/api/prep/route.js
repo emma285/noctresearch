@@ -17,7 +17,7 @@ async function notifyCoachSlack(name, email, items, files, origin, userId) {
   const text = [
     `*코칭 준비 자료 도착* — ${name}${email ? ` (${email})` : ""}`,
     ...items.map((it) => `• [${it.type}] ${it.text}`),
-    ...files.map((f) => `첨부 · ${f.name}: ${f.url}`),
+    ...files.map((f) => `첨부 · ${f.name}: ${origin}/api/coach/file?u=${encodeURIComponent(f.url)}`),
     userId ? `배정: ${origin}/coach/assign?uid=${userId}` : "",
   ].filter(Boolean).join("\n");
   await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
@@ -29,6 +29,8 @@ export async function POST(request) {
     if (!items.length && !files.length) {
       return NextResponse.json({ success: false, message: "추가한 내용이 없어요." }, { status: 400 });
     }
+    const origin = new URL(request.url).origin;
+    const proxy = (u) => `${origin}/api/coach/file?u=${encodeURIComponent(u)}`;
 
     const { userId } = auth();
     let name = "선수", email = "";
@@ -57,7 +59,7 @@ export async function POST(request) {
       }
       if (files.length) {
         blocks.push(h2("첨부 파일"));
-        files.forEach((f) => blocks.push(bullet(f.name, f.url)));
+        files.forEach((f) => blocks.push(bullet(f.name, proxy(f.url))));
       }
       await notion.pages.create({
         parent: { database_id: ATHLETE_DB_ID },

@@ -33,11 +33,12 @@ export default function PrepForm({ name }) {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [files, setFiles] = useState([]);
-  const [uploadPct, setUploadPct] = useState(null); // null = 업로드 중 아님
+  const [pending, setPending] = useState([]); // 업로드 중 [{id,name,pct}]
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const albumRef = useRef(null);
   const cameraRef = useRef(null);
+  const idRef = useRef(0);
 
   const cur = TYPES.find((t) => t.key === type);
 
@@ -52,25 +53,29 @@ export default function PrepForm({ name }) {
   }
   const removeItem = (i) => setItems((p) => p.filter((_, idx) => idx !== i));
 
-  async function doUpload(list) {
-    if (!list.length) return;
-    setUploadPct(0);
-    try {
-      for (const file of list) {
-        const b = await upload(file.name, file, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-          onUploadProgress: (ev) => setUploadPct(Math.round(ev?.percentage ?? 0)),
+  // 동시 업로드 — 각 파일 개별 진행률. 업로드 중에도 다른 파일 추가 가능.
+  function doUpload(list) {
+    for (const file of list) {
+      const id = ++idRef.current;
+      setPending((p) => [...p, { id, name: file.name, pct: 0 }]);
+      upload(file.name, file, {
+        access: "private",
+        handleUploadUrl: "/api/upload",
+        onUploadProgress: (ev) =>
+          setPending((p) => p.map((x) => (x.id === id ? { ...x, pct: Math.min(99, Math.round(ev?.percentage ?? 0)) } : x))),
+      })
+        .then((b) => {
+          setPending((p) => p.map((x) => (x.id === id ? { ...x, pct: 100 } : x)));
+          setFiles((f) => [...f, { name: file.name, url: b.url }]);
+          setTimeout(() => setPending((p) => p.filter((x) => x.id !== id)), 400);
+        })
+        .catch((err) => {
+          alert("업로드에 실패했어요: " + file.name + "\n" + err.message);
+          setPending((p) => p.filter((x) => x.id !== id));
         });
-        setFiles((p) => [...p, { name: file.name, url: b.url }]);
-      }
-    } catch (err) {
-      alert("업로드에 실패했어요: " + err.message);
-    } finally {
-      setUploadPct(null);
-      if (albumRef.current) albumRef.current.value = "";
-      if (cameraRef.current) cameraRef.current.value = "";
     }
+    if (albumRef.current) albumRef.current.value = "";
+    if (cameraRef.current) cameraRef.current.value = "";
   }
   const removeFile = (i) => setFiles((p) => p.filter((_, idx) => idx !== i));
 
@@ -99,7 +104,7 @@ export default function PrepForm({ name }) {
           <Check className="w-8 h-8 text-white" strokeWidth={3} />
         </div>
         <h1 className="text-[22px] font-extrabold text-[#0D1B2A] mb-2">코치에게 전달됐어요</h1>
-        <p className="text-[15px] text-gray-500 leading-relaxed mb-8">보내주신 일정으로 맞춤 코칭을<br />준비할게요.</p>
+        <p className="text-[15px] text-gray-500 leading-relaxed mb-8">보내주신 정보로 맞춤 수면 루틴을<br />준비할게요.</p>
         <button onClick={() => router.push("/portal")}
           className="w-full max-w-xs py-4 rounded-2xl text-white font-bold text-base active:scale-[0.99] transition-transform" style={{ background: GRAD }}>
           포털로 돌아가기
@@ -109,17 +114,20 @@ export default function PrepForm({ name }) {
   }
 
   const empty = items.length === 0 && files.length === 0;
+  const uploading = pending.length > 0;
   const cardShadow = "0 2px 16px rgba(13,27,42,0.05)";
+  const ctaDisabled = empty || loading || uploading;
+  const ctaLabel = loading ? "보내는 중…" : uploading ? "파일 업로드 중…" : empty ? "일정을 추가해 주세요" : "자료 업로드";
 
   return (
-    <main className="min-h-screen bg-[#F2F3F6] pb-28" style={{ fontFamily: "'Pretendard',sans-serif" }}>
+    <main className="min-h-screen bg-[#F2F3F6] pb-28 overflow-x-hidden" style={{ fontFamily: "'Pretendard',sans-serif" }}>
       <Header onBack={() => router.push("/portal")} />
 
       <div className="max-w-md mx-auto px-5 pt-20">
         {/* 타이틀 */}
         <h1 className="text-[24px] font-extrabold text-[#0D1B2A] leading-snug tracking-[-0.02em]">코칭 준비 자료</h1>
         <p className="text-[15px] text-gray-500 mt-2 leading-relaxed">
-          {name ? `${name}님, ` : ""}코칭 전에 일정을 알려주시면<br />그걸로 맞춤 계획을 짜서 준비해요.
+          {name ? `${name}님, ` : ""}코칭 전에 수면 루틴을 만드는 데<br />도움될 만한 정보를 공유해 주세요.
         </p>
 
         {/* ── 입력 블럭 (액션) ── */}
@@ -174,13 +182,13 @@ export default function PrepForm({ name }) {
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => cameraRef.current?.click()} disabled={uploadPct !== null}
-              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[15px] active:scale-[0.99] transition-all disabled:opacity-60"
+            <button type="button" onClick={() => cameraRef.current?.click()}
+              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[15px] active:scale-[0.99] transition-all"
               style={{ background: "#EEF0FB", color: INDIGO }}>
               <Camera className="w-4 h-4" /> 사진 촬영
             </button>
-            <button type="button" onClick={() => albumRef.current?.click()} disabled={uploadPct !== null}
-              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[15px] active:scale-[0.99] transition-all disabled:opacity-60"
+            <button type="button" onClick={() => albumRef.current?.click()}
+              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[15px] active:scale-[0.99] transition-all"
               style={{ background: "#EEF0FB", color: INDIGO }}>
               <ImagePlus className="w-4 h-4" /> 앨범·파일
             </button>
@@ -188,24 +196,25 @@ export default function PrepForm({ name }) {
           <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={(e) => doUpload(Array.from(e.target.files || []))} className="hidden" />
           <input ref={albumRef} type="file" accept="image/*,application/pdf" multiple onChange={(e) => doUpload(Array.from(e.target.files || []))} className="hidden" />
 
-          {/* 업로드 진행 게이지 */}
-          {uploadPct !== null && (
-            <div className="mt-3">
+          {/* 업로드 진행 (개별) */}
+          {pending.map((p) => (
+            <div key={p.id} className="mt-3">
               <div className="flex justify-between text-[12px] font-semibold text-gray-500 mb-1">
-                <span>업로드 중</span><span>{uploadPct}%</span>
+                <span className="truncate mr-2">{p.name}</span><span>{p.pct}%</span>
               </div>
               <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${uploadPct}%`, background: GRAD }} />
+                <div className="h-full rounded-full transition-all duration-200" style={{ width: `${p.pct}%`, background: GRAD }} />
               </div>
             </div>
-          )}
+          ))}
 
           {files.length > 0 && (
             <div className="mt-3 flex flex-col gap-2">
               {files.map((f, i) => (
                 <div key={i} className="flex items-center gap-2 bg-[#F2F3F6] rounded-xl px-3 py-2.5">
                   <Paperclip className="w-4 h-4 text-gray-400 shrink-0" />
-                  <a href={f.url} target="_blank" rel="noreferrer" className="flex-1 min-w-0 truncate text-[14px] text-gray-700">{f.name}</a>
+                  <span className="flex-1 min-w-0 truncate text-[14px] text-gray-700">{f.name}</span>
+                  <span className="shrink-0 text-[12px] text-[#4355B0] font-semibold">첨부됨</span>
                   <button onClick={() => removeFile(i)} className="shrink-0 text-gray-300 active:text-gray-500"><X className="w-4 h-4" /></button>
                 </div>
               ))}
@@ -217,10 +226,10 @@ export default function PrepForm({ name }) {
       {/* 하단 고정 CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#F2F3F6] via-[#F2F3F6] to-transparent pt-6 pb-5 px-5">
         <div className="max-w-md mx-auto">
-          <button onClick={submit} disabled={empty || loading || uploadPct !== null}
+          <button onClick={submit} disabled={ctaDisabled}
             className="w-full py-4 rounded-2xl text-white font-bold text-[16px] disabled:bg-gray-200 disabled:text-gray-400 active:scale-[0.99] transition-all"
-            style={empty || loading || uploadPct !== null ? {} : { background: GRAD }}>
-            {loading ? "보내는 중…" : empty ? "일정을 추가해 주세요" : "자료 업로드"}
+            style={ctaDisabled ? {} : { background: GRAD }}>
+            {ctaLabel}
           </button>
         </div>
       </div>
