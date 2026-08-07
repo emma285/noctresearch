@@ -570,12 +570,34 @@ function h3(text) {
   };
 }
 
+// ─── 코치 슬랙 알림 (SLACK_WEBHOOK_URL 있을 때만) ───
+async function notifyCoachSlack(data, userId, email, origin) {
+  const url = process.env.SLACK_WEBHOOK_URL;
+  if (!url) return;
+  const name = data.name || "이름 미상";
+  const sport = data.formType === "athlete"
+    ? (data.sport === "기타" ? (data.sport_detail || "기타") : (data.sport || ""))
+    : "";
+  const assignUrl = `${origin}/coach/assign?uid=${userId}`;
+  const text = [
+    `🏃 *새 선수 사전질문지 제출* — ${name}${sport ? ` (${sport})` : ""}`,
+    email ? `이메일: ${email}` : "",
+    "첫 코칭 세션 날짜와 프로그램(주)을 배정해 주세요:",
+    assignUrl,
+  ].filter(Boolean).join("\n");
+  await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+}
+
 // ─── API Handler ───
 export async function POST(request) {
   try {
     const data = await request.json();
 
-    // 로그인 상태로 제출하면 Clerk에 "질문지 완료" 표시 → 포털이 전/후 상태 전환
+    // 로그인 상태로 제출하면 Clerk에 "질문지 완료" 표시 → 포털이 전/후 상태 전환 + 코치에게 슬랙 알림
     try {
       const { userId } = auth();
       if (userId) {
@@ -583,6 +605,13 @@ export async function POST(request) {
         await cc.users.updateUserMetadata(userId, {
           publicMetadata: { intakeDone: true, intakeAt: new Date().toISOString() },
         });
+        try {
+          const u = await cc.users.getUser(userId);
+          const email = u?.emailAddresses?.[0]?.emailAddress || "";
+          await notifyCoachSlack(data, userId, email, new URL(request.url).origin);
+        } catch (e) {
+          console.error("coach notify failed:", e?.message);
+        }
       }
     } catch (e) {
       console.error("clerk metadata update failed:", e?.message);
