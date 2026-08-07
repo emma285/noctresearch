@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Moon, ChevronDown, Check, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { QUESTIONS as DEFAULT_QUESTIONS, YEARS, HRS, MINS, hrLabel } from "../data/questions";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 // ─── Brand ───
 const Brand = ({ athlete }) => (
@@ -180,6 +181,7 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
   const [err, setErr] = useState("");
   const containerRef = useRef(null);
   const { user } = useUser();
+  const router = useRouter();
 
   // 마운트 후 임시저장 복원 (클라 전용 → 서버 렌더와 불일치 없음)
   useEffect(() => {
@@ -335,6 +337,8 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
         setSubmitted(true);
         if (storageKey && typeof window !== "undefined") { try { localStorage.removeItem(storageKey); } catch {} }
         goTo(Q.length - 1);
+        // 운동선수 포털 흐름: 완료 안내를 잠깐 보여준 뒤 포털(완료 상태)로 자동 복귀
+        if (formType === "athlete") setTimeout(() => router.push("/portal?stage=done"), 2200);
       } else {
         alert("전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
       }
@@ -391,6 +395,12 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
                 <ArrowLeft className="w-4 h-4" /> 이전으로 돌아가기
               </button>
             </div>
+          )}
+          {submitted && formType === "athlete" && (
+            <button onClick={() => router.push("/portal?stage=done")}
+              className="px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 transition-all shadow-md">
+              내 코칭 공간으로 돌아가기
+            </button>
           )}
         </div>
       );
