@@ -130,7 +130,7 @@ const CSS = `
   font-size:12.5px;color:var(--gray2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
 @media (max-width:720px){
-  .noct-hub .wrap{padding:24px 18px 56px;}
+  .noct-hub .wrap{padding:24px 24px 56px;}
   .noct-hub .hero{padding:26px 22px;}
   .noct-hub .hero-name{font-size:27px;}
   .noct-hub .kpi{flex:0 0 50%;min-width:0;padding:14px 16px;border-left:none;}
