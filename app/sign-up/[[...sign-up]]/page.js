@@ -68,7 +68,7 @@ export default function SignUpPage() {
     return (
       <AuthShell>
         <div className="card">
-          <h1>이미 로그인되어 있어요</h1>
+          <h1>로그인됐어요</h1>
           <p className="lead">잠시만요, 내 코칭 공간으로 이동할게요…</p>
         </div>
       </AuthShell>
