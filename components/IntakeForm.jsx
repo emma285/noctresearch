@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Moon, ChevronDown, Check, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { QUESTIONS as DEFAULT_QUESTIONS, YEARS, HRS, MINS, hrLabel } from "../data/questions";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 // ─── Brand ───
 const Brand = ({ athlete }) => (
@@ -53,9 +55,18 @@ const ChkPill = ({ label, chk, onClick }) => (
   </button>
 );
 
+// 연락처 자동 하이픈 (010-1234-5678). 숫자만 남기고 3-4-4로 끊음.
+const formatPhone = (v) => {
+  const d = String(v || "").replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+};
+
 // ─── Text Input ───
-const TInput = ({ value, onChange, ph, autoFocus }) => (
-  <input type="text" value={value || ""} onChange={e => onChange(e.target.value)} placeholder={ph || ""} autoFocus={autoFocus}
+const TInput = ({ value, onChange, ph, autoFocus, phone }) => (
+  <input type="text" inputMode={phone ? "numeric" : undefined} maxLength={phone ? 13 : undefined}
+    value={value || ""} onChange={e => onChange(e.target.value)} placeholder={ph || ""} autoFocus={autoFocus}
     className="w-full bg-white border-2 border-gray-200 focus:border-blue-400 text-gray-900 text-lg py-3 px-4 rounded-xl outline-none transition-colors placeholder:text-gray-300" />
 );
 
@@ -157,30 +168,47 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
     try { return JSON.parse(localStorage.getItem(storageKey) || "null"); } catch { return null; }
   };
 
-  const [idx, setIdx] = useState(() => {
-    const saved = loadSaved();
-    return saved && typeof saved.idx === "number" ? saved.idx : 0;
-  });
-  // def 값이 있는 질문은 초기값으로, 저장된 값이 있으면 복원
+  // SSR/CSR 초기 렌더 일치를 위해 항상 기본값으로 시작 → 마운트 후 localStorage 복원 (hydration 안전)
+  const [idx, setIdx] = useState(0);
   const [data, setData] = useState(() => {
     const init = {};
     Q.forEach(q => { if (q.def && q.k) init[q.k] = q.def; });
-    const saved = loadSaved();
-    return saved && saved.data ? { ...init, ...saved.data } : init;
+    return init;
   });
+  const [restored, setRestored] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [err, setErr] = useState("");
   const containerRef = useRef(null);
+  const { user } = useUser();
+  const router = useRouter();
+
+  // 마운트 후 임시저장 복원 (클라 전용 → 서버 렌더와 불일치 없음)
+  useEffect(() => {
+    const saved = loadSaved();
+    if (saved) {
+      if (typeof saved.idx === "number") setIdx(saved.idx);
+      if (saved.data) setData(prev => ({ ...prev, ...saved.data }));
+    }
+    setRestored(true);
+  }, []); // eslint-disable-line
+
+  // 로그인한 사용자면 이름 자동 채움 → 설문에서 이름 다시 안 묻는다(name 문항 showIf로 스킵).
+  // 이미 입력/복원된 이름이 있으면 존중.
+  useEffect(() => {
+    if (!user) return;
+    const nm = (user.unsafeMetadata?.name || user.fullName || user.firstName || "").trim();
+    if (nm) setData(prev => (prev.name && String(prev.name).trim()) ? prev : { ...prev, name: nm });
+  }, [user]);
 
   // 답변을 건드리면 에러 문구 자동 해제
   useEffect(() => { if (err) setErr(""); }, [data]); // eslint-disable-line
 
-  // data/idx 변경 시 자동 저장
+  // data/idx 변경 시 자동 저장 (복원 완료 후에만 → 기본값이 저장본 덮어쓰지 않게)
   useEffect(() => {
-    if (!storageKey || typeof window === "undefined") return;
+    if (!restored || !storageKey || typeof window === "undefined") return;
     try { localStorage.setItem(storageKey, JSON.stringify({ data, idx })); } catch {}
-  }, [data, idx, storageKey]);
+  }, [data, idx, storageKey, restored]);
 
   const q = Q[idx];
 
@@ -237,6 +265,26 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
     let i = idx + 1; while (i < Q.length && !visible(i)) i++; if (i <= Q.length - 1) goTo(i);
   };
   const prev = () => { let i = idx - 1; while (i > 0 && !visible(i)) i--; if (i >= 0) goTo(i); };
+  const goFirst = () => { let i = 1; while (i < Q.length && !visible(i)) i++; goTo(Math.min(i, Q.length - 1)); };
+
+  // 에러 시 답 안 한 첫 항목 id 찾기 (여러 항목 문항용)
+  const firstMissingId = (qq) => {
+    if (!qq) return null;
+    const d = data;
+    switch (qq.type) {
+      case "epworth": { const i = qq.sits.findIndex((_, si) => d[`ep_${si}`] === undefined); return i >= 0 ? `f-ep_${i}` : null; }
+      case "beliefs": { const it = qq.items.find(it => d[it.k] === undefined); return it ? `f-${it.k}` : null; }
+      case "readiness": { const i = qq.items.findIndex((_, ri) => d[`r_${ri}`] === undefined); return i >= 0 ? `f-r_${i}` : null; }
+      case "timegroup": { const f = qq.fields.find(ff => d[ff.k + "_h"] === null || d[ff.k + "_h"] === undefined); return f ? `f-${f.k}` : null; }
+      default: return null;
+    }
+  };
+  const scrollToError = () => {
+    const id = firstMissingId(q);
+    const el = id && typeof document !== "undefined" ? document.getElementById(id) : null;
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    else if (containerRef.current) containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const submit = async () => {
     setLoading(true);
@@ -289,6 +337,8 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
         setSubmitted(true);
         if (storageKey && typeof window !== "undefined") { try { localStorage.removeItem(storageKey); } catch {} }
         goTo(Q.length - 1);
+        // 운동선수 포털 흐름: 완료 안내를 잠깐 보여준 뒤 포털(완료 상태)로 자동 복귀
+        if (formType === "athlete") setTimeout(() => router.push("/portal?stage=done"), 2200);
       } else {
         alert("전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
       }
@@ -346,6 +396,12 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
               </button>
             </div>
           )}
+          {submitted && formType === "athlete" && (
+            <button onClick={() => router.push("/portal?stage=done")}
+              className="px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 transition-all shadow-md">
+              내 코칭 공간으로 돌아가기
+            </button>
+          )}
         </div>
       );
     }
@@ -359,7 +415,8 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
 
     // Text
     if (q.type === "text") {
-      return <>{badge}{title}{sub}<TInput value={get(q.k)} onChange={v => set(q.k, v)} ph={q.ph} autoFocus /></>;
+      const isPhone = q.k === "phone";
+      return <>{badge}{title}{sub}<TInput value={get(q.k)} onChange={v => set(q.k, isPhone ? formatPhone(v) : v)} ph={q.ph} autoFocus phone={isPhone} /></>;
     }
 
     // Textarea
@@ -460,9 +517,11 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
         <>{badge}{title}{sub}
           <div className="space-y-6">
             {q.fields.map(f => (
-              <TimePair key={f.k} label={f.label}
-                hVal={get(f.k + "_h")} mVal={get(f.k + "_m")}
-                onH={v => set(f.k + "_h", v)} onM={v => set(f.k + "_m", v)} />
+              <div key={f.k} id={`f-${f.k}`}>
+                <TimePair label={f.label}
+                  hVal={get(f.k + "_h")} mVal={get(f.k + "_m")}
+                  onH={v => set(f.k + "_h", v)} onM={v => set(f.k + "_m", v)} />
+              </div>
             ))}
           </div>
         </>
@@ -475,7 +534,7 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
         <>{badge}{title}{sub}
           <div className="space-y-6">
             {q.sits.map((sit, si) => (
-              <div key={si}>
+              <div key={si} id={`f-ep_${si}`}>
                 <p className="text-sm font-medium text-gray-700 mb-2">{si + 1}. {sit}</p>
                 <div className="grid grid-cols-4 gap-2">
                   {q.sLbl.map((lbl, li) => (
@@ -498,7 +557,7 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
         <>{badge}{title}{sub}
           <div className="space-y-6">
             {q.items.map((item, i) => (
-              <div key={i}>
+              <div key={i} id={`f-${item.k}`}>
                 <p className="text-sm font-medium text-gray-700 mb-2">{item.t}</p>
                 <div className="grid grid-cols-5 gap-2">
                   {q.scale.map((lbl, li) => (
@@ -521,7 +580,7 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
         <>{badge}{title}{sub}
           <div className="space-y-6">
             {q.items.map((item, i) => (
-              <div key={i}>
+              <div key={i} id={`f-r_${i}`}>
                 <p className="text-sm font-medium text-gray-700 mb-2">{item}</p>
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, 5].map(n => (
@@ -548,10 +607,26 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
       <div ref={containerRef} className="max-w-lg mx-auto px-6 pt-24 pb-12">
         {renderQ()}
         {err && q.type !== "welcome" && q.type !== "complete" && (
-          <p className="mt-5 text-sm text-red-500 font-medium">{err}</p>
+          <div className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-red-500 font-medium">
+            <span>{err}</span>
+            {firstMissingId(q) && (
+              <button type="button" onClick={scrollToError}
+                className="text-red-400 underline underline-offset-2 whitespace-nowrap hover:text-red-600 transition-colors">
+                위치로 이동 ↓
+              </button>
+            )}
+          </div>
         )}
         {q.type !== "welcome" && q.type !== "complete" && (
           <NavBtns idx={idx} total={Q.length} onPrev={prev} onNext={next} loading={loading} />
+        )}
+        {q.type !== "welcome" && q.type !== "complete" && idx > 1 && (
+          <div className="mt-4 text-center">
+            <button type="button" onClick={goFirst}
+              className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+              처음으로 가기
+            </button>
+          </div>
         )}
         {q.type === "welcome" && (
           <div className="mt-6 flex flex-col items-center gap-4">

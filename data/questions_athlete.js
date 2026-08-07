@@ -20,8 +20,9 @@ const isDorm = (d) => (d.living_type || []).includes("합숙·기숙사");
 export const QUESTIONS = [
   { id: "w", type: "welcome" },
   // 1 — 기본 정보
-  { id: "name", type: "text", sec: "기본 정보", sn: 1, title: "이름을 알려주세요", k: "name", ph: "이름 입력" },
-  { id: "phone", type: "text", title: "연락처를 알려주세요", sub: "작성 내용은 자동 저장돼요. 안내·문의에 사용됩니다", k: "phone", ph: "010-0000-0000" },
+  // 로그인 사용자는 이름을 이미 알고 있으니(IntakeForm이 자동 채움) 이 문항은 건너뜀. 비로그인 시에만 표시.
+  { id: "name", type: "text", showIf: (d) => !(d.name && String(d.name).trim()), title: "이름을 알려주세요", k: "name", ph: "이름 입력" },
+  { id: "phone", type: "text", sec: "기본 정보", sn: 1, title: "연락처를 알려주세요", sub: "작성 내용은 자동 저장돼요. 안내·문의에 사용됩니다", k: "phone", ph: "010-0000-0000" },
   { id: "birth", type: "dropdown", title: "태어난 연도를 선택해 주세요", k: "birth_year", def: "2000년" },
   { id: "gender", type: "pills", title: "성별을 선택해 주세요", k: "gender", opts: ["남성", "여성", "기타"] },
   { id: "living", type: "multi", title: "요즘(최근 2주) 주로 어디서 지내나요?", sub: "왔다갔다 하면 해당하는 것 모두 선택해 주세요", k: "living_type", opts: ["합숙·기숙사", "자취·혼자 생활", "본가·가족과 함께", "배우자·자녀와 함께"] },
