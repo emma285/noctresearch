@@ -3,6 +3,7 @@
 import { Client } from "@notionhq/client";
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { notifyCoaching } from "../../../lib/notify";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const DB_ID = process.env.NOTION_DATABASE_ID;
@@ -570,26 +571,20 @@ function h3(text) {
   };
 }
 
-// ─── 코치 슬랙 알림 (SLACK_WEBHOOK_URL 있을 때만) ───
+// ─── 코치 슬랙 알림 (#코칭 채널) ───
 async function notifyCoachSlack(data, userId, email, origin) {
-  const url = process.env.SLACK_WEBHOOK_URL;
-  if (!url) return;
   const name = data.name || "이름 미상";
   const sport = data.formType === "athlete"
     ? (data.sport === "기타" ? (data.sport_detail || "기타") : (data.sport || ""))
     : "";
   const assignUrl = `${origin}/coach/assign?uid=${userId}`;
   const text = [
-    `🏃 *새 선수 사전질문지 제출* — ${name}${sport ? ` (${sport})` : ""}`,
+    `*사전질문지 제출 완료* — ${name}${sport ? ` (${sport})` : ""}`,
     email ? `이메일: ${email}` : "",
     "첫 코칭 세션 날짜와 프로그램(주)을 배정해 주세요:",
     assignUrl,
   ].filter(Boolean).join("\n");
-  await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
+  await notifyCoaching(text);
 }
 
 // ─── API Handler ───

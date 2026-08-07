@@ -53,6 +53,12 @@ export default function SignUpPage() {
       const res = await signUp.attemptEmailAddressVerification({ code: code.trim() });
       if (res.status === "complete") {
         await setActive({ session: res.createdSessionId });
+        // 코치에게 가입 알림 (#코칭). 실패해도 진행 막지 않음.
+        fetch("/api/signup-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+        }).catch(() => {});
         router.push("/portal");
       } else {
         setError("인증을 완료하지 못했어요. 코드를 다시 확인해 주세요.");

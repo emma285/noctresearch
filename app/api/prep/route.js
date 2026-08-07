@@ -3,6 +3,7 @@
 import { Client } from "@notionhq/client";
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { notifyCoaching } from "../../../lib/notify";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 // 코칭 준비 자료는 인테이크(사전질문지) DB와 분리된 전용 DB에 저장.
@@ -13,15 +14,13 @@ async function getClerk() {
 }
 
 async function notifyCoachSlack(name, email, items, files, origin, userId) {
-  const url = process.env.SLACK_WEBHOOK_URL;
-  if (!url) return;
   const text = [
     `*코칭 준비 자료 도착* — ${name}${email ? ` (${email})` : ""}`,
     ...items.map((it) => `• [${it.type}] ${it.text}`),
     ...files.map((f) => `첨부 · ${f.name}: ${origin}/api/coach/file?u=${encodeURIComponent(f.url)}`),
     userId ? `배정: ${origin}/coach/assign?uid=${userId}` : "",
   ].filter(Boolean).join("\n");
-  await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+  await notifyCoaching(text);
 }
 
 export async function POST(request) {
