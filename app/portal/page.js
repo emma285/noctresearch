@@ -185,6 +185,7 @@ export default async function PortalPage({ searchParams }) {
     CLIENT.name;
   // intake 완료 여부 = Clerk publicMetadata (제출 시 서버가 설정). ?stage=done 은 미리보기용
   const done = user?.publicMetadata?.intakeDone === true || searchParams?.stage === "done";
+  const prepDone = user?.publicMetadata?.prepDone === true;
   const JOURNEY = done ? JOURNEY_DONE : JOURNEY_PRE;
   const status = done ? "첫 세션 준비 중" : "시작 준비";
 
@@ -264,6 +265,18 @@ export default async function PortalPage({ searchParams }) {
             <div>
               <div className="cta-t">사전 수면 질문지 작성하기</div>
               <div className="cta-d">68문항 · 약 15분 · 지금 수면 상태를 진단해요.</div>
+            </div>
+            <div className="cta-go"><ArrowIcon /></div>
+          </a>
+        )}
+
+        {/* intake 완료 후: 코칭 준비 자료 CTA (제출 전까지) */}
+        {done && !prepDone && (
+          <a className="cta" href="/prep">
+            <div className="cta-ic"><ClipboardIcon /></div>
+            <div>
+              <div className="cta-t">코칭 준비 자료 보내기</div>
+              <div className="cta-d">경기·원정·비행·훈련 일정을 알려주면 맞춤 계획을 짜요.</div>
             </div>
             <div className="cta-go"><ArrowIcon /></div>
           </a>

@@ -3,7 +3,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // 로그인 필요한 경로 (선수 개인 포털 + 코치 배정 페이지)
-const isProtectedRoute = createRouteMatcher(["/portal(.*)", "/coach(.*)"]);
+const isProtectedRoute = createRouteMatcher(["/portal(.*)", "/coach(.*)", "/prep(.*)"]);
 
 export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) {
