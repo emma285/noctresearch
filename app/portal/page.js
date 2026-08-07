@@ -25,12 +25,7 @@ const JOURNEY_PRE = [
   { cls: "", stage: "다음 · 최종 목표", tt: "흔들리지 않는 나만의 회복 루틴", td: "첫 세션에서 목표를 함께 정하고, 이 자리에 나만의 목표가 하나씩 채워질 거예요." },
 ];
 
-// ── intake 완료 상태 데이터 ──
-const KPIS_DONE = [
-  { v: "2", u: "일 뒤", k: "첫 코칭 세션" },
-  { v: "68", u: "문항", k: "진단 완료" },
-  { v: "8", u: "주", k: "코칭 프로그램" },
-];
+// ── intake 완료 상태 KPI는 PortalPage에서 선수별 metadata로 동적 생성 (아래) ──
 const JOURNEY_DONE = [
   { cls: "", stage: "시작 · 오늘", tt: "사전 질문지를 완료했어요", td: "68문항으로 지금 수면 상태를 네 영역으로 진단했어요. 코치가 결과를 살펴보고 있어요." },
   { cls: "now", stage: "이번 주 일요일(8월 9일) · 오전 10시", tt: "첫 코칭 세션에서 리포트를 함께 봐요", td: "진단 결과와 첫 수면 리포트를 같이 보면서 앞으로의 방향을 잡아요." },
@@ -193,6 +188,44 @@ export default async function PortalPage({ searchParams }) {
   const JOURNEY = done ? JOURNEY_DONE : JOURNEY_PRE;
   const status = done ? "첫 세션 준비 중" : "시작 준비";
 
+  // ── 선수별 배정 정보 (가입하면 코치가 슬랙에서 골라줌 → publicMetadata에 기록). 없으면 '미정' ──
+  const meta = user?.publicMetadata || {};
+  const firstSessionAt = meta.firstSessionAt || (searchParams?.stage === "done" ? "2026-08-09" : null); // 미리보기 기본값
+  const programWeeks = meta.programWeeks || (searchParams?.stage === "done" ? 8 : null);
+
+  // D-day (UTC 기준, 표시용). 미정이면 null
+  const dday = (() => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(firstSessionAt || "");
+    if (!m) return null;
+    const target = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    const n = new Date();
+    const today = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+    return Math.round((target - today) / 86400000);
+  })();
+
+  const sessionKpi =
+    dday === null ? { v: "미정", u: "", k: "첫 코칭 세션" }
+    : dday > 0 ? { v: String(dday), u: "일 뒤", k: "첫 코칭 세션" }
+    : dday === 0 ? { v: "오늘", u: "", k: "첫 코칭 세션" }
+    : { v: "진행 중", u: "", k: "코칭 세션" };
+
+  const kpis = [
+    sessionKpi,
+    { v: "68", u: "문항", k: "진단 완료" },
+    programWeeks ? { v: String(programWeeks), u: "주", k: "코칭 프로그램" } : { v: "미정", u: "", k: "코칭 프로그램" },
+  ];
+
+  // 세션 일정 라벨 (여정 타임라인용). sessionLabel 지정 없으면 날짜에서 만들고, 날짜도 없으면 안내문
+  const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+  const sessionLabel =
+    meta.sessionLabel ||
+    (firstSessionAt && /^(\d{4})-(\d{2})-(\d{2})/.test(firstSessionAt)
+      ? (() => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(firstSessionAt); const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])); return `${+m[2]}월 ${+m[3]}일(${DOW[d.getUTCDay()]}) · 오전 10시`; })()
+      : "일정은 코치가 배정해요");
+
+  // 여정의 '첫 코칭 세션' 항목 날짜를 선수별 실제 일정으로 치환
+  const journey = JOURNEY.map((it) => (it.tt && it.tt.includes("코칭 세션") ? { ...it, stage: sessionLabel } : it));
+
   return (
     <div className="noct-hub">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -209,7 +242,7 @@ export default async function PortalPage({ searchParams }) {
           <div className="hero-status"><span className="status"><span className="dot" />{status}</span></div>
           {done ? (
             <div className="kpis">
-              {KPIS_DONE.map((kpi) => (
+              {kpis.map((kpi) => (
                 <div className="kpi" key={kpi.k}>
                   <span className="kv">{kpi.v}{kpi.u && <i>{kpi.u}</i>}</span>
                   <span className="kk">{kpi.k}</span>
@@ -241,7 +274,7 @@ export default async function PortalPage({ searchParams }) {
           <div className="sec-label">Progress</div>
           <div className="sec-title">나의 수면 여정</div>
           <div className="tl">
-            {JOURNEY.map((it, i) => (
+            {journey.map((it, i) => (
               <div className={`tli ${it.cls}`} key={i}>
                 <div className="stage">{it.stage}</div>
                 <div className="tt">{it.tt}</div>
