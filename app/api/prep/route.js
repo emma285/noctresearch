@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
-const ATHLETE_DB_ID = process.env.NOTION_ATHLETE_DATABASE_ID || "02b71e35b98b4f92ba5f9ee4437c6832";
+// 코칭 준비 자료는 인테이크(사전질문지) DB와 분리된 전용 DB에 저장.
+const PREP_DB_ID = process.env.NOTION_PREP_DATABASE_ID || "3b5565bc034381aab23efdac3a6c6574";
 
 async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
@@ -61,12 +62,16 @@ export async function POST(request) {
         blocks.push(h2("첨부 파일"));
         files.forEach((f) => blocks.push(bullet(f.name, proxy(f.url))));
       }
+      const props = {
+        "이름": { title: [{ text: { content: name } }] },
+        "제출일": { date: { start: new Date().toISOString().split("T")[0] } },
+        "항목 수": { number: items.length },
+        "첨부 수": { number: files.length },
+      };
+      if (email) props["이메일"] = { email };
       await notion.pages.create({
-        parent: { database_id: ATHLETE_DB_ID },
-        properties: {
-          "이름": { title: [{ text: { content: `[코칭준비] ${name}` } }] },
-          "작성일": { date: { start: new Date().toISOString().split("T")[0] } },
-        },
+        parent: { database_id: PREP_DB_ID },
+        properties: props,
         children: blocks.slice(0, 100),
       });
     }

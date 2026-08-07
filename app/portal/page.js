@@ -270,13 +270,13 @@ export default async function PortalPage({ searchParams }) {
           </a>
         )}
 
-        {/* intake 완료 후: 코칭 준비 자료 CTA (제출 전까지) */}
-        {done && !prepDone && (
+        {/* intake 완료 후: 코칭 준비 자료 CTA (상시 — 언제든 추가 업로드 가능) */}
+        {done && (
           <a className="cta" href="/prep">
             <div className="cta-ic"><ClipboardIcon /></div>
             <div>
-              <div className="cta-t">코칭 준비 자료 보내기</div>
-              <div className="cta-d">경기·원정·비행·훈련 일정을 알려주면 맞춤 계획을 짜요.</div>
+              <div className="cta-t">코칭 준비 자료 올리기</div>
+              <div className="cta-d">경기·원정·비행·훈련 일정을 언제든 올릴 수 있어요.</div>
             </div>
             <div className="cta-go"><ArrowIcon /></div>
           </a>
