@@ -2,6 +2,7 @@
 
 // 코치 배정 폼 — 첫 세션 날짜 + 세션 라벨(선택) + 프로그램(주)을 선수 metadata에 저장.
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -14,6 +15,7 @@ function labelFromDate(iso) {
 }
 
 export default function AssignForm({ target }) {
+  const router = useRouter();
   const [firstSessionAt, setFirstSessionAt] = useState(target.firstSessionAt || "");
   const [sessionLabel, setSessionLabel] = useState(target.sessionLabel || "");
   const [programWeeks, setProgramWeeks] = useState(target.programWeeks || "");
@@ -36,7 +38,12 @@ export default function AssignForm({ target }) {
         }),
       });
       const j = await res.json();
-      setStatus(j.success ? "ok" : (j.message || "저장 실패"));
+      if (j.success) {
+        setStatus("ok");
+        setTimeout(() => { router.push("/portal"); router.refresh(); }, 1000);
+      } else {
+        setStatus(j.message || "저장 실패");
+      }
     } catch {
       setStatus("네트워크 오류");
     }
@@ -49,6 +56,7 @@ export default function AssignForm({ target }) {
   return (
     <main className="min-h-screen bg-[#F2F3F6] flex items-start justify-center px-6 py-16" style={{ fontFamily: "'Pretendard',sans-serif" }}>
       <div className="w-full max-w-md">
+        <a href="/portal" className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:underline mb-4">← 코치 대시보드</a>
         <h1 className="text-xl font-extrabold text-gray-900 mb-1">선수 코칭 배정</h1>
         <p className="text-sm text-gray-500 mb-6">
           {target.name || "이름 미상"}{target.email ? ` · ${target.email}` : ""}
@@ -80,7 +88,7 @@ export default function AssignForm({ target }) {
 
           {status === "ok" && (
             <p className="text-sm text-green-600 font-semibold text-center">
-              ✅ 저장했어요. 선수 포털에 바로 반영돼요.
+              저장했어요. 대시보드로 돌아갈게요…
             </p>
           )}
           {status && status !== "ok" && (
