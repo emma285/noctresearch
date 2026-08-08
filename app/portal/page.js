@@ -12,8 +12,45 @@
   ⚠️ 지금은 목업. 2단계에서 Clerk 로그인 + Notion(클라이언트 마스터, 상태=여정단계) 배선으로 교체.
 */
 
-import { currentUser } from "@clerk/nextjs/server";
+import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import LogoutButton from "../../components/portal/LogoutButton";
+import CoachDashboard from "../../components/coach/CoachDashboard";
+import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
+
+async function getClerk() {
+  return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
+}
+
+// 코치 대시보드용 선수 목록 (코치 본인·다른 코치 제외). 실패 시 빈 배열.
+async function getAthletes() {
+  try {
+    const cc = await getClerk();
+    const res = await cc.users.getUserList({ limit: 200, orderBy: "-created_at" });
+    const list = Array.isArray(res) ? res : res?.data || [];
+    return list
+      .filter((u) => {
+        const em = u?.emailAddresses?.[0]?.emailAddress;
+        return em && !COACH_EMAILS.includes(String(em).toLowerCase());
+      })
+      .map((u) => ({
+        uid: u.id,
+        name:
+          u?.unsafeMetadata?.name ||
+          u?.firstName ||
+          u?.username ||
+          u?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
+          "이름 미상",
+        email: u?.emailAddresses?.[0]?.emailAddress || "",
+        intakeDone: u?.publicMetadata?.intakeDone === true,
+        prepDone: u?.publicMetadata?.prepDone === true,
+        firstSessionAt: u?.publicMetadata?.firstSessionAt || "",
+        sessionLabel: u?.publicMetadata?.sessionLabel || "",
+        programWeeks: u?.publicMetadata?.programWeeks || "",
+      }));
+  } catch {
+    return [];
+  }
+}
 
 const CLIENT = { name: "김프로", role: "선수", program: "운동선수 수면 코칭" };
 
@@ -177,6 +214,16 @@ function ChartIcon() {
 
 export default async function PortalPage({ searchParams }) {
   const user = await currentUser();
+
+  // ── 코치 이메일이면 선수 허브 대신 코치 대시보드 ──
+  const myEmail = user?.emailAddresses?.[0]?.emailAddress;
+  if (isCoachEmail(myEmail)) {
+    const athletes = await getAthletes();
+    const coachName =
+      user?.unsafeMetadata?.name || user?.firstName || myEmail?.split("@")[0] || "코치";
+    return <CoachDashboard coachName={coachName} athletes={athletes} />;
+  }
+
   const clientName =
     user?.unsafeMetadata?.name ||
     user?.firstName ||
