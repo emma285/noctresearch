@@ -18,8 +18,10 @@ function Notice({ children }) {
 
 const CSS = `
 .noct-ad{--navy:#0D1B2A;--ink:#111;--gray:#6b7280;--gray2:#9aa3ad;--line:#e6e7eb;--primary:#4355B0;--sky:#7EC8E3;--grad:linear-gradient(90deg,#4355B0,#7EC8E3);
-  font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif;background:#F2F3F6;color:var(--ink);min-height:100vh;letter-spacing:-.02em;-webkit-font-smoothing:antialiased;line-height:1.5;}
-.noct-ad .wrap{max-width:900px;margin:0 auto;padding:32px 24px 72px;}
+  font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif;background:#F2F3F6;color:var(--ink);min-height:100vh;letter-spacing:-.02em;-webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden;max-width:100vw;}
+.noct-ad .wrap{max-width:900px;margin:0 auto;padding:32px 24px 72px;width:100%;}
+.noct-ad .tile > div{min-width:0;}
+.noct-ad .tile .tt,.noct-ad .tile .td,.noct-ad .hemail{overflow-wrap:anywhere;}
 .noct-ad .back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--primary);text-decoration:none;margin-bottom:16px;}
 .noct-ad .back:hover{text-decoration:underline;}
 .noct-ad .hero{border-radius:16px;overflow:hidden;color:#fff;background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%);padding:26px 28px;box-shadow:0 14px 40px rgba(13,27,42,.2);}

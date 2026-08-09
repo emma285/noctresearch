@@ -11,10 +11,12 @@ const CSS = `
   --navy:#0D1B2A;--ink:#111;--gray:#6b7280;--gray2:#9aa3ad;--line:#e6e7eb;
   --indigo:#4355B0;--sky:#7EC8E3;--grad:linear-gradient(90deg,#4355B0,#7EC8E3);
   font-family:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:#F2F3F6;color:var(--ink);line-height:1.5;min-height:100vh;
+  background:#F2F3F6;color:var(--ink);line-height:1.5;min-height:100vh;overflow-x:hidden;max-width:100vw;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-.02em;
 }
-.noct-coach .wrap{max-width:960px;margin:0 auto;padding:36px 24px 72px;}
+.noct-coach .wrap{max-width:960px;margin:0 auto;padding:36px 24px 72px;width:100%;}
+.noct-coach .acard > div{min-width:0;}
+.noct-coach .aemail{overflow-wrap:anywhere;}
 .noct-coach .hero{position:relative;overflow:hidden;border-radius:20px;padding:30px 32px 28px;
   background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%);color:#fff;box-shadow:0 18px 50px rgba(13,27,42,.22);}
 .noct-coach .hero::after{content:"";position:absolute;right:-90px;top:-130px;width:340px;height:340px;
