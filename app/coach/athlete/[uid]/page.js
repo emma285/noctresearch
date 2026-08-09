@@ -2,7 +2,7 @@
 // 코치 이메일만 접근. 자료는 lib/athleteAssets 로 자동 연결(수동 URL 입력 불필요).
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
-import { resolveAssets } from "../../../../lib/athleteAssets";
+import { resolveAssets, publishedReportSet } from "../../../../lib/athleteAssets";
 import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 
 async function getClerk() {
@@ -61,6 +61,14 @@ const CSS = `
 .noct-ad .manage{margin-top:22px;font-size:13px;}
 .noct-ad .manage a{color:var(--primary);font-weight:800;text-decoration:none;}
 .noct-ad .manage a:hover{text-decoration:underline;}
+.noct-ad .rhead{font-size:13px;font-weight:800;color:var(--navy);margin:18px 0 10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.noct-ad .rhead span{font-size:12px;font-weight:600;color:var(--gray2);}
+.noct-ad .rlist{display:flex;flex-direction:column;gap:10px;}
+.noct-ad .rrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 18px;box-shadow:0 1px 2px rgba(13,27,42,.05);}
+.noct-ad .rrow .rl{min-width:0;}
+.noct-ad .rrow .rt{font-size:15px;font-weight:800;color:var(--navy);}
+.noct-ad .rrow .rlink{font-size:12.5px;font-weight:700;color:var(--primary);text-decoration:none;margin-top:3px;display:inline-block;}
+.noct-ad .rrow .rlink:hover{text-decoration:underline;}
 @media(max-width:640px){.noct-ad .wrap{padding:22px 16px 56px;}.noct-ad .grid{grid-template-columns:1fr;}}
 `;
 
@@ -88,12 +96,17 @@ export default async function AthleteDetailPage({ params }) {
       guideUrl: u?.publicMetadata?.guideUrl || "",
       dataUrl: u?.publicMetadata?.dataUrl || "",
       reportPublished: u?.publicMetadata?.reportPublished === true,
+      publishedReports: Array.isArray(u?.publicMetadata?.publishedReports) ? u.publicMetadata.publishedReports : [],
     };
   } catch {
     return <Notice>선수를 찾을 수 없어요. (uid: {uid})</Notice>;
   }
 
   const assets = resolveAssets(a);
+  const pub = publishedReportSet(
+    { publishedReports: a.publishedReports, reportPublished: a.reportPublished },
+    assets.reports[0]?.slug || ""
+  );
   const sessionLabel = a.sessionLabel || (a.firstSessionAt ? a.firstSessionAt.slice(0, 10) : "미배정");
 
   return (
@@ -116,15 +129,26 @@ export default async function AthleteDetailPage({ params }) {
         <div className="sec">
           <div className="sec-label">Materials</div>
           <div className="sec-title">선수 자료</div>
-          <div className="grid">
-            {assets.data
-              ? <a className="tile" href={assets.data}><div><div className="tt">선수 데이터</div><div className="td">사전 질문지 응답 전체</div></div><div className="go">→</div></a>
-              : <div className="tile off"><div><div className="tt">선수 데이터</div><div className="td">아직 연결된 데이터가 없어요</div></div></div>}
-            {assets.report
-              ? <a className="tile" href={assets.report}><div><div className="tt">수면 리포트 확인</div><div className="td">1차 수면 평가 리포트</div></div><div className="go">→</div></a>
-              : <div className="tile off"><div><div className="tt">수면 리포트</div><div className="td">아직 만든 리포트가 없어요</div></div></div>}
-          </div>
-          {assets.report && <ReportPublishToggle uid={a.uid} initial={a.reportPublished} />}
+          {assets.data
+            ? <a className="tile" href={assets.data}><div><div className="tt">선수 데이터</div><div className="td">사전 질문지 응답 전체</div></div><div className="go">→</div></a>
+            : <div className="tile off"><div><div className="tt">선수 데이터</div><div className="td">아직 연결된 데이터가 없어요</div></div></div>}
+
+          <div className="rhead">수면 리포트 <span>{assets.reports.length}개 · 리포트마다 선수 공개 토글</span></div>
+          {assets.reports.length === 0 ? (
+            <div className="tile off"><div><div className="tt">수면 리포트</div><div className="td">아직 만든 리포트가 없어요</div></div></div>
+          ) : (
+            <div className="rlist">
+              {assets.reports.map((r) => (
+                <div className="rrow" key={r.slug}>
+                  <div className="rl">
+                    <div className="rt">{r.label}</div>
+                    <a className="rlink" href={r.url} target="_blank" rel="noopener noreferrer">리포트 열기 →</a>
+                  </div>
+                  <ReportPublishToggle uid={a.uid} slug={r.slug} initialOn={pub.has(r.slug)} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 코칭 세션 */}

@@ -16,7 +16,7 @@ import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import LogoutButton from "../../components/portal/LogoutButton";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
-import { resolveAssets } from "../../lib/athleteAssets";
+import { resolveAssets, publishedReportSet } from "../../lib/athleteAssets";
 
 async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
@@ -256,11 +256,12 @@ export default async function PortalPage({ searchParams }) {
   const firstSessionAt = meta.firstSessionAt || (searchParams?.stage === "done" ? "2026-08-09" : null); // 미리보기 기본값
   const programWeeks = meta.programWeeks || (searchParams?.stage === "done" ? 8 : null);
 
-  // 리포트 공개 여부 — 코치가 배정 화면에서 '리포트 공개' 토글을 켜면 true.
-  // 공개돼야 선수 포털의 "내 수면 리포트" 카드가 잠금 해제된다. ?report=open 은 미리보기용.
-  const reportPublished = meta.reportPublished === true || searchParams?.report === "open";
+  // 리포트 공개 — 코치가 리포트마다 공개 토글을 켜면 그 slug가 publishedReports에 들어간다.
+  // 공개된 리포트만 포털 "내 수면 공간"에 카드로 열린다. ?report=open 은 전체 미리보기용.
   const assets = resolveAssets({ name: clientName, email: myEmail, reportUrl: meta.reportUrl, guideUrl: meta.guideUrl, dataUrl: meta.dataUrl });
-  const reportOpen = reportPublished && !!assets.report;
+  const pub = publishedReportSet(meta, assets.reports[0]?.slug || "");
+  const openReports = searchParams?.report === "open" ? assets.reports : assets.reports.filter((r) => pub.has(r.slug));
+  const reportOpen = openReports.length > 0;
 
   // D-day (UTC 기준, 표시용). 미정이면 null
   const dday = (() => {
@@ -375,31 +376,39 @@ export default async function PortalPage({ searchParams }) {
             <span className="count">{reportOpen ? "리포트 열렸어요" : "세션 후 열려요"}</span>
           </div>
           <div className="slist">
-            {SPACE.map((c) => {
-              // 리포트 카드는 코치가 공개하면 잠금 해제 + 링크로 전환
-              if (c.h === "내 수면 리포트" && reportOpen) {
-                return (
-                  <a className="scard open" key={c.h} href={assets.report} target="_blank" rel="noopener noreferrer">
-                    <div className="sopen"><ChartIcon /></div>
-                    <div className="sbody">
-                      <h3>{c.h}</h3>
-                      <p>코치가 리포트를 공개했어요. 눌러서 확인해보세요.</p>
-                    </div>
-                    <span className="stag open"><ArrowIcon /> 열기</span>
-                  </a>
-                );
-              }
-              return (
-                <div className="scard" key={c.h}>
-                  <div className="slock"><LockIcon /></div>
-                  <div className="sbody">
-                    <h3>{c.h}</h3>
-                    <p>{c.p}</p>
-                  </div>
-                  <span className="stag"><LockIcon /> 오픈 예정</span>
+            {/* 공개된 리포트마다 열린 카드 — 리포트별 토글로 하나씩 열림 */}
+            {openReports.map((r) => (
+              <a className="scard open" key={r.slug} href={r.url} target="_blank" rel="noopener noreferrer">
+                <div className="sopen"><ChartIcon /></div>
+                <div className="sbody">
+                  <h3>{r.label}</h3>
+                  <p>코치가 공개한 리포트예요. 눌러서 확인해보세요.</p>
                 </div>
-              );
-            })}
+                <span className="stag open"><ArrowIcon /> 열기</span>
+              </a>
+            ))}
+            {/* 공개된 리포트가 하나도 없으면 "내 수면 리포트" 잠금 카드 노출 */}
+            {!reportOpen && (
+              <div className="scard">
+                <div className="slock"><LockIcon /></div>
+                <div className="sbody">
+                  <h3>내 수면 리포트</h3>
+                  <p>세션에서 코치와 함께 첫 리포트를 열어봐요.</p>
+                </div>
+                <span className="stag"><LockIcon /> 오픈 예정</span>
+              </div>
+            )}
+            {/* 나머지 기능 카드는 항상 잠금 */}
+            {SPACE.filter((c) => c.h !== "내 수면 리포트").map((c) => (
+              <div className="scard" key={c.h}>
+                <div className="slock"><LockIcon /></div>
+                <div className="sbody">
+                  <h3>{c.h}</h3>
+                  <p>{c.p}</p>
+                </div>
+                <span className="stag"><LockIcon /> 오픈 예정</span>
+              </div>
+            ))}
           </div>
         </section>
 

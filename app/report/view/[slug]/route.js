@@ -7,20 +7,13 @@ import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isCoachEmail } from "../../../../lib/coach";
-import { resolveAssets } from "../../../../lib/athleteAssets";
+import { resolveAssets, publishedReportSet } from "../../../../lib/athleteAssets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
-}
-
-// "/report/view/yuna-report" · "/reports/yuna-report.html" → "yuna-report"
-function slugFromUrl(u) {
-  if (!u) return "";
-  const last = String(u).split("?")[0].split("/").pop() || "";
-  return last.replace(/\.html?$/i, "");
 }
 
 export async function GET(_request, { params }) {
@@ -40,12 +33,13 @@ export async function GET(_request, { params }) {
     if (isCoachEmail(email)) {
       allowed = true; // 코치는 모든 리포트 열람 가능
     } else {
-      // 선수 본인 리포트만 — 배정된 리포트 slug가 일치하고, 코치가 공개했을 때만
+      // 선수 본인 리포트만 — 요청 slug가 본인 리포트 목록에 있고, 그 리포트가 공개됐을 때만
       const meta = me?.publicMetadata || {};
       const name = me?.unsafeMetadata?.name || me?.firstName || me?.username || "";
       const mine = resolveAssets({ name, email, reportUrl: meta.reportUrl, guideUrl: meta.guideUrl, dataUrl: meta.dataUrl });
-      const published = meta.reportPublished === true;
-      if (published && slugFromUrl(mine.report) === slug) allowed = true;
+      const isMine = mine.reports.some((r) => r.slug === slug);
+      const pub = publishedReportSet(meta, mine.reports[0]?.slug || "");
+      if (isMine && pub.has(slug)) allowed = true;
     }
     if (!allowed) return new NextResponse("이 리포트를 볼 권한이 없어요.", { status: 403 });
 
