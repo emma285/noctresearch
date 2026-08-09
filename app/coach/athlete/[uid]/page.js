@@ -3,6 +3,7 @@
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { resolveAssets } from "../../../../lib/athleteAssets";
+import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 
 async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
@@ -86,6 +87,7 @@ export default async function AthleteDetailPage({ params }) {
       reportUrl: u?.publicMetadata?.reportUrl || "",
       guideUrl: u?.publicMetadata?.guideUrl || "",
       dataUrl: u?.publicMetadata?.dataUrl || "",
+      reportPublished: u?.publicMetadata?.reportPublished === true,
     };
   } catch {
     return <Notice>선수를 찾을 수 없어요. (uid: {uid})</Notice>;
@@ -122,6 +124,7 @@ export default async function AthleteDetailPage({ params }) {
               ? <a className="tile" href={assets.report}><div><div className="tt">수면 리포트 확인</div><div className="td">1차 수면 평가 리포트</div></div><div className="go">→</div></a>
               : <div className="tile off"><div><div className="tt">수면 리포트</div><div className="td">아직 만든 리포트가 없어요</div></div></div>}
           </div>
+          {assets.report && <ReportPublishToggle uid={a.uid} initial={a.reportPublished} />}
         </div>
 
         {/* 코칭 세션 */}
