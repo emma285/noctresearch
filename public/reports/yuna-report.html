@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>윤이나 선수 · 1차 수면 평가 리포트</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#F2F3F6; --fg:#0b0e14; --card:#fff; --border:#e6e7eb;
+    --primary:#4355B0; --sky:#7EC8E3; --lav:#A0B0FF; --coral:#F4978E; --navy:#0D1B2A;
+    --muted:#6b7280;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{overflow-x:hidden}
+  body{background:var(--bg);color:var(--fg);
+    font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
+    letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
+  .wrap{max-width:940px;margin:0 auto;padding:36px 24px}
+  section,.block{margin-bottom:28px}
+  .tabnum{font-variant-numeric:tabular-nums}
+
+  /* Hero */
+  .hero{border-radius:12px;overflow:hidden;color:#fff;background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%)}
+  .hero .pad{padding:30px 32px 0}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--sky)}
+  .hero .titrow{margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .hero h1{font-size:24px;font-weight:800;letter-spacing:-.03em}
+  .hero .pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 13px;white-space:nowrap;
+    background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);color:#c4e7f5}
+  .hero .who{margin-top:11px;font-size:15px;font-weight:700;color:#fff}
+  .hero .who span{font-size:13px;font-weight:400;color:rgba(255,255,255,.65);margin-left:3px}
+  .hero .date{margin-top:5px;font-size:12px;color:rgba(255,255,255,.5)}
+  .kpis{margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.1)}
+  .kpi{padding:16px 20px} .kpi + .kpi{border-left:1px solid rgba(255,255,255,.1)}
+  .kpi .v{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .kpi .v small{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-left:2px}
+  .kpi .k{font-size:12px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.3}
+
+  /* Impression */
+  .impression{border-radius:12px;background:#f5f6fb;border:1px solid #e3e6f4;padding:24px 26px}
+  .impression .lab{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--primary)}
+  .impression p{font-size:15px;line-height:1.75;color:var(--fg);margin-top:11px}
+  .impression p b{font-weight:800}
+  .flags{margin-top:17px;padding-top:16px;border-top:1px solid #e3e6f4;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
+  .flags .flab{font-size:12px;font-weight:800;color:#a25a48}
+  .flags .f{font-size:12px;color:#5c6270;display:flex;align-items:center;gap:6px}
+  .flags .f i{width:6px;height:6px;border-radius:50%;background:#d98a72;flex-shrink:0}
+
+  /* Alert (안전 콜아웃) */
+  .alert{border-radius:12px;background:#fbe9e6;border:1px solid #f1cbc3;padding:16px 18px;display:flex;gap:13px;align-items:flex-start}
+  .alert .ai{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#c0554a;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .alert .at{font-size:14px;font-weight:800;color:#8f3d31}
+  .alert .ad{font-size:13px;color:#6b4a44;margin-top:5px;line-height:1.65}
+
+  /* Section head */
+  .shead .lab{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary)}
+  .shead h2{font-size:18px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
+  .shead .desc{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.6}
+  .shead{margin-bottom:16px}
+
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+
+  .s-g{color:#1f8a4c} .s-w{color:#b9770e} .s-b{color:#c0554a}
+  /* Score (ring gauge) */
+  .scorecard{padding:20px 22px}
+  .scoretop{display:flex;gap:24px;align-items:center}
+  .ring{width:112px;height:112px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    background:conic-gradient(from 0deg,var(--primary),var(--sky) var(--p),#e6e7f0 var(--p) 100%)}
+  .ring .inner{width:86px;height:86px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .rv{font-size:32px;font-weight:800;line-height:1;color:var(--navy)}
+  .ring .rl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:700}
+  .sdesc{font-size:13px;color:#5c6270;line-height:1.65;flex:1}
+  .scorenote{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.55;padding-top:12px;border-top:1px dashed var(--border)}
+  .scorenote b{color:var(--primary);font-weight:700}
+  /* Domain bars = Progress(알약형 h-2) */
+  .domwrap{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+  .domtitle{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:15px}
+  .dom{margin-bottom:13px} .dom:last-child{margin-bottom:0}
+  .domh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;gap:8px}
+  .domn{font-size:13px;font-weight:700;color:var(--navy)} .domn span{font-size:11px;color:var(--muted);font-weight:500;margin-left:5px}
+  .doms{font-size:13.5px;font-weight:800}
+  .pbar{height:8px;background:#f0f1f4;border-radius:999px;overflow:hidden} .pbar>i{display:block;height:100%;border-radius:999px}
+  /* Tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .tile{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:13px 14px}
+  .tile .tv{font-size:18px;font-weight:800;letter-spacing:-.03em;line-height:1.15} .tile .tv small{font-size:11px;font-weight:700}
+  .tile .tn{font-size:12px;color:var(--navy);margin-top:7px;font-weight:700}
+  .tile .tb{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.35}
+  .tile .tp{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;margin-top:9px}
+  .tp.g{background:rgba(31,138,76,.12);color:#1f8a4c} .tp.w{background:rgba(185,119,14,.13);color:#9c6c16}
+  .tp.b{background:rgba(192,85,74,.12);color:#a25a48} .tp.n{background:#eef0f4;color:#6b7280}
+  /* 훈련일/휴식일 비교표 */
+  .cmpcard{padding:2px 20px 6px}
+  .cmphead{display:grid;grid-template-columns:1.5fr 1fr 1fr;padding:12px 0 10px;border-bottom:1px solid var(--border)}
+  .cmphead span{font-size:11.5px;font-weight:800;color:var(--muted);text-align:center}
+  .cmphead span:first-child{text-align:left}
+  .cmprow{display:grid;grid-template-columns:1.5fr 1fr 1fr;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+  .cmprow:last-child{border-bottom:none}
+  .cmprow .cl{font-size:13px;font-weight:700;color:var(--navy)}
+  .cmprow .cv{font-size:14px;font-weight:800;text-align:center;color:#3e7d66}
+  .cmprow .cv.warn{color:#b9770e} .cmprow .cv.bad{color:#c0554a}
+  /* Meter (ESS) */
+  .meterwrap{position:relative;padding-top:22px;margin-top:10px}
+  .meter{display:flex;height:12px;border-radius:999px;overflow:hidden;gap:2px}
+  .meter .mz{height:100%}
+  .mtick{position:absolute;top:0;transform:translateX(-50%);text-align:center;z-index:3}
+  .mtick .ml{font-size:10.5px;font-weight:800;color:var(--navy);white-space:nowrap}
+  .mtick .mb{width:2px;height:18px;background:var(--navy);margin:2px auto 0;border-radius:1px}
+  .mlabels{display:flex;font-size:10.5px;color:var(--muted);margin-top:8px;font-weight:600}
+  .mlabels span{display:block}
+  .mlabels .on{color:#9c6c16;font-weight:800}
+  .esscard{padding:20px 22px}
+  .essh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .essh .l{font-size:13.5px;font-weight:700;color:var(--navy)} .essh .v{font-size:14px;font-weight:800;color:#b9770e}
+  .essnote{font-size:12.5px;color:#5c6270;margin-top:15px;line-height:1.65} .essnote b{color:var(--navy)}
+
+  /* Timeline */
+  .tl{padding:18px 20px}
+  .tlrows{display:flex;flex-direction:column;gap:14px}
+  .row{display:flex;align-items:center;gap:10px}
+  .row .rlab{width:64px;flex-shrink:0;text-align:right}
+  .row .rlab .n{font-size:12.5px;font-weight:700;line-height:1.2}
+  .row .rlab .s{font-size:10px;color:var(--muted);line-height:1.2}
+  .track{position:relative;flex:1;height:32px}
+  .track .gl{position:absolute;top:0;bottom:0;width:1px;background:var(--border)}
+  .bar{position:absolute;top:50%;transform:translateY(-50%);height:22px;border-radius:6px;display:flex;align-items:center}
+  .bar .bt{font-size:10px;font-weight:700;color:rgba(255,255,255,.92);padding-left:7px;white-space:nowrap}
+  .wake{position:absolute;top:50%;transform:translateY(-50%);font-size:11px;font-weight:800;color:var(--navy);white-space:nowrap}
+  .axis{display:flex;gap:10px;margin-top:6px}
+  .axis .sp{width:64px;flex-shrink:0}
+  .axis .rel{position:relative;flex:1;height:14px}
+  .axis .t{position:absolute;font-size:10px;color:var(--muted);transform:translateX(-50%)}
+  .tlnote{margin-top:16px;border-radius:8px;background:#f1f2fb;border:1px solid #dde1f6;padding:14px;font-size:13px;line-height:1.65;color:#3a3f52}
+  .tlnote b{font-weight:800;color:var(--navy)}
+  .hatch{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);height:22px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+    background:repeating-linear-gradient(45deg,#e6e8ef 0,#e6e8ef 5px,#f4f5f8 5px,#f4f5f8 10px);border:1px dashed #c3c8d4}
+  .hatch .ht{font-size:10.5px;font-weight:800;color:#6b7280}
+
+  /* Detail problems */
+  .prob{padding:17px 20px;margin-bottom:12px} .prob:last-child{margin-bottom:0}
+  .prob .top{display:flex;align-items:baseline;gap:10px}
+  .prob .num{font-size:15px;font-weight:800;color:#c9694f}
+  .prob .tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;background:#f5ddd4;color:#a25a48}
+  .prob .flow{font-size:14.5px;font-weight:700;letter-spacing:-.02em;color:var(--navy);margin-top:9px}
+  .prob .ev{font-size:13px;color:#5c6270;margin-top:6px;line-height:1.65}
+  .prob .src{font-size:11px;color:var(--muted);margin-top:9px;font-weight:600}
+  .prob .src b{color:var(--primary);font-weight:700}
+
+  /* Q&A */
+  .qa{padding:18px 20px}
+  .qa .qq{font-size:13.5px;font-weight:700;color:var(--navy);padding-left:23px;position:relative}
+  .qa .qq::before{content:"Q";position:absolute;left:0;top:0;color:var(--primary);font-weight:800}
+  .qa .aa{font-size:13.5px;color:#4a4f60;line-height:1.7;margin-top:11px;padding-left:23px;position:relative}
+  .qa .aa::before{content:"A";position:absolute;left:0;top:0;color:#a25a48;font-weight:800}
+  .qa .aa b{color:var(--navy);font-weight:700}
+
+  /* Plan */
+  .plan{padding:17px 20px;margin-bottom:12px;display:flex;align-items:flex-start;gap:14px} .plan:last-child{margin-bottom:0}
+  .plan .pc{flex-shrink:0;font-size:12px;font-weight:800;padding:4px 10px;border-radius:7px;margin-top:1px}
+  .plan .pt{font-size:14.5px;font-weight:700;letter-spacing:-.02em;color:var(--navy)}
+  .plan .pd{font-size:13px;color:#4a4f60;margin-top:6px;line-height:1.65}
+  .plan .pd b{font-weight:700;color:var(--navy)}
+
+  /* Safety list */
+  .safelist{padding:4px 20px}
+  .si{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border)} .si:last-child{border-bottom:none}
+  .si .sic{flex-shrink:0;margin-top:2px;font-size:10.5px;font-weight:800;color:#a25a48;background:#f5ddd4;border-radius:5px;padding:3px 8px;white-space:nowrap}
+  .si .sit{font-size:13.5px;color:#4a4f60;line-height:1.65} .si .sit b{color:var(--navy);font-weight:700}
+
+  /* Next */
+  .nextbox{padding:0 20px}
+  .nx{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border)} .nx:last-child{border-bottom:none}
+  .nx i{flex-shrink:0;margin-top:6px;width:8px;height:8px;border-radius:50%;background:var(--primary)}
+  .nx .t{font-size:14px;font-weight:700} .nx .d{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.6}
+
+  .footlogo{padding-top:20px;display:flex;justify-content:center}
+  .footlogo img{height:16px;opacity:.35}
+  .disc{margin-top:14px;font-size:11px;color:#a7abb2;line-height:1.7;text-align:center}
+
+  /* Big steps (고객용 큰 플랜) */
+  .bigstep{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(13,27,42,.05);padding:24px 26px;margin-bottom:14px}
+  .bigstep:last-child{margin-bottom:0}
+  .bigstep .bn{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--primary);color:#fff;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .bigstep .bwhen{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.02em}
+  .bigstep .bt{font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--navy);margin-top:5px}
+  .bigstep .bd{font-size:14px;color:#4a4f60;line-height:1.7;margin-top:9px}
+
+  @media print{body{background:#fff}}
+  @media(max-width:760px){
+    .wrap{padding:22px 14px}
+    .hero .pad{padding:24px 18px 0}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi{padding:14px 16px} .kpi:nth-child(3),.kpi:nth-child(4){border-top:1px solid rgba(255,255,255,.1)}
+    .kpi:nth-child(odd){border-left:none}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .scoretop{flex-direction:column;align-items:stretch;gap:18px;text-align:center}
+    .scoretop .ring{align-self:center}
+    .scoretop .sdesc{text-align:left}
+    .impression,.tl,.prob,.plan,.scorecard,.esscard,.qa{padding-left:16px;padding-right:16px}
+    .safelist,.nextbox,.cmpcard,.bigstep{padding-left:16px;padding-right:16px}
+    .row .rlab,.axis .sp{width:52px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero block">
+    <div class="pad">
+      <div class="eyebrow">운동선수 수면 코칭</div>
+      <div class="titrow">
+        <h1>1차 수면 평가 리포트</h1>
+        <span class="pill">1차 평가 · 초기</span>
+      </div>
+      <div class="who">윤이나 <span>골프 · 프로</span></div>
+      <div class="date">사전 질문지 기반 · 2026. 08. 08 작성</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v tabnum">6~7<small>h</small></div><div class="k">총수면 (자가보고)</div></div>
+      <div class="kpi"><div class="v tabnum">90<small>분</small></div><div class="k">입면잠복 · 휴식일</div></div>
+      <div class="kpi"><div class="v tabnum">11<small>/24</small></div><div class="k">주간 졸림 ESS</div></div>
+      <div class="kpi"><div class="v tabnum">4.4<small>/5</small></div><div class="k">변화 준비도</div></div>
+    </div>
+  </div>
+
+  <!-- Impression -->
+  <section class="impression block">
+    <div class="lab">IMPRESSION · 종합 소견</div>
+    <p>훈련일에는 비교적 잘 주무시지만, 휴식일과 경기 전날에는 잠들기까지 오래 걸리고 새벽에 일찍 깹니다. 잠드는 데 시간이 걸리는데(휴식일 입면 90분), 하루 리듬을 잡아주는 신호(아침 햇빛·규칙적 식사)가 거의 없는 점이 겹칩니다. 한 번 깬 뒤 다시 잠드는 데는 10~20분이면 되는 편이라, 그 부분은 회복에 유리한 신호입니다. 불면이 특정 사건을 계기로 시작됐다고 하신 만큼, 몸의 문제라기보다 그 일로 촉발돼 굳어진 조건화된 불면에 가깝습니다. 변화 준비도가 4.4로 높아 반응이 빠를 것으로 기대됩니다.</p>
+    <div class="flags">
+      <span class="flab">주의 신호</span>
+      <span class="f"><i></i>휴식일 수면효율 약 70%</span>
+      <span class="f"><i></i>입면잠복 90분 (휴식일)</span>
+      <span class="f"><i></i>낮 졸림·졸음운전</span>
+      <span class="f"><i></i>경기 전날 과각성</span>
+    </div>
+  </section>
+
+  <!-- Score -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">SCORE</div>
+      <h2>수면 건강 점수</h2>
+      <div class="desc">사전 질문지 응답을 4개 영역으로 나눠 가중 합산한 코칭 분석 점수입니다(측정 장비 값이 아닌 평가 점수).</div>
+    </div>
+    <div class="card scorecard">
+      <div class="scoretop">
+        <div class="ring" style="--p:52%">
+          <div class="inner"><div class="rv tabnum">52</div><div class="rl">/ 100 · 주의</div></div>
+        </div>
+        <div class="sdesc">잠드는 데는 시간이 걸리지만, 한 번 든 잠을 유지하고 다시 드는 힘은 괜찮은 편입니다. 대신 리듬 신호가 부족하고 휴식일 입면이 길며, 대회·원정에서 각성이 올라가 회복이 무너집니다. 무너지는 지점이 뚜렷해 개선 여지가 큰 편입니다.</div>
+      </div>
+      <div class="domwrap">
+        <div class="domtitle">영역별 점수</div>
+        <div class="dom"><div class="domh"><span class="domn">기본 수면 능력 <span>재입면 양호 · 휴식일 입면 지연</span></span><span class="doms" style="color:#b9770e">58</span></div><div class="pbar"><i style="width:58%;background:#c9a24a"></i></div></div>
+        <div class="dom"><div class="domh"><span class="domn">리듬·규칙성 <span>아침 햇빛·식사 리듬 부재</span></span><span class="doms s-w">46</span></div><div class="pbar"><i style="width:46%;background:#b9770e"></i></div></div>
+        <div class="dom"><div class="domh"><span class="domn">심리·인지 <span>계기 이후 조건화 · 반추 · 각성 강박</span></span><span class="doms s-w">44</span></div><div class="pbar"><i style="width:44%;background:#b9770e"></i></div></div>
+        <div class="dom"><div class="domh"><span class="domn">대회·원정 수면 <span>경기 전날 과각성 · 시차 지연</span></span><span class="doms s-b">42</span></div><div class="pbar"><i style="width:42%;background:#c0554a"></i></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key metrics -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">FINDINGS</div>
+      <h2>핵심 수면 지표</h2>
+      <div class="desc">사전 질문지 응답을 수면 지표로 정리했습니다. 이갈이·무호흡 감별은 아래 안전·의료 권고를 참고하세요.</div>
+    </div>
+    <div class="card cmpcard" style="margin-bottom:12px">
+      <div class="cmphead"><span>지표</span><span>훈련일</span><span>휴식일</span></div>
+      <div class="cmprow"><span class="cl">입면잠복</span><span class="cv warn">30분</span><span class="cv bad">90분</span></div>
+      <div class="cmprow"><span class="cl">총수면 (계산값)</span><span class="cv">6.8~7.2h</span><span class="cv bad">4.8~5.2h</span></div>
+      <div class="cmprow"><span class="cl">수면효율</span><span class="cv">85~90%</span><span class="cv bad">69~74%</span></div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="tv s-w">11<small> /24</small></div><div class="tn">주간 졸림 (ESS)</div><div class="tb">정상 &lt;11</div><span class="tp w">경계</span></div>
+      <div class="tile"><div class="tv" style="color:#6b7280">10~20<small> 분</small></div><div class="tn">재입면 속도</div><div class="tb">야간 각성 2회 · 주호소</div><span class="tp n">관찰</span></div>
+      <div class="tile"><div class="tv s-b">거의<small> 못 잠</small></div><div class="tn">경기 전날 수면</div><div class="tb">시간 미기재 · 세션 확인</div><span class="tp b">과각성</span></div>
+      <div class="tile"><div class="tv s-g">4.4<small> /5</small></div><div class="tn">변화 준비도</div><div class="tb">5점 만점</div><span class="tp g">높음</span></div>
+    </div>
+  </section>
+
+  <!-- Daytime sleepiness -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">DAYTIME SLEEPINESS</div>
+      <h2>주간 졸림 척도</h2>
+      <div class="desc">Epworth 졸림 척도(ESS)로 낮에 의도치 않게 졸게 되는 정도를 본 점수입니다.</div>
+    </div>
+    <div class="card esscard">
+      <div class="essh"><span class="l">Epworth Sleepiness Scale</span><span class="v">11 / 24</span></div>
+      <div class="meterwrap">
+        <div class="mtick" style="left:45.8%"><div class="ml">11점</div><div class="mb"></div></div>
+        <div class="meter">
+          <div class="mz" style="width:45.8%;background:#5bb489"></div>
+          <div class="mz" style="width:8.3%;background:#e0aa4e"></div>
+          <div class="mz" style="width:45.9%;background:#d08a7e"></div>
+        </div>
+        <div class="mlabels"><span style="width:45.8%">정상 0~10</span><span class="on" style="width:8.3%;text-align:center">경계</span><span style="width:45.9%;text-align:right">과다 13~24</span></div>
+      </div>
+      <div class="essnote">정상 범위를 살짝 넘은 <b>경계</b> 구간입니다. 밤 회복이 부족하다는 신호로 보며, 총수면을 늘리고 리듬을 잡으면 낮 졸림도 함께 내려갈 가능성이 큽니다.</div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">SLEEP TIMELINE</div>
+      <h2>수면 스케줄 정렬 상태</h2>
+      <div class="desc">막대는 사전 질문지에 기재된 실제 취침·기상 시각입니다. 시각이 기재되지 않은 항목은 세션에서 확인할 예정입니다.</div>
+    </div>
+    <div class="card tl">
+      <div class="tlrows">
+        <div class="row">
+          <div class="rlab"><div class="n">훈련일</div><div class="s">안정</div></div>
+          <div class="track">
+            <div class="gl" style="left:25%"></div><div class="gl" style="left:50%"></div><div class="gl" style="left:75%"></div>
+            <div class="bar" style="left:15.63%;width:46.88%;background:#4355B0"><span class="bt">22:30</span></div>
+            <span class="wake" style="left:calc(62.5% + 6px)">6:00</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rlab"><div class="n">휴식일</div><div class="s">입면 90분</div></div>
+          <div class="track">
+            <div class="gl" style="left:25%"></div><div class="gl" style="left:50%"></div><div class="gl" style="left:75%"></div>
+            <div class="bar" style="left:28.13%;width:34.38%;background:#A0B0FF"><span class="bt">0:30</span></div>
+            <span class="wake" style="left:calc(62.5% + 6px)">6:00</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rlab"><div class="n">경기 전날</div><div class="s">과각성</div></div>
+          <div class="track">
+            <div class="gl" style="left:25%"></div><div class="gl" style="left:50%"></div><div class="gl" style="left:75%"></div>
+            <div class="hatch"><span class="ht">? 시각 미기재 · 첫 세션에서 확인</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="axis">
+        <div class="sp"></div>
+        <div class="rel">
+          <span class="t" style="left:25%">자정</span>
+          <span class="t" style="left:50%">새벽 4시</span>
+          <span class="t" style="left:75%">오전 8시</span>
+        </div>
+      </div>
+      <div class="tlnote"><b>휴식일 입면이 90분으로 깁니다.</b> 늦게 잠들어도 이른 새벽에 깨고, 시합이 아닌 날은 더 일찍 깬다고 하셨습니다. 늦게 자도 일찍 깨는 이른 각성과, 잠들기까지 오래 걸리는 입면 지연이 함께 나타납니다. 경기 전날은 질문지에 "거의 못 잔다"만 있고 실제 취침·기상 시각이 없어 임의로 그리지 않고 첫 세션에서 확인합니다.</div>
+    </div>
+  </section>
+
+  <!-- Detail -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">DETAIL</div>
+      <h2>세부 소견</h2>
+    </div>
+
+    <div class="card prob">
+      <div class="top"><span class="num tabnum">01</span><span class="tag">리듬 신호 부재</span></div>
+      <div class="flow">아침 햇빛 없음 · 식사 불규칙 · 밝은 침실 → 리듬 고정이 약함</div>
+      <div class="ev">몸이 하루의 기준점을 잡을 신호가 거의 없습니다. 아침 햇빛을 거의 보지 않고, 식사 패턴이 없으며(배고프면 먹음), 침실이 밝은 편이고 취침 전 폰·웹툰을 봅니다. 생체시계를 맞추는 신호가 흐려진 상태라, 잦은 원정까지 겹치면 리듬이 더 흔들립니다.</div>
+    </div>
+
+    <div class="card prob">
+      <div class="top"><span class="num tabnum">02</span><span class="tag">조건화된 불면 · 입면 지연</span></div>
+      <div class="flow">특정 사건을 계기로 불면 시작 · 잠들 때 불안·반추 → 휴식일 입면 90분</div>
+      <div class="ev">불면이 특정 사건을 계기로 시작됐다고 하셨습니다. 잠들 무렵 생각이 많아지고 불안해지며, "자야 한다"는 압박이 오히려 각성을 키웁니다. 몸의 이상이라기보다 그 일로 촉발돼 침대·밤이 각성과 연결되며 굳어진 조건화 패턴에 가깝습니다.</div>
+    </div>
+
+    <div class="card prob">
+      <div class="top"><span class="num tabnum">03</span><span class="tag">이른 새벽 각성</span></div>
+      <div class="flow">늦게 자도 이른 새벽에 깸 · 필요한 시각보다 일찍 깸</div>
+      <div class="ev">주요 수면 문제로 "새벽에 일찍 깬다"를 직접 꼽으셨습니다. 늦은 티오프로 늦게 일어나도 되는 날에도 기상 1~2시간 전에 깨고, 시합이 아닌 날은 늦게 잠들어도 아침에 더 일찍 깬다고 하셨습니다. 평소 기상은 6시 알람이라, 알람보다·필요한 시각보다 일찍 깨는 패턴이 실제로 얼마나 되는지는 수면일지로 확인합니다. 잠들 무렵 생각이 많아지고 불안하다는 응답과 함께 보면, 정서적 각성과 이어질 가능성이 있습니다.</div>
+    </div>
+
+    <div class="card prob">
+      <div class="top"><span class="num tabnum">04</span><span class="tag">대회·원정 과각성</span></div>
+      <div class="flow">경기 전날 거의 못 잠 · 시차 적응 6~10일 (원정 주 1회 이상)</div>
+      <div class="ev">중요한 경기 전날엔 스윙·퍼팅 시뮬레이션이 멈추지 않아 잠들지 못하고, 그 생각을 피하려 릴스·웹툰을 더 보기도 합니다. 원정 시차는 아시아·미주 기준 6~10일이 걸립니다. 생체시계는 하루 1~1.5시간씩만 조율되므로, 큰 이동엔 적응력보다 사전 프로토콜이 관건입니다.</div>
+    </div>
+
+    <div class="card prob">
+      <div class="top"><span class="num">＋</span><span class="tag">악화 요인 · 카페인</span></div>
+      <div class="flow">하루 2잔, 시간 무관 → 깊은 잠 훼손</div>
+      <div class="ev">카페인 반감기가 5~6시간이라 오후 섭취는 밤까지 남아 깊은잠을 줄입니다. 멜라토닌 5~20mg 고용량 복용 이력도 잔류감·의존 위험이 있어 주의가 필요합니다.</div>
+    </div>
+  </section>
+
+  <!-- Plan (보스턴 시차 적응) -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">PLAN</div>
+      <h2>1차 코칭 방향 · 보스턴 시차 적응</h2>
+      <div class="desc">이번 첫 원정(FM Championship, 8/24~30 보스턴)까지의 1차 목표는 현지 시차에 잘 적응해 첫 라운드에 컨디션을 맞추는 것입니다. 그 아래 입면·조건화 문제는 보스턴 이후에 본격적으로 다룹니다.</div>
+    </div>
+
+    <div class="bigstep">
+      <div class="bn">1</div>
+      <div class="bx">
+        <div class="bwhen">지금부터</div>
+        <div class="bt">하루 기본 틀(고정 앵커) 만들기</div>
+        <div class="bd">훈련·식사·수면 시간표를 정해 매일 같은 순서로 고정합니다. 원정을 가서도 그대로 가져갈 나만의 기본 리듬을 지금 만들어 둡니다.</div>
+      </div>
+    </div>
+
+    <div class="bigstep">
+      <div class="bn">2</div>
+      <div class="bx">
+        <div class="bwhen">출국 4~5일 전부터</div>
+        <div class="bt">취침·기상 시간을 보스턴에 맞춰 조절</div>
+        <div class="bd">잠자고 일어나는 시간과 생활 패턴을 보스턴 시간에 맞춰 조금씩 옮깁니다. 구체적인 시간과 방법은 항공 일정에 맞춰 세션에서 함께 정합니다.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Safety -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">SAFETY</div>
+      <h2>안전 · 의료 권고</h2>
+      <div class="desc">코칭 영역 밖이라, 아래 항목은 해당 진료·검사를 함께 받으시길 권합니다.</div>
+    </div>
+    <div class="card safelist">
+      <div class="si"><span class="sic">수면검사</span><div class="sit"><b>수면다원검사(PSG) 의뢰 권고.</b> 이갈이, ESS 11, 충분히 자도 피곤함, 야간각성 2회가 함께 있고 수면검사 이력이 없습니다. 무호흡 감별을 위해 검사를 받아보시길 권합니다.</div></div>
+    </div>
+  </section>
+
+  <!-- This week (세션 후 작성) -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">THIS WEEK</div>
+      <h2>이번 주 시도할 것</h2>
+      <div class="desc">첫 세션에서 함께 정한 실천 항목을 이곳에 정리해 공유합니다.</div>
+    </div>
+    <div class="card nextbox">
+      <!-- 세션 후 실천 항목을 아래 형식으로 추가하세요 (필요한 만큼 복사):
+      <div class="nx"><i></i><div><div class="t">1. 제목</div><div class="d">설명</div></div></div>
+      -->
+      <div class="nx" style="border-bottom:none"><i style="background:#c3c8d4"></i><div><div class="t" style="color:#9aa0aa">첫 세션 후 작성 예정</div><div class="d">함께 정한 이번 주 실천 항목이 이곳에 채워집니다.</div></div></div>
+    </div>
+  </section>
+
+  <div class="footlogo"><img src="noct_logo.png" alt="NOCT Research"></div>
+  <div class="disc">이 리포트는 사전 질문지 응답을 바탕으로 한 분석 자료로, 의학적 진단을 대체하지 않습니다.</div>
+
+</div>
+</body>
+</html>

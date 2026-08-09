@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>윤이나 선수 · 1차 세션 코치 가이드 (코치 전용)</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  /* ── 수면리포트와 동기화된 토큰·컴포넌트 ── */
+  :root{
+    --bg:#F2F3F6; --fg:#0b0e14; --card:#fff; --border:#e6e7eb;
+    --primary:#4355B0; --sky:#7EC8E3; --lav:#A0B0FF; --coral:#F4978E; --navy:#0D1B2A;
+    --muted:#6b7280;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{overflow-x:hidden}
+  body{background:var(--bg);color:var(--fg);
+    font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
+    letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
+  .wrap{max-width:940px;margin:0 auto;padding:36px 24px}
+  section,.block{margin-bottom:28px}
+  .tabnum{font-variant-numeric:tabular-nums}
+
+  /* Hero */
+  .hero{border-radius:12px;overflow:hidden;color:#fff;background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%)}
+  .hero .pad{padding:30px 32px 0}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--sky)}
+  .hero .titrow{margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .hero h1{font-size:24px;font-weight:800;letter-spacing:-.03em}
+  .hero .pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 13px;white-space:nowrap;
+    background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);color:#c4e7f5}
+  .hero .who{margin-top:11px;font-size:15px;font-weight:700;color:#fff}
+  .hero .who span{font-size:13px;font-weight:400;color:rgba(255,255,255,.65);margin-left:3px}
+  .hero .date{margin-top:5px;font-size:12px;color:rgba(255,255,255,.5)}
+  .kpis{margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.1)}
+  .kpi{padding:16px 20px} .kpi + .kpi{border-left:1px solid rgba(255,255,255,.1)}
+  .kpi .v{font-size:20px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .kpi .v small{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-left:2px}
+  .kpi .k{font-size:12px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.3}
+
+  .shead .lab{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary)}
+  .shead h2{font-size:19px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
+  .shead .desc{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.6}
+  .shead{margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+  .s-g{color:#1f8a4c} .s-w{color:#b9770e} .s-b{color:#c0554a}
+
+  /* 기저선 비교표 (리포트와 동일) */
+  .cmpcard{padding:2px 20px 6px}
+  .cmphead{display:grid;grid-template-columns:1.5fr 1fr 1fr;padding:12px 0 10px;border-bottom:1px solid var(--border)}
+  .cmphead span{font-size:11.5px;font-weight:800;color:var(--muted);text-align:center}
+  .cmphead span:first-child{text-align:left}
+  .cmprow{display:grid;grid-template-columns:1.5fr 1fr 1fr;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+  .cmprow:last-child{border-bottom:none}
+  .cmprow .cl{font-size:13px;font-weight:700;color:var(--navy)}
+  .cmprow .cv{font-size:14px;font-weight:800;text-align:center;color:#3e7d66}
+  .cmprow .cv.warn{color:#b9770e} .cmprow .cv.bad{color:#c0554a}
+
+  .tlnote{border-radius:8px;background:#f1f2fb;border:1px solid #dde1f6;padding:14px;font-size:13px;line-height:1.65;color:#3a3f52}
+  .tlnote b{font-weight:800;color:var(--navy)}
+
+  /* ── 코치 전용 추가 요소 ── */
+  .coachbar{background:#0D1B2A;color:#fff;border-radius:8px;padding:11px 16px;font-size:12px;font-weight:700;letter-spacing:.03em;text-align:center;margin-bottom:16px}
+  .coachbar b{color:#7EC8E3}
+
+  /* 메모 (코치 노트) */
+  .note{background:#fdf7e6;border:1px solid #f0e4bd;border-radius:8px;padding:14px 16px;margin-top:12px}
+  .note .nl{font-size:10.5px;font-weight:800;letter-spacing:.12em;color:#9c7a16;margin-bottom:6px}
+  .note p{font-size:13px;color:#5c5330;line-height:1.7} .note p + p{margin-top:6px}
+  .note b{color:#3a3320}
+
+  /* 멘트 스크립트 (선수에게 이렇게 말하기) */
+  .script{background:#eef0f4;border-radius:8px;padding:14px 16px;margin-top:12px}
+  .script .sl{font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--primary);margin-bottom:7px}
+  .script p{font-size:14px;color:var(--navy);line-height:1.75} .script p + p{margin-top:8px}
+
+  /* 아젠다 타임박스 */
+  .agenda{padding:6px 20px}
+  .agrow{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--border)}
+  .agrow:last-child{border-bottom:none}
+  .agrow .at{flex-shrink:0;width:78px;font-size:12.5px;font-weight:800;color:var(--primary)}
+  .agrow .ac{font-size:13.5px;color:#33363d;line-height:1.55}
+  .agrow .ac b{color:var(--navy);font-weight:700}
+
+  /* 체크리스트 (확인 항목) */
+  .chk{padding:4px 20px}
+  .chkrow{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)}
+  .chkrow:last-child{border-bottom:none}
+  .chkrow .cb{flex-shrink:0;width:17px;height:17px;border:1.5px solid #b9bfca;border-radius:4px;margin-top:2px}
+  .chkrow .ct{font-size:13.5px;color:#33363d;line-height:1.6} .chkrow .ct b{color:var(--navy);font-weight:700}
+  .chkrow .ct .memo{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+
+  /* 카드 안 일반 텍스트 */
+  .body{padding:18px 20px}
+  .body h3{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:8px;letter-spacing:-.02em}
+  .body h3 + p{margin-top:0}
+  .body p{font-size:13.5px;color:#33363d;line-height:1.7;margin-bottom:9px} .body p:last-child{margin-bottom:0}
+  .body b{color:var(--navy);font-weight:700}
+  .body ul{list-style:none;margin:4px 0 0}
+  .body li{font-size:13.5px;color:#33363d;line-height:1.6;padding:5px 0 5px 16px;position:relative}
+  .body li::before{content:"·";position:absolute;left:4px;color:var(--primary);font-weight:800}
+  .num3{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--primary);color:#fff;font-size:12px;font-weight:800;margin-right:8px;vertical-align:middle}
+
+  /* 실시간 메모 입력 필드 (자동저장) */
+  .memo-field{margin-top:10px;min-height:40px;background:#fffdf5;border:1px dashed #d9d2b0;border-radius:6px;padding:9px 12px;font-size:13px;color:#33363d;line-height:1.7;outline:none;white-space:pre-wrap}
+  .memo-field.mini{margin-top:8px;min-height:30px;padding:7px 11px;font-size:12.5px}
+  .memo-field.big{min-height:120px}
+  .memo-field:empty::before{content:attr(data-ph);color:#bcb59a}
+  .memo-field:focus{border-color:#c9a24a;background:#fffef7;box-shadow:0 0 0 3px rgba(201,162,74,.12)}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:12px;color:var(--muted)}
+  .toolbar .tbtns{display:flex;gap:8px}
+  .toolbar button{font-family:inherit;font-size:12px;font-weight:700;color:var(--primary);background:#eef0fb;border:1px solid #dbe0f4;border-radius:7px;padding:7px 13px;cursor:pointer}
+  .toolbar button:hover{background:#e4e8f8}
+  .toolbar .clr{color:#a25a48;background:#f7ece9;border-color:#efd8d2}
+
+  .footlogo{padding-top:20px;display:flex;justify-content:center}
+  .footlogo img{height:16px;opacity:.35}
+  .disc{margin-top:14px;font-size:11px;color:#a7abb2;line-height:1.7;text-align:center}
+
+  /* 질문 아이템 */
+  .qitem{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--border)}
+  .qitem:first-of-type{border-top:none}
+  .qitem .qn{flex-shrink:0;width:22px;height:22px;border-radius:6px;background:#eef0fb;color:var(--primary);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .qitem .qx{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:6px 14px;align-items:start}
+  .qitem .qx p{grid-column:1;font-size:13.5px;color:#33363d;line-height:1.6;margin:0}
+  .qitem .qx .memo{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+  .qitem .qx .memo-field{grid-column:2;margin-top:0}
+  .grouplab{font-size:13.5px;font-weight:800;color:var(--navy);margin:2px 0 4px;letter-spacing:-.02em}
+  /* 2열 미니표 */
+  .t2{width:100%;border-collapse:collapse}
+  .t2 td{padding:9px 0;border-top:1px solid var(--border);font-size:13px;color:#33363d;line-height:1.55;vertical-align:top}
+  .t2 tr:first-child td{border-top:none}
+  .t2 td:first-child{width:34%;font-weight:700;color:var(--navy);padding-right:12px}
+  /* 전체그림 */
+  .ascii{background:#0d1b2a;color:#c4e7f5;border-radius:8px;padding:14px 16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;line-height:1.75;white-space:pre;overflow-x:auto;margin-top:10px}
+  /* 빨강 노트 */
+  .note.red{background:#fbe9e6;border-color:#f1cbc3}
+  .note.red .nl{color:#a25a48} .note.red p{color:#6b4a44} .note.red b{color:#8f3d31}
+
+  @media print{body{background:#fff}.wrap{max-width:100%}}
+  @media(max-width:760px){
+    .wrap{padding:22px 14px}
+    .hero .pad{padding:24px 18px 0}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi{padding:14px 16px} .kpi:nth-child(3),.kpi:nth-child(4){border-top:1px solid rgba(255,255,255,.1)}
+    .kpi:nth-child(odd){border-left:none}
+    .cmpcard,.agenda,.chk,.body{padding-left:16px;padding-right:16px}
+    .agrow .at{width:64px}
+    .qitem .qx{grid-template-columns:1fr}
+    .qitem .qx .memo-field{grid-column:1;margin-top:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="coachbar">코치 전용 · 세션 진행용 · <b>선수에게 공유하지 않음</b></div>
+
+  <div class="toolbar">
+    <span>메모는 이 브라우저에 자동 저장돼요 (새로고침해도 유지)</span>
+    <div class="tbtns">
+      <button onclick="window.print()">인쇄</button>
+      <button class="clr" onclick="if(confirm('이 세션 메모를 모두 지울까요?')){Object.keys(localStorage).filter(function(k){return k.indexOf('yuna-coach-')===0}).forEach(function(k){localStorage.removeItem(k)});location.reload()}">메모 초기화</button>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero block">
+    <div class="pad">
+      <div class="eyebrow">COACH GUIDE · 1차 세션</div>
+      <div class="titrow">
+        <h1>1차 세션 진행 가이드</h1>
+        <span class="pill">60분 · 기저선 확보</span>
+      </div>
+      <div class="who">윤이나 <span>골프 · 프로</span></div>
+      <div class="date">작성 2026. 08. 08 · 1차 사전 질문지 + 출국 일정(8/19) 기반</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v">3</div><div class="k">설명할 메시지</div></div>
+      <div class="kpi"><div class="v">22</div><div class="k">확인 질문</div></div>
+      <div class="kpi"><div class="v">1</div><div class="k">이번 주 과제</div></div>
+      <div class="kpi"><div class="v">8/14</div><div class="k">다음 결정 게이트</div></div>
+    </div>
+  </div>
+
+  <!-- 이 세션의 목표 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">GOAL</div>
+      <h2>이 세션의 목표</h2>
+    </div>
+    <div class="card body">
+      <ul>
+        <li><b>주호소 재정의 + 순서 동의</b> 확보 (시차는 증폭 요인, 기저는 조건화 불면)</li>
+        <li><b>수면 노력·성과주의 낮추기</b> 시작 (인지 메시지 3개)</li>
+        <li><b>졸음운전 안전</b> 다루고 8/19 운전 금지 합의</li>
+        <li>이번 주 과제 = <b>수면일지 1개</b>만. 기저선을 오염 없이 확보</li>
+      </ul>
+      <div class="note">
+        <div class="nl">코치 노트 · 큰 원칙</div>
+        <p>이번 주는 <b>"고치는 주"가 아니라 "보는 주"</b>다. 습관은 손대지 않고 인지 개입만 시작한다. 시차 플랜(보스턴)은 8/14 기저선을 본 뒤 결정한다.</p>
+        <p>과제를 많이 주지 않는다. 준비도 4.4는 양날 — 의욕이 높은 만큼 다 완벽히 하려다 수면 노력이 올라간다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 케이스 한눈에 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">CASE</div>
+      <h2>케이스 한눈에 (코치용)</h2>
+      <div class="desc">선수에게 그대로 말하는 내용이 아니라, 코치가 쥐고 있어야 할 구조.</div>
+    </div>
+    <div class="card body">
+      <p><b>본인이 말하는 문제:</b> "시차 적응이 늦다"</p>
+      <p><b>1차 구조:</b> 특정 사건을 계기로 시작된 <b>조건화된 정신생리성 불면</b> (잠들 때 불안·반추, 침대·밤 = 각성 학습)</p>
+      <p><b>2차 구조:</b> 만성 수면부족 — 기상 6시 알람 고정으로 총수면 상한이 막혀 있음</p>
+      <p><b>시차의 위치:</b> 위 두 가지 위에 얹힌 <b>증폭 요인</b>. 시차만 다루면 개선이 안 나온다.</p>
+      <div class="note">
+        <div class="nl">코치 노트 · 왜 순서가 중요한가</div>
+        <p>"시차 적응이 늦다"는 자기귀인 자체가 유지 요인이다. 도착 후 처지는 것을 전부 시차 탓으로 돌리면 개입이 안 먹힌다. 첫 세션에서 <b>시차는 증폭 요인이고 밑에 조건화·수면부족이 있다</b>는 순서에 동의를 받아야 한다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 기저선 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">BASELINE</div>
+      <h2>기저선 (문진표 산출 · 실측 전)</h2>
+    </div>
+    <div class="card cmpcard">
+      <div class="cmphead"><span>지표</span><span>훈련일</span><span>휴식일</span></div>
+      <div class="cmprow"><span class="cl">입면잠복 (SOL)</span><span class="cv warn">30분</span><span class="cv bad">90분</span></div>
+      <div class="cmprow"><span class="cl">총수면 (TST)</span><span class="cv">6.8~7.2h</span><span class="cv bad">4.8~5.2h</span></div>
+      <div class="cmprow"><span class="cl">수면효율 (SE)</span><span class="cv">85~90%</span><span class="cv bad">69~74%</span></div>
+    </div>
+    <div class="tlnote" style="margin-top:12px"><b>구조:</b> 기상 6시 알람 고정(연장 불가) → 총수면 상한이 고정됨 → 유일한 조절 경로는 <b>입면 쪽</b>인데, 휴식일 입면잠복 90분이 그걸 막고 있다. 손댈 수 있는 방향은 입면이지 기상이 아니다.</div>
+    <div class="note">
+      <div class="nl">코치 노트 · 6시 각성 감별 (이번 주 관찰 대상)</div>
+      <p><b>A</b> 위상이 앞에 고정 → 빛으로 조절 / <b>B</b> 조건화된 예기각성 → 인지 개입 / <b>C</b> 유지 능력 한계 → 의학적 배제 우선.</p>
+      <p>"늦은 티타임 날 오히려 더 일찍 깬다"는 진술은 <b>B를 시사</b>. A+B 혼재로 보되 B 비중이 클 것으로 가정. 단, 평소 6시는 알람 기상이라 "얼마나 일찍 깨는지"는 일지로 확인.</p>
+    </div>
+  </section>
+
+  <!-- 세션 아젠다 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">AGENDA · 60분</div>
+      <h2>세션 진행 순서</h2>
+    </div>
+    <div class="card agenda">
+      <div class="agrow"><div class="at">0~5분</div><div class="ac">라포 · <b>손목 상태 안부</b>로 자연스럽게 연다</div></div>
+      <div class="agrow"><div class="at">5~15분</div><div class="ac"><b>졸음운전</b> — 운전 빈도·거리 확인, 8/19 출국일 운전 금지 합의</div></div>
+      <div class="agrow"><div class="at">15~28분</div><div class="ac"><b>주호소 재정의</b> — 시차는 증폭 요인, 기저는 조건화. 순서 동의 확보</div></div>
+      <div class="agrow"><div class="at">28~38분</div><div class="ac"><b>인지 개입</b> — 아래 3가지 메시지</div></div>
+      <div class="agrow"><div class="at">38~46분</div><div class="ac"><b>목표 재계약</b> — TIB 9h 희망 → TST 7~7.5h로</div></div>
+      <div class="agrow"><div class="at">46~52분</div><div class="ac"><b>수면다원검사</b> 권고 · 복귀 후 실시 안내</div></div>
+      <div class="agrow"><div class="at">52~60분</div><div class="ac">이번 주 과제 = <b>수면일지 1개</b> · 8/14 결정 게이트 예고</div></div>
+    </div>
+  </section>
+
+  <!-- 설명할 내용 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">EXPLAIN · 1</div>
+      <h2>주호소 재정의</h2>
+    </div>
+    <div class="card body">
+      <p>"시차 적응이 늦다"를 부정하지 않되, 그 밑에 있는 구조를 같이 본다. 시차는 증폭 요인이라는 순서에 동의를 받는 게 이 파트의 목표.</p>
+      <div class="script">
+        <div class="sl">이렇게 말하기</div>
+        <p>"시차 적응이 힘든 건 맞아요. 그런데 자료를 보면 시차가 원인이라기보다, 원래 있던 예민함 위에 시차가 얹혀서 더 크게 흔들리는 구조예요."</p>
+        <p>"그래서 우리가 순서를 이렇게 잡을게요. 먼저 잠드는 예민함을 낮추고, 그 위에 시차 준비를 얹는 거예요. 시차만 붙잡으면 매번 원점이거든요."</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="shead">
+      <div class="lab">EXPLAIN · 2</div>
+      <h2>인지 개입 · 3가지 메시지</h2>
+      <div class="desc">이번 주의 유일한 개입. 정보 제공은 행동을 안 바꾸므로 기저선을 오염시키지 않는다.</div>
+    </div>
+
+    <div class="card body">
+      <h3><span class="num3">1</span>"침대에 있는 시간"과 "자는 시간"은 다르다</h3>
+      <p>희망 취침·기상 22:00 / 7:00 = 침대 9시간인데, 지금 효율에서 침대를 9시간으로 늘리면 효율이 60%대로 떨어지고 조건화가 악화된다. 목표를 <b>TST 7~7.5h</b>로 재계약. 이 대화 자체가 성과주의를 내리는 개입.</p>
+      <div class="script">
+        <div class="sl">이렇게 말하기</div>
+        <p>"오래 누워 있는다고 그만큼 자는 게 아니에요. 억지로 9시간 누우면 오히려 뒤척이는 시간만 늘어요. 우리 목표는 침대에 오래 눕는 게 아니라 실제로 자는 7시간 정도예요."</p>
+      </div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3><span class="num3">2</span>하룻밤 부족은 생각보다 덜 위험하다</h3>
+      <p>급성 수면부족은 반응속도·지구력에 먼저 오고, 골프의 핵심인 정교한 운동제어·퍼팅 판단에는 상대적으로 늦게 온다. 하룻밤은 회복도 빠르다. <b>"자야 한다"는 압박 자체가 이 케이스의 유지 요인</b>이라, 확신을 심는 게 실제로 1시간 더 재우는 것보다 이득이 크다.</p>
+      <div class="script">
+        <div class="sl">이렇게 말하기</div>
+        <p>"경기 전날 못 자도 다음 날 칠 수 있어요. 하룻밤 부족은 몸이 금방 회복해요. 오히려 '오늘 꼭 자야 해'라는 압박이 잠을 더 밀어내요."</p>
+      </div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3><span class="num3">3</span>이번 주는 "고치는 주"가 아니라 "보는 주"다</h3>
+      <p>과제가 하나뿐인 이유를 설명한다. 준비도 높은 선수일수록 "이것밖에 안 해도 되나"에서 불안이 생기므로, 적게 주는 게 의도된 설계임을 명시.</p>
+      <div class="script">
+        <div class="sl">이렇게 말하기</div>
+        <p>"이번 주는 뭘 바꾸는 게 아니라 지금 상태를 있는 그대로 기록만 할 거예요. 이 한 주가 앞으로 다 비교할 기준선이라서, 오히려 아무것도 안 바꾸는 게 중요해요."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1차 세션 질문 목록 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">QUESTIONS</div>
+      <h2>1차 세션 질문 목록</h2>
+      <div class="desc">답을 각 칸에 바로 기록. 브라우저에 자동 저장돼요.</div>
+    </div>
+
+    <div class="card body">
+      <div class="grouplab">A · 기상 앵커 — 이번 케이스 핵심 감별</div>
+      <div class="note"><div class="nl">왜 중요한가</div><p>"알람으로 바로 일어남"만으론 세 가지가 안 구분됨: ① 알람에 깸(위상 문제 아님·부채 적음) ② 알람 전 항상 깸(예기각성·조건화·인지개입 필요) ③ 알람 없이도 6시(위상 앞 고정·빛으로 조절 가능). 어디냐에 따라 사전 조정 성공 확률·부채 규모가 완전히 달라짐.</p></div>
+      <div class="qitem"><div class="qn">1</div><div class="qx"><p>지금 6시 기상은 <b>알람을 맞춰서</b> 일어나시나요?</p><div class="memo-field mini" contenteditable="true" data-k="q1" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">2</div><div class="qx"><p>알람은 몇 시로 맞추시나요? 그 시각을 정한 이유가 있나요?</p><div class="memo-field mini" contenteditable="true" data-k="q2" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">3</div><div class="qx"><p>알람이 울리기 <b>전에</b> 깨는 날이 있나요? 얼마나 자주인가요?</p><div class="memo-field mini" contenteditable="true" data-k="q3" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">4</div><div class="qx"><p>알람을 아예 안 맞춘 날(휴식일·비시즌)에는 몇 시에 깨시나요?</p><div class="memo-field mini" contenteditable="true" data-k="q4" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">5</div><div class="qx"><p>알람이 울리면 바로 일어나시나요, 다시 눕는 편인가요?</p><div class="memo-field mini" contenteditable="true" data-k="q5" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">6</div><div class="qx"><p>알람을 8시로 맞추면 8시까지 주무실 수 있을 것 같으세요? 아니면 그래도 6시에 깰 것 같으세요?</p><div class="memo-field mini" contenteditable="true" data-k="q6" data-ph="답변…"></div></div></div>
+      <div class="note"><div class="nl">코치 노트</div><p><b>6번이 특히 중요.</b> 본인의 예측이 신념을 드러냄. "그래도 깰 것 같다"고 답하면 조건화가 강한 것 → 프로토콜 설명 전에 이 신념부터 다룬다.</p></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <div class="grouplab">B · 손목</div>
+      <div class="qitem"><div class="qn">7</div><div class="qx"><p>밤에 <b>통증 때문에 깨시나요</b>, 아니면 깬 뒤에 통증을 느끼시나요?</p><div class="memo-field mini" contenteditable="true" data-k="q7" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">8</div><div class="qx"><p>자는 자세에 따라 다른가요?</p><div class="memo-field mini" contenteditable="true" data-k="q8" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">9</div><div class="qx"><p>지금 손목 치료는 어디서 어떻게 받고 계신가요?</p><div class="memo-field mini" contenteditable="true" data-k="q9" data-ph="답변…"></div></div></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <div class="grouplab">C · 문진표 확인</div>
+      <div class="qitem"><div class="qn">10</div><div class="qx"><p>휴식일 기상이 6시라고 되어 있는데 "시합 아닌 날은 더 일찍 깬다"고도 쓰셨어요. 실제로는 몇 시쯤인가요?<span class="memo">노션 메모: 22:00/6:00은 매우 좋은 상태 → 수면 연장을 더 원하는지도 확인</span></p><div class="memo-field mini" contenteditable="true" data-k="q10" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">11</div><div class="qx"><p>경기 전날은 실제로 몇 시에 눕고 몇 시에 일어나시나요?<span class="memo">노션 메모: "몇 시간 정도?"</span></p><div class="memo-field mini" contenteditable="true" data-k="q11" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">12</div><div class="qx"><p>침실이 "밝은 편"이라고 하셨는데, 잘 때가 밝은 건가요 아침에 밝아지는 건가요?</p><div class="memo-field mini" contenteditable="true" data-k="q12" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">13</div><div class="qx"><p>새벽 훈련이 있는 날은 주로 실내인가요, 야외인가요?</p><div class="memo-field mini" contenteditable="true" data-k="q13" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">14</div><div class="qx"><p>커피는 어떤 종류로 하루 몇 잔, 마지막이 보통 몇 시쯤인가요?</p><div class="memo-field mini" contenteditable="true" data-k="q14" data-ph="답변…"></div></div></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <div class="grouplab">D · 안전</div>
+      <div class="qitem"><div class="qn">15</div><div class="qx"><p>원정 다니실 때 직접 운전하시나요? 얼마나 자주, 얼마나 긴 거리인가요?</p><div class="memo-field mini" contenteditable="true" data-k="q15" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">16</div><div class="qx"><p>운전 중 졸린 적이 있다고 하셨는데, 최근에도 있었나요?</p><div class="memo-field mini" contenteditable="true" data-k="q16" data-ph="답변…"></div></div></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <div class="grouplab">E · 목표</div>
+      <div class="qitem"><div class="qn">17</div><div class="qx"><p>8/24 시합을 어떻게 보고 계신가요? 성적 목표가 있는 경기인가요, 컨디션 회복 겸 복귀전인가요?</p><div class="memo-field mini" contenteditable="true" data-k="q17" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">18</div><div class="qx"><p>8시간 자고 싶다고 하셨는데, 실제로 8시간 잤을 때가 언제였나요? 그때 컨디션은 어땠나요?<span class="memo">TIB 9시간 목표를 TST 7~7.5시간으로 재계약하는 대화의 출발점</span></p><div class="memo-field mini" contenteditable="true" data-k="q18" data-ph="답변…"></div></div></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <div class="grouplab">F · 기타 (노션 메모)</div>
+      <div class="qitem"><div class="qn">19</div><div class="qx"><p>이갈이 — 낮에도 이 악무는 습관이 있는지, 코골이·숨 멈춤 신호가 있는지<span class="memo">노션 메모: 무호흡 있는지 / 낮에도 이악물기 있는지 (PSG 권고와 연결)</span></p><div class="memo-field mini" contenteditable="true" data-k="q19" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">20</div><div class="qx"><p>성적 부담 외에 수면을 흔드는 스트레스 요인이 더 있는지<span class="memo">노션 메모: 22년 사건 외 요인 (민감, 조심스럽게)</span></p><div class="memo-field mini" contenteditable="true" data-k="q20" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">21</div><div class="qx"><p>아침에 일어나면 주로 뭘 하시나요? 기상은 이른 편인데 아침 햇빛은 거의 안 본다고 하셨어요.<span class="memo">노션 메모: 아침에 일어나서 뭐하는지 / 기상시간은 이른데</span></p><div class="memo-field mini" contenteditable="true" data-k="q21" data-ph="답변…"></div></div></div>
+      <div class="qitem"><div class="qn">22</div><div class="qx"><p>안압 상승·시력 저하·어지럼·두통은 실제로 병원에서 확인한 내용인가요, 느낌인가요?<span class="memo">노션 메모: 실제 병원에서 확인한 내용?</span></p><div class="memo-field mini" contenteditable="true" data-k="q22" data-ph="답변…"></div></div></div>
+    </div>
+  </section>
+
+  <!-- 이갈이 답변 준비 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">Q&amp;A</div>
+      <h2>이갈이 질문 답변 준비</h2>
+      <div class="desc">본인이 직접 물은 질문 — "이갈이도 고치고 싶은데 가능할까요?"</div>
+    </div>
+    <div class="card body">
+      <div class="script">
+        <div class="sl">이렇게 답하기</div>
+        <p>"행동만으로 완전히 없애긴 어려워요. 근데 이갈이는 대부분 자는 동안의 각성 반응이라, 긴장이 줄면 강도가 같이 줄어드는 경우가 많아요. 지금은 두 가지 먼저 할게요. 무호흡이 같이 있는지 확인하고, 치과 나이트가드로 치아를 보호하는 거예요."</p>
+      </div>
+      <div class="note">
+        <div class="nl">코치 노트</div>
+        <p>완치 약속하지 않는다. 무호흡 감별(PSG)과 연결. 이갈이 "교정 시도"는 이번 범위에서 다루지 않음.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 안전 · 의뢰 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">SAFETY</div>
+      <h2>안전 · 의뢰 · 보류</h2>
+    </div>
+    <div class="card body">
+      <h3>졸음운전 (도입부에서 다룬다)</h3>
+      <p>ESS 11 + "운전할 때도 졸릴 정도". 미루지 않는다. 운전 빈도·거리 확인 후 <b>8/19 공항 이동 시 본인 운전 금지</b>를 프로토콜 규칙으로 명시. 세션 노트에 논의 사실 기록.</p>
+      <h3 style="margin-top:14px">수면다원검사 (의뢰 1건)</h3>
+      <p>이갈이 + ESS 11 + 비회복성 수면 + 야간각성 2회, 검사 이력 없음. <b>이번 범위는 권고와 예약 안내까지</b>, 실제 검사는 원정 일정상 보스턴 복귀 후로 잡는다.</p>
+      <div class="note">
+        <div class="nl">코치 노트 · 수면제한요법(SRT) 보류</div>
+        <p>휴식일 SE 70%는 교과서적 SRT 적응증이나 지금은 금기에 가깝다. SRT는 초기 1~2주 주간 졸림을 의도적으로 늘린다 → ESS 11 + 졸음운전 + 시즌 중 조합에서 사고 위험. <b>해제 조건:</b> ① PSG로 호흡장애 배제 ② ESS 10 이하 ③ 비시즌(12월 중순 이후). 그 전까지 자극조절 + 인지 개입으로 대체.</p>
+      </div>
+      <div class="note">
+        <div class="nl">이번 세션에서 다루지 않을 것</div>
+        <p>수면제한요법 · 기상 시각 조정 과제 · 취침 전 폰/웹툰 금지(대체 루틴 정착 전) · 식사량/체중 지시 · 이갈이 교정 시도.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 과제 & 다음 게이트 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">HOMEWORK</div>
+      <h2>이번 주 과제 · 다음 게이트</h2>
+    </div>
+    <div class="card body">
+      <h3>과제 = 수면일지 1개 (매일 아침 5분 이내)</h3>
+      <ul>
+        <li>누운 시각 · 잠든 것 같은 시각(추정) · 밤중 깬 횟수 · 재입면 시간 · 최종 기상 · 아침 컨디션(1~5)</li>
+        <li>8/11부터 카페인 마지막 시각 추가</li>
+        <li><b>밤에 시계 보지 않기</b> — 아침에 추정으로 기록 (시계 확인이 각성을 올림)</li>
+        <li>종이 권장 (데이터 모니터링 1/5로 낮아 앱은 부담)</li>
+      </ul>
+      <div class="tlnote" style="margin-top:12px"><b>8/14 결정 게이트:</b> 7일 기저선을 보고 <b>출국 전 시차 사전조정(선취)</b> 실시 여부를 결정한다. 총수면 5.5h 미만이 3일 이상이면 사전조정은 제외. 실제 플랜(보스턴)은 Emma가 별도 작성 중.</div>
+    </div>
+  </section>
+
+  <!-- 보스턴 원정 프로토콜 (안전 우선 v2) -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">PROTOCOL</div>
+      <h2>보스턴 원정 수면 준비 (안전 우선)</h2>
+      <div class="desc">8/19 출국 · 8/24 시합. 도착 후 곧 훈련이고 부채 회복 완충이 없어, 적응 속도보다 안전을 우선.</div>
+    </div>
+
+    <div class="card body">
+      <h3>설계 원칙</h3>
+      <p><b>잠을 깎지 않는 수단(빛·식사·훈련 시각)을 최대한 길게 쓰고, 취침 이동은 최소한으로.</b> 빛·식사는 몸시계를 옮기면서 수면 손실이 없고, 취침 이동만 부채를 만든다. 그래서 전자를 일찍 시작해 오래 쓰고 후자는 짧고 얕게.</p>
+      <p>목표는 완전 적응이 아니라 <b>8/24 티오프 시각에 컨디션이 오도록</b> 맞추는 것. 방향은 <b>늦게 자는 쪽(지연)</b>. 서울↔보스턴 13시간 차.</p>
+      <div class="ascii">8/9  ~ 8/10   기록만 (2일)
+8/11 ~ 8/18   빛·식사·훈련 시각 이동 (8일)   ← 수면 손실 없음
+8/14 ~ 8/18   취침 40분씩 이동 (5일)         ← 여기만 부채 발생
+8/19          출국
+8/20 ~ 8/23   현지 적응 (4일)
+8/24          시합</div>
+      <div class="note"><div class="nl">가장 중요한 원칙</div><p>기상 시각은 목표가 아니라 <b>관찰 항목</b>. 늦게 일어나려고 애쓰지 않는다. 일찍 깨도 실패가 아니다.</p></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3>8/9(일)~8/10(월) · 기록만</h3>
+      <p>아무것도 바꾸지 않고 지금 리듬을 그대로 확인. 매일 아침 5분 기록(밤엔 시계 안 봄, 아침에 추정). 침대 누운 시각 / 잠든 것 같은 시각 / 깬 횟수·재입면 / 최종 기상 / <b>알람보다 먼저 깼는지 알람에 깼는지</b> / 컨디션 1~5 / 손목 통증으로 깼는지. 함께: 아침 첫 끼·마지막 식사·훈련 시작·종료 시각. <b>8/10 세션에서 8/11부터 시각표 확정.</b></p>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3>8/11(화)~8/18(화) · 빛·식사·훈련 <span style="font-weight:600;color:var(--muted);font-size:13px">(주력 8일)</span></h3>
+      <p>취침은 8/13까지 평소대로 두고, 아래 셋만 먼저 움직인다.</p>
+      <table class="t2">
+        <tr><td>① 빛 · 기상 후 4시간</td><td>빛을 <b>피함</b>. 실내에 있고, 나가야 하면 선글라스</td></tr>
+        <tr><td>① 빛 · 낮</td><td>평소대로</td></tr>
+        <tr><td>① 빛 · 저녁~밤</td><td>실내 조명 <b>최대한 밝게</b>, 취침 직전까지. 밤 폰·태블릿도 이 기간엔 오히려 도움</td></tr>
+        <tr><td>② 식사</td><td>마지막 식사·아침 첫 끼를 <b>하루 30분씩 뒤로</b>. 안 고파도 시각은 지키고 양은 조절</td></tr>
+        <tr><td>③ 훈련</td><td>훈련 시각 조금씩 뒤로(오후·저녁 유리). <b>8/14부터 강도 낮춤</b>, 8/18은 가벼운 것만. 손목 무리 동작 줄이기</td></tr>
+      </table>
+      <div class="note"><div class="nl">코치 노트</div><p>일상의 "아침 햇빛"과 <b>정반대</b>. 지금은 몸시계를 뒤로 밀어야 해서 아침 빛이 방해. 원정 복귀 후 원래대로. 취침을 안 미뤄도 빛·식사만으로 졸음이 자연히 뒤로 밀려, 나중에 억지로 미룰 폭이 줄어든다.</p></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3>8/14(금)~8/18(화) · 취침 이동 <span style="font-weight:600;color:var(--muted);font-size:13px">(하루 40분씩)</span></h3>
+    </div>
+    <div class="card cmpcard" style="margin-top:-2px">
+      <div class="cmphead"><span>밤</span><span>취침</span><span>알람</span></div>
+      <div class="cmprow"><span class="cl">8/14 (금)</span><span class="cv">23:10</span><span class="cv">6:40</span></div>
+      <div class="cmprow"><span class="cl">8/15 (토)</span><span class="cv">23:50</span><span class="cv">7:20</span></div>
+      <div class="cmprow"><span class="cl">8/16 (일)</span><span class="cv">00:30</span><span class="cv">8:00</span></div>
+      <div class="cmprow"><span class="cl">8/17 (월)</span><span class="cv">01:10</span><span class="cv">8:40</span></div>
+      <div class="cmprow"><span class="cl">8/18 (화)</span><span class="cv">01:50</span><span class="cv">9:20</span></div>
+    </div>
+    <div class="card body" style="margin-top:12px">
+      <p>총 3시간 20분. <b>의도적으로 덜 옮긴다</b>(빛을 8일 먼저 작동시켜서 실제 이동 폭은 이보다 큼).</p>
+      <ul>
+        <li><b>알람은 끄지 않고 같은 폭으로 함께 뒤로.</b> 알람 = "여기까지 자도 된다"는 선. 그 전에 깨면 그냥 일어나도 정상</li>
+        <li>훈련과 겹치면 <b>알람이 먼저 고정되고 취침 폭을 줄인다</b>(훈련 시각도 함께 이동)</li>
+        <li>폰 알람이면 화면 뒤집어두거나 손 닿는 거리 밖에 (밤중 시각 확인이 잠 밀어냄)</li>
+        <li>일찍 깨면 다시 자려 애쓰지 말고 어둡게 유지</li>
+        <li>낮잠 8/16부터 오후 30분 이내(알람), 8/17~18 특히 챙김</li>
+      </ul>
+      <div class="note"><div class="nl">선수에게 설명 (필수)</div><p><b>총수면이 줄어드는 건 정상이고 계획된 것.</b> 이때 생긴 피로가 기내 수면과 보스턴 첫날 입면을 도와준다. 목표는 "잘 자는 것"이 아니라 "출발할 때 몸시계를 옮겨두는 것". 이 설명을 빼면 "프로토콜 하니까 더 못 자는데요?"가 나온다.</p></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3>중단 기준 · 안전</h3>
+      <div class="note red"><div class="nl">하나라도 나타나면 멈추고 코치에게 알림 (그 상태로 출국)</div><p>· 낮에 나도 모르게 졸음 (<b>특히 운전 중</b>)<br>· 손목 통증 심해짐<br>· <b>총수면 5시간 미만인 밤이 이틀 연속</b></p><p style="margin-top:6px">중단해도 손해 아님 — 2시간만 옮겨도 현지 적응이 하루 이상 빨라진다. 끝까지 하는 것보다 안전하게 도착하는 게 중요.</p></div>
+      <div class="note"><div class="nl">8/16 중간 체크 (필수)</div><p>기상이 얼마나 따라왔는지 · 낮 졸림 · 손목. <b>기상이 30분 이상 안 따라왔으면 남은 사흘 폭을 20분으로 축소.</b></p></div>
+      <div class="note red"><div class="nl">절대 규칙</div><p><b>8/19 공항 갈 때 직접 운전 금지.</b> 닷새간 잠 줄인 상태 + 장거리 이동 직전 운전은 위험. 다른 사람 운전 또는 대중교통.</p></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3>8/19 출국 · 8/20~23 현지 · 8/24 시합</h3>
+      <p><b>8/19 기내</b>(항공 시각 확정 후 상세): 보스턴 시각으로 밤인 구간에 자고 나머지는 깨어 있기. 도착 후 현지 취침까지 버티기(자도 30분 이내). 기내 술 X, 카페인은 보스턴 오후 이전까지.</p>
+      <table class="t2" style="margin-top:6px">
+        <tr><td>8/20~23 · 정오~저녁</td><td>빛 최대 확보. 야외 훈련이 그대로 도움</td></tr>
+        <tr><td>8/20~23 · 저녁 이후</td><td>첫날 밤 9시부터 빛 차단, <b>매일 1시간씩 뒤로</b>(2일차 10시, 3일차 11시…). 선글라스·조도 낮추기</td></tr>
+        <tr><td>식사·낮잠</td><td>식사 현지 시각(양 조절) · 낮잠 30분 이내, 오후 3시 이전 · 새벽에 깨면 시계 안 봄</td></tr>
+      </table>
+      <div class="note"><div class="nl">선수에게 미리 심을 것</div><p>도착 첫 이틀 무거운 건 <b>이동 피로</b>(탈수·좁은 좌석·수면 끊김)이지 시차 적응 실패가 아니다. "역시 시차가 안 되네"로 귀인하지 않게 미리 설명.</p></div>
+      <div class="note"><div class="nl">8/24 시합</div><p>완전 적응이 목표 아님 — 티오프 시각에 컨디션 오도록. 티오프 확정되면 마지막 이틀 취침·기상 조정(오후 티오프면 부분 적응이 유리할 수도). 시합 전날 새로운 것 시도 금지. "하룻밤 못 자도 다음날 칠 수 있다 — 못 자는 것보다 못 잘까 걱정하는 게 더 해롭다."</p></div>
+    </div>
+
+    <div class="card body" style="margin-top:14px">
+      <h3>코치에게 알려줄 것</h3>
+      <table class="t2">
+        <tr><td>발권되는 대로</td><td>출발·도착 편명과 시각</td></tr>
+        <tr><td>발권되는 대로</td><td>8/24 티오프 시각 (확정 시점도)</td></tr>
+        <tr><td>8/10 (월)</td><td>세션 — 시각표 확정</td></tr>
+        <tr><td>8/16 (일)</td><td>중간 체크 (필수)</td></tr>
+        <tr><td>중단 신호 시</td><td>즉시</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 세션 자유 메모 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">SESSION NOTES</div>
+      <h2>세션 자유 메모</h2>
+      <div class="desc">세션 중 떠오르는 것, 다음 세션으로 넘길 것 등 자유롭게.</div>
+    </div>
+    <div class="card body"><div class="memo-field big" contenteditable="true" data-k="free" data-ph="세션 중 자유롭게 기록…"></div></div>
+  </section>
+
+  <div class="footlogo"><img src="noct_logo.png" alt="NOCT Research"></div>
+  <div class="disc">코치 전용 내부 문서 · 선수 공유용 아님 · NOCT RESEARCH</div>
+
+</div>
+
+<script>
+  (function(){
+    document.querySelectorAll('.memo-field').forEach(function(f){
+      var key = 'yuna-coach-' + f.dataset.k;
+      var saved = localStorage.getItem(key);
+      if(saved !== null) f.innerHTML = saved;
+      f.addEventListener('input', function(){ localStorage.setItem(key, f.innerHTML); });
+    });
+  })();
+</script>
+</body>
+</html>
