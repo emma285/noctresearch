@@ -17,8 +17,26 @@
   body{background:var(--bg);color:var(--fg);
     font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
     letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
-  .wrap{max-width:940px;margin:0 auto;padding:36px 24px}
-  section,.block{margin-bottom:28px;clear:both}
+  .wrap{max-width:1200px;margin:0 auto;padding:36px 24px}
+  section,.block{margin-bottom:28px}
+  /* 본문 + 우측 코멘트 거터 (노션 스타일) */
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 304px;gap:30px;align-items:start;position:relative}
+  .doc{min-width:0}
+  .gutter{position:relative;min-width:0}
+  .cmt-anchor{position:relative}
+  .cmt-add{position:absolute;top:8px;right:8px;z-index:6;opacity:0;transition:opacity .12s;
+    border:1px solid #dbe0f4;background:#eef0fb;color:var(--primary);font-family:inherit;font-size:11px;font-weight:800;
+    border-radius:7px;padding:4px 9px;cursor:pointer}
+  .cmt-anchor:hover > .cmt-add{opacity:1}
+  .cmt-anchor.has-cmt{box-shadow:0 0 0 1.5px #f0d98a inset}
+  .cmt-anchor.cmt-hi{box-shadow:0 0 0 2px #e0aa4e inset}
+  .cmtcard{position:absolute;left:0;width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;
+    box-shadow:0 2px 10px rgba(13,27,42,.09);padding:11px 13px 12px;transition:top .12s ease}
+  .cmtcard::before{content:"";position:absolute;left:-16px;top:16px;width:16px;height:1.5px;background:#e6dcae}
+  .cmtcard .cmtx{font-size:12.5px;line-height:1.65;color:#33363d;outline:none;min-height:34px;white-space:pre-wrap;padding-right:14px}
+  .cmtcard .cmtx:empty::before{content:attr(data-ph);color:#bcc0c8}
+  .cmtdel{position:absolute;top:7px;right:8px;border:none;background:none;color:#c3c8d0;font-size:15px;line-height:1;cursor:pointer;padding:0}
+  .cmtdel:hover{color:#c0554a}
   .tabnum{font-variant-numeric:tabular-nums}
 
   /* Hero */
@@ -154,7 +172,11 @@
     .agrow .at{width:64px}
     .qitem .qx{grid-template-columns:1fr}
     .qitem .qx .memo-field{grid-column:1;margin-top:6px}
-    .secmemo{float:none;width:100%;margin:0 0 14px 0}
+    .layout{grid-template-columns:1fr}
+    .cmtcard{position:static!important;width:100%;margin-bottom:10px}
+    .cmtcard::before{display:none}
+    .cmt-add{opacity:1}
+    .gutter:empty{display:none}
   }
 </style>
 </head>
@@ -191,7 +213,8 @@
   </div>
 
   <!-- 이 세션의 목표 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-1" data-ph="이 부분 메모…"></div></div>
+  <div class="layout"><div class="doc">
+<section class="block">
     <div class="shead">
       <div class="lab">GOAL</div>
       <h2>이 세션의 목표</h2>
@@ -212,7 +235,7 @@
   </section>
 
   <!-- 케이스 한눈에 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-2" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">CASE</div>
       <h2>케이스 한눈에 (코치용)</h2>
@@ -231,7 +254,7 @@
   </section>
 
   <!-- 기저선 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-3" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">BASELINE</div>
       <h2>기저선 (문진표 산출 · 실측 전)</h2>
@@ -251,7 +274,7 @@
   </section>
 
   <!-- 세션 아젠다 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-4" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">AGENDA · 60분</div>
       <h2>세션 진행 순서</h2>
@@ -268,7 +291,7 @@
   </section>
 
   <!-- 설명할 내용 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-5" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">EXPLAIN · 1</div>
       <h2>주호소 재정의</h2>
@@ -283,7 +306,7 @@
     </div>
   </section>
 
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-6" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">EXPLAIN · 2</div>
       <h2>인지 개입 · 3가지 메시지</h2>
@@ -376,7 +399,7 @@
   </section>
 
   <!-- 이갈이 답변 준비 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-7" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">Q&amp;A</div>
       <h2>이갈이 질문 답변 준비</h2>
@@ -395,7 +418,7 @@
   </section>
 
   <!-- 안전 · 의뢰 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-8" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">SAFETY</div>
       <h2>안전 · 의뢰 · 보류</h2>
@@ -417,7 +440,7 @@
   </section>
 
   <!-- 과제 & 다음 게이트 -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-9" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">HOMEWORK</div>
       <h2>이번 주 과제 · 다음 게이트</h2>
@@ -435,7 +458,7 @@
   </section>
 
   <!-- 보스턴 원정 프로토콜 (안전 우선 v2) -->
-  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-10" data-ph="이 부분 메모…"></div></div>
+  <section class="block">
     <div class="shead">
       <div class="lab">PROTOCOL</div>
       <h2>보스턴 원정 수면 준비 (안전 우선)</h2>
@@ -536,6 +559,7 @@
     </div>
     <div class="card body"><div class="memo-field big" contenteditable="true" data-k="free" data-ph="세션 중 자유롭게 기록…"></div></div>
   </section>
+</div><div class="gutter" id="cmtgutter"></div></div>
 
   <div class="footlogo"><img src="/noct-logo.png" alt="NOCT Research"></div>
   <div class="disc">코치 전용 내부 문서 · 선수 공유용 아님 · NOCT RESEARCH</div>
@@ -550,6 +574,82 @@
       if(saved !== null) f.innerHTML = saved;
       f.addEventListener('input', function(){ localStorage.setItem(key, f.innerHTML); });
     });
+  })();
+
+  /* 노션 스타일 위치 연동 코멘트 */
+  (function(){
+    var doc = document.querySelector('.doc');
+    var gutter = document.getElementById('cmtgutter');
+    if(!doc || !gutter) return;
+    var K = function(cid){ return 'yuna-cmt-' + cid; };
+    var cards = {}; // cid -> {el, block, ed}
+
+    // 코멘트 가능한 블록에 id 부여
+    var blocks = Array.prototype.slice.call(doc.querySelectorAll('.card, .agrow'));
+    blocks.forEach(function(b, i){
+      if(!b.dataset.cid) b.dataset.cid = 'b' + i;
+      b.classList.add('cmt-anchor');
+      var add = document.createElement('button');
+      add.className = 'cmt-add'; add.type = 'button'; add.textContent = '+ 메모';
+      add.addEventListener('click', function(e){ e.stopPropagation(); openCard(b); });
+      b.appendChild(add);
+    });
+
+    function place(){
+      var narrow = window.matchMedia('(max-width:900px)').matches;
+      if(narrow) return; // 모바일은 static
+      var gTop = gutter.getBoundingClientRect().top + window.scrollY;
+      var items = Object.keys(cards).map(function(cid){
+        var c = cards[cid];
+        var r = c.block.getBoundingClientRect();
+        return { c: c, y: r.top + window.scrollY };
+      }).sort(function(a, b){ return a.y - b.y; });
+      var prevBottom = -1e9;
+      items.forEach(function(o){
+        var top = Math.max(o.y - gTop, prevBottom + 12);
+        o.c.el.style.top = top + 'px';
+        prevBottom = top + o.c.el.offsetHeight;
+      });
+    }
+
+    function removeCard(cid){
+      localStorage.removeItem(K(cid));
+      if(cards[cid]){
+        cards[cid].el.remove();
+        cards[cid].block.classList.remove('has-cmt');
+        delete cards[cid];
+        place();
+      }
+    }
+
+    function openCard(block){
+      var cid = block.dataset.cid;
+      if(cards[cid]){ cards[cid].ed.focus(); return; }
+      var card = document.createElement('div');
+      card.className = 'cmtcard';
+      card.innerHTML = '<div class="cmtx" contenteditable="true" data-ph="메모…"></div><button class="cmtdel" type="button" title="삭제">×</button>';
+      var ed = card.querySelector('.cmtx');
+      var saved = localStorage.getItem(K(cid));
+      if(saved != null) ed.innerHTML = saved;
+      ed.addEventListener('input', function(){ localStorage.setItem(K(cid), ed.innerHTML); place(); });
+      ed.addEventListener('blur', function(){ if(!ed.textContent.trim()) removeCard(cid); });
+      card.querySelector('.cmtdel').addEventListener('click', function(){ removeCard(cid); });
+      card.addEventListener('mouseenter', function(){ block.classList.add('cmt-hi'); });
+      card.addEventListener('mouseleave', function(){ block.classList.remove('cmt-hi'); });
+      block.addEventListener('mouseenter', function(){ card.classList.add('cmt-hi'); });
+      gutter.appendChild(card);
+      block.classList.add('has-cmt');
+      cards[cid] = { el: card, block: block, ed: ed };
+      place();
+      ed.focus();
+    }
+
+    // 저장된 코멘트 복원
+    blocks.forEach(function(b){ if(localStorage.getItem(K(b.dataset.cid)) != null) openCard(b); });
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('load', place);
+    setTimeout(place, 400); setTimeout(place, 1200);
   })();
 </script>
 </body>
