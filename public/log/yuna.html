@@ -132,7 +132,8 @@ svg{display:block}
 .cal td.today{color:var(--primary);font-weight:700}
 .cal td.tap{cursor:pointer}
 .cal td.tap:active{opacity:.55}
-.cal td .dot{position:absolute;left:0;right:0;bottom:6px;margin:0 auto;width:5px;height:5px;border-radius:50%}
+.cal td .dots{position:absolute;left:0;right:0;bottom:6px;display:flex;gap:3px;justify-content:center;height:5px}
+.cal td .dots i{width:5px;height:5px;border-radius:50%}
 .cal-hint{text-align:center;font-size:12.5px;color:#aab0bd;font-weight:600;margin:12px 18px 0}
 .recent .ei.day{flex-direction:column;gap:0;background:#eef0fb;color:var(--primary)}
 .recent .ei.day b{font-size:15px;font-weight:700;line-height:1}
@@ -383,7 +384,7 @@ svg{display:block}
 
       <div class="sect" style="display:flex;justify-content:space-between;align-items:center">
         <span id="calMonth">2026년 8월</span>
-        <span style="font-weight:600;color:#aab0bd;font-size:11.5px"><span style="color:var(--primary)">●</span> 수면 &nbsp;<span style="color:var(--sky)">●</span> 루틴만</span>
+        <span style="font-weight:600;color:#aab0bd;font-size:11.5px"><span style="color:var(--primary)">●</span> 수면 &nbsp;<span style="color:var(--sky)">●</span> 루틴</span>
       </div>
       <div class="cal" id="cal"></div>
       <div class="cal-hint">날짜를 누르면 그날 기록을 볼 수 있어요</div>
@@ -822,10 +823,11 @@ function renderCal(){
       if(d===null){body+='<td></td>';continue;}
       const key=ymd(year,month,d), rec=RECORDS[key];
       const has=!!rec;
-      const col=!rec?'transparent':(rec.sleep?'var(--primary)':(rec.routine>0?'var(--sky)':'transparent'));
+      let dots='';
+      if(rec){ if(rec.sleep) dots+='<i style="background:var(--primary)"></i>'; if(rec.routine>0) dots+='<i style="background:var(--sky)"></i>'; }
       const cls=(d===today?'today':'')+(has?' tap':'');
       const click=has?` onclick="openDay('${key}')"`:'';
-      body+=`<td class="${cls}"${click}>${d}<span class="dot" style="background:${col}"></span></td>`;
+      body+=`<td class="${cls}"${click}>${d}<span class="dots">${dots}</span></td>`;
     }
     body+='</tr>';
   }
