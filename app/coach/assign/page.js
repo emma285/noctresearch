@@ -39,6 +39,9 @@ export default async function CoachAssignPage({ searchParams }) {
       firstSessionAt: u?.publicMetadata?.firstSessionAt || "",
       sessionLabel: u?.publicMetadata?.sessionLabel || "",
       programWeeks: u?.publicMetadata?.programWeeks || "",
+      reportUrl: u?.publicMetadata?.reportUrl || "",
+      guideUrl: u?.publicMetadata?.guideUrl || "",
+      dataUrl: u?.publicMetadata?.dataUrl || "",
     };
   } catch {
     return <Notice>선수를 찾을 수 없어요. (uid: {uid})</Notice>;

@@ -47,13 +47,14 @@ const CSS = `
 .noct-coach .chip.g{background:rgba(31,138,76,.1);color:#1f8a4c;border-color:rgba(31,138,76,.2);}
 .noct-coach .chip.w{background:rgba(185,119,14,.1);color:#9c6c16;border-color:rgba(185,119,14,.2);}
 .noct-coach .chip b{font-weight:800;}
-.noct-coach .aact{display:flex;flex-direction:column;gap:8px;align-items:flex-end;justify-self:end;}
-.noct-coach .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;text-decoration:none;
-  padding:9px 15px;border-radius:10px;white-space:nowrap;transition:transform .14s,box-shadow .14s;}
+.noct-coach .aact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-self:end;justify-content:flex-end;max-width:320px;}
+.noct-coach .btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;text-decoration:none;
+  padding:8px 13px;border-radius:9px;white-space:nowrap;transition:transform .14s,box-shadow .14s,background .14s;cursor:pointer;}
 .noct-coach .btn.primary{background:var(--indigo);color:#fff;}
 .noct-coach .btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(67,85,176,.28);}
 .noct-coach .btn.ghost{background:#fff;color:var(--indigo);border:1px solid #dbe0f4;}
 .noct-coach .btn.ghost:hover{background:#eef0fb;}
+.noct-coach .btn.off{background:#f2f3f6;color:var(--gray2);border:1px solid var(--line);cursor:not-allowed;}
 
 .noct-coach .empty{background:#fff;border:1.5px dashed #d3d6de;border-radius:14px;padding:40px 24px;text-align:center;color:var(--gray2);font-size:14px;line-height:1.6;}
 .noct-coach .foot{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--gray2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
@@ -69,10 +70,6 @@ const CSS = `
   .noct-coach .aact{flex-direction:row;justify-self:start;align-items:center;}
 }
 `;
-
-function LogoutIcon() {
-  return null;
-}
 
 export default function CoachDashboard({ coachName = "코치", athletes = [] }) {
   const total = athletes.length;
@@ -123,7 +120,16 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
                   </div>
                 </div>
                 <div className="aact">
-                  <a className="btn primary" href={`/coach/assign?uid=${a.uid}`}>세션 배정</a>
+                  {a.dataUrl
+                    ? <a className="btn ghost" href={a.dataUrl} target="_blank" rel="noreferrer">선수 데이터</a>
+                    : <span className="btn off">선수 데이터</span>}
+                  {a.reportUrl
+                    ? <a className="btn ghost" href={a.reportUrl} target="_blank" rel="noreferrer">리포트</a>
+                    : <span className="btn off">리포트</span>}
+                  {a.guideUrl
+                    ? <a className="btn ghost" href={a.guideUrl} target="_blank" rel="noreferrer">코치 가이드</a>
+                    : <span className="btn off">코치 가이드</span>}
+                  <a className="btn primary" href={`/coach/assign?uid=${a.uid}`}>정보 입력</a>
                 </div>
               </div>
             ))}
