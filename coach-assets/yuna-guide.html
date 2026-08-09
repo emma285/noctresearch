@@ -144,6 +144,12 @@
   .qdel:hover{color:#c0554a;background:#f7ece9}
   .qaddbtn{margin:14px 0 2px;font-family:inherit;font-size:12.5px;font-weight:800;color:var(--primary);background:#eef0fb;border:1px solid #dbe0f4;border-radius:8px;padding:8px 14px;cursor:pointer}
   .qaddbtn:hover{background:#e4e8f8}
+  /* 본문 블록 인라인 수정·삭제 */
+  .editable:focus{outline:none;background:#fffef7;box-shadow:0 0 0 3px rgba(201,162,74,.12);border-radius:4px}
+  .delblock{position:relative}
+  .blockdel{position:absolute;top:2px;right:2px;opacity:0;border:none;background:#fff;color:#c3c8d0;font-size:13px;line-height:1;cursor:pointer;padding:1px 6px;border-radius:5px;z-index:5;box-shadow:0 1px 3px rgba(13,27,42,.12);transition:opacity .12s}
+  .delblock:hover > .blockdel{opacity:1}
+  .blockdel:hover{color:#c0554a}
   .qitem .qn{flex-shrink:0;width:22px;height:22px;border-radius:6px;background:#eef0fb;color:var(--primary);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
   .qitem .qx{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:6px 14px;align-items:start}
   .qitem .qx p{grid-column:1;font-size:13.5px;color:#33363d;line-height:1.6;margin:0}
@@ -587,7 +593,7 @@
     var cards = {}; // cid -> {el, block, ed}
 
     // 코멘트 가능한 블록에 id 부여
-    var blocks = Array.prototype.slice.call(doc.querySelectorAll('.card, .agrow'));
+    var blocks = Array.prototype.slice.call(doc.querySelectorAll('.card'));
     blocks.forEach(function(b, i){
       if(!b.dataset.cid) b.dataset.cid = 'b' + i;
       b.classList.add('cmt-anchor');
@@ -737,6 +743,43 @@
         it.querySelector('p').focus();
       });
       g.appendChild(add);
+    });
+  })();
+
+  /* 본문 블록 인라인 수정 + 삭제 (질문 시스템 밖의 컨텐츠) */
+  (function(){
+    var doc = document.querySelector('.doc');
+    if(!doc) return;
+    function clean(el){ var c = el.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll('.blockdel'), function(n){ n.remove(); }); return c.innerHTML; }
+
+    // 1) 인라인 편집 대상
+    var editSel = '.body > p, .body > ul > li, .body h3, .note p, .script p, .tlnote, .agrow .ac, .cmprow .cl, .cmprow .cv, .grouplab, .t2 td';
+    var eEls = Array.prototype.slice.call(doc.querySelectorAll(editSel)).filter(function(e){ return !e.closest('.qitem'); });
+    eEls.forEach(function(e, i){
+      var id = 'e' + i, key = 'yuna-e-' + id;
+      var saved = localStorage.getItem(key);
+      if(saved !== null) e.innerHTML = saved;
+      e.classList.add('editable');
+      e.contentEditable = 'true';
+      e.addEventListener('input', function(){ localStorage.setItem(key, clean(e)); });
+    });
+
+    // 2) 삭제 대상 블록
+    var delSel = '.note, .script, .tlnote, .agrow, .cmprow, .body > p, .body > ul > li';
+    var dEls = Array.prototype.slice.call(doc.querySelectorAll(delSel)).filter(function(e){ return !e.closest('.qitem'); });
+    dEls.forEach(function(b, i){
+      var id = 'd' + i, key = 'yuna-ed-' + id;
+      if(localStorage.getItem(key) === '1'){ b.remove(); return; }
+      b.classList.add('delblock');
+      var x = document.createElement('button');
+      x.className = 'blockdel'; x.type = 'button'; x.title = '삭제'; x.textContent = '×';
+      x.contentEditable = 'false';
+      x.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        if(!confirm('이 부분을 삭제할까요?')) return;
+        localStorage.setItem(key, '1'); b.remove();
+      });
+      b.appendChild(x);
     });
   })();
 </script>
