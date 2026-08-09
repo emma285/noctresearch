@@ -40,8 +40,10 @@ svg{display:block}
 .view.on{display:flex}
 
 /* 공용 헤더 */
-.brandbar{display:flex;align-items:center;justify-content:flex-start;padding:20px 22px 6px}
-.applogo{height:24px;width:auto;object-fit:contain;display:block}
+.appheader{display:flex;align-items:center;justify-content:center;height:52px;border-bottom:1px solid var(--line);background:#fff}
+.applogo{height:19px;width:auto;object-fit:contain;display:block}
+.wz-home{width:34px;height:34px;flex-shrink:0;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--mut)}
+.wz-home:active{background:#f1f2f6}
 .logo{font-weight:700;font-size:17px;letter-spacing:.06em;color:var(--navy)}
 .logo span{color:var(--primary)}
 .iconbtn{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--navy)}
@@ -50,7 +52,7 @@ svg{display:block}
 .topbar .date{font-size:14px;font-weight:600;color:var(--mut)}
 
 /* ---------- 포털 ---------- */
-.hello{padding:10px 22px 4px}
+.hello{padding:22px 22px 4px}
 .hello h1{font-size:25px;font-weight:700;color:var(--navy);line-height:1.32;letter-spacing:-0.04em}
 .hello p{font-size:14.5px;color:var(--mut);margin-top:7px;letter-spacing:-0.02em}
 
@@ -126,13 +128,13 @@ svg{display:block}
 .cal{margin:4px 18px 0;background:#fff;border-radius:20px;padding:16px 10px;box-shadow:0 3px 14px rgba(13,27,42,.045)}
 .cal table{width:100%;border-collapse:collapse;table-layout:fixed}
 .cal th{font-size:11px;font-weight:700;color:#aab0bd;padding-bottom:12px}
-.cal td{height:46px;padding:0;text-align:center;vertical-align:middle}
-.cal .c{display:inline-flex;flex-direction:column;align-items:center;gap:5px}
-.cal .n{width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#3a4257;border-radius:50%}
-.cal .c.today .n{color:var(--primary);font-weight:800}
-.cal .dot{width:5px;height:5px;border-radius:50%;background:transparent}
+.cal td{height:44px;padding:0;text-align:center;vertical-align:top}
+.cal .c{display:block;padding-top:8px}
+.cal .n{display:block;height:20px;line-height:20px;font-size:13px;font-weight:500;color:#3a4257}
+.cal .c.today .n{color:var(--primary);font-weight:700}
+.cal .dot{display:block;width:5px;height:5px;border-radius:50%;margin:4px auto 0;background:transparent}
 .cal .c.tap{cursor:pointer}
-.cal .c.tap:active{transform:scale(.9)}
+.cal .c.tap:active{opacity:.55}
 .cal-hint{text-align:center;font-size:12.5px;color:#aab0bd;font-weight:600;margin:12px 18px 0}
 .recent .ei.day{flex-direction:column;gap:0;background:#eef0fb;color:var(--primary)}
 .recent .ei.day b{font-size:15px;font-weight:700;line-height:1}
@@ -354,7 +356,7 @@ svg{display:block}
 
     <!-- ============ 포털 ============ -->
     <div class="view on" id="v-portal">
-      <div class="brandbar">
+      <div class="appheader">
         <img src="noct_logo.png" class="applogo" alt="NOCT RESEARCH">
       </div>
       <div class="hello">
@@ -371,7 +373,7 @@ svg{display:block}
           <div class="rc-s"><span class="dot green"></span>3개 기록됨</div>
           <span class="rc-arrow"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></span>
         </button>
-        <button class="rec-card sleep" onclick="go('morning')">
+        <button class="rec-card sleep" onclick="startSleep()">
           <div class="rc-ic">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M20.7 13.3a8.6 8.6 0 0 1-11-11 .8.8 0 0 0-1-1 9.9 9.9 0 1 0 13 13 .8.8 0 0 0-1-1z"/><path d="M16.2 3.5l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z"/></svg>
           </div>
@@ -397,6 +399,7 @@ svg{display:block}
         <button class="back" onclick="wzBack()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
         <div class="wz-prog"><div class="wz-fill" id="wzFill"></div></div>
         <div class="wz-count" id="wzCount">1/5</div>
+        <button class="wz-home" onclick="go('portal')" aria-label="홈"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
       </div>
 
       <div class="wz-body">
@@ -796,6 +799,12 @@ function updateCardStatus(){
   if(sc) sc.innerHTML = rec.sleep ? '<span class="dot green"></span>오늘 기록됨' : '<span class="dot red"></span>지난밤 · 기록 전';
   const rc=document.querySelector('.rec-card.routine .rc-s');
   if(rc) rc.innerHTML = (rec.routine>0) ? '<span class="dot green"></span>오늘 '+rec.routine+'개 기록됨' : '<span class="dot red"></span>오늘 · 기록 전';
+}
+function startSleep(){
+  const now=new Date(); const key=ymd(now.getFullYear(),now.getMonth()+1,now.getDate());
+  if(RECORDS[key] && RECORDS[key].sleep){
+    if(confirm('오늘 수면은 이미 기록했어요.\n다시 기록하면 별도로 하나 더 저장돼요. 그래도 진행할까요?')) go('morning');
+  } else { go('morning'); }
 }
 function renderCal(){
   const el=document.getElementById('cal');if(!el)return;
