@@ -136,12 +136,18 @@
   .disc{margin-top:14px;font-size:11px;color:#a7abb2;line-height:1.7;text-align:center}
 
   /* 질문 아이템 */
-  .qitem{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--border)}
+  .qitem{display:flex;gap:12px;align-items:flex-start;padding:13px 30px 13px 0;border-top:1px solid var(--border);position:relative}
   .qitem:first-of-type{border-top:none}
+  .qx p.qedit:focus{outline:none;background:#fffef7;box-shadow:0 0 0 3px rgba(201,162,74,.12);border-radius:4px}
+  .qdel{position:absolute;top:10px;right:0;opacity:0;border:none;background:none;color:#c3c8d0;font-size:16px;line-height:1;cursor:pointer;padding:2px 5px;border-radius:5px;z-index:4}
+  .qitem:hover .qdel{opacity:1}
+  .qdel:hover{color:#c0554a;background:#f7ece9}
+  .qaddbtn{margin:14px 0 2px;font-family:inherit;font-size:12.5px;font-weight:800;color:var(--primary);background:#eef0fb;border:1px solid #dbe0f4;border-radius:8px;padding:8px 14px;cursor:pointer}
+  .qaddbtn:hover{background:#e4e8f8}
   .qitem .qn{flex-shrink:0;width:22px;height:22px;border-radius:6px;background:#eef0fb;color:var(--primary);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
   .qitem .qx{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:6px 14px;align-items:start}
   .qitem .qx p{grid-column:1;font-size:13.5px;color:#33363d;line-height:1.6;margin:0}
-  .qitem .qx .memo{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+  .qitem .qx .memo{display:block;grid-column:1;font-size:11.5px;color:var(--muted);margin-top:3px}
   .qitem .qx .memo-field{grid-column:2;margin-top:0}
   .grouplab{font-size:13.5px;font-weight:800;color:var(--navy);margin:2px 0 4px;letter-spacing:-.02em}
   /* 2열 미니표 */
@@ -650,6 +656,92 @@
     window.addEventListener('resize', place);
     window.addEventListener('load', place);
     setTimeout(place, 400); setTimeout(place, 1200);
+  })();
+
+  /* 질문 목록 수정·삭제·추가 */
+  (function(){
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.card.body'))
+      .filter(function(c){ return c.querySelector('.qitem') && c.querySelector('.grouplab'); });
+    if(!groups.length) return;
+    var QT = function(id){ return 'yuna-qtext-' + id; };
+    var QD = function(id){ return 'yuna-qdel-' + id; };
+    var QA = function(g){ return 'yuna-qadd-' + g; };
+    var AT = function(k){ return 'yuna-coach-' + k; }; // 답변 저장키(기존 memo-field와 동일)
+
+    function attachAnswer(field){
+      var k = field.dataset.k; var s = localStorage.getItem(AT(k));
+      if(s !== null) field.innerHTML = s;
+      field.addEventListener('input', function(){ localStorage.setItem(AT(k), field.innerHTML); });
+    }
+
+    function setupItem(item, gid){
+      var qx = item.querySelector('.qx');
+      var p = qx.querySelector('p');
+      var field = qx.querySelector('.memo-field');
+      var qid = field ? field.dataset.k : ('qc' + Math.random().toString(36).slice(2,8));
+      // 힌트(.memo) 는 편집영역 밖으로 빼서 p 를 순수 질문텍스트로
+      var hint = p.querySelector('.memo');
+      if(hint){ p.parentNode.insertBefore(hint, field || null); }
+      // 삭제된 항목이면 제거
+      if(localStorage.getItem(QD(qid)) === '1'){ item.remove(); return; }
+      // 질문 텍스트 편집 가능
+      p.classList.add('qedit'); p.contentEditable = 'true';
+      var savedT = localStorage.getItem(QT(qid));
+      if(savedT !== null) p.innerHTML = savedT;
+      p.addEventListener('input', function(){ localStorage.setItem(QT(qid), p.innerHTML); });
+      // 삭제 버튼
+      var del = document.createElement('button');
+      del.className = 'qdel'; del.type = 'button'; del.title = '질문 삭제'; del.textContent = '×';
+      del.addEventListener('click', function(){
+        if(!confirm('이 질문을 삭제할까요?')) return;
+        if(String(qid).indexOf('qc') === 0){ // 추가된 질문 → 목록에서 제거
+          var arr = JSON.parse(localStorage.getItem(QA(gid)) || '[]').filter(function(x){ return x.id !== qid; });
+          localStorage.setItem(QA(gid), JSON.stringify(arr));
+          localStorage.removeItem(QT(qid)); localStorage.removeItem(AT(qid));
+        } else { localStorage.setItem(QD(qid), '1'); }
+        item.remove();
+      });
+      item.appendChild(del);
+    }
+
+    function makeItem(gid, qid, text){
+      var item = document.createElement('div');
+      item.className = 'qitem';
+      item.innerHTML = '<div class="qn">＋</div><div class="qx">'
+        + '<p></p>'
+        + '<div class="memo-field mini" contenteditable="true" data-k="' + qid + '" data-ph="답변…"></div>'
+        + '</div>';
+      item.querySelector('p').textContent = text || '';
+      return item;
+    }
+
+    groups.forEach(function(g, gi){
+      var gid = 'g' + gi;
+      // 기존 질문 세팅
+      Array.prototype.slice.call(g.querySelectorAll('.qitem')).forEach(function(it){ setupItem(it, gid); });
+      // 추가된 질문 복원
+      var added = JSON.parse(localStorage.getItem(QA(gid)) || '[]');
+      added.forEach(function(o){
+        var it = makeItem(gid, o.id, '');
+        g.appendChild(it);
+        var f = it.querySelector('.memo-field'); if(f) attachAnswer(f);
+        setupItem(it, gid);
+      });
+      // 질문 추가 버튼
+      var add = document.createElement('button');
+      add.className = 'qaddbtn'; add.type = 'button'; add.textContent = '+ 질문 추가';
+      add.addEventListener('click', function(){
+        var qid = 'qc' + Math.random().toString(36).slice(2,9);
+        var arr = JSON.parse(localStorage.getItem(QA(gid)) || '[]');
+        arr.push({ id: qid }); localStorage.setItem(QA(gid), JSON.stringify(arr));
+        var it = makeItem(gid, qid, '');
+        g.insertBefore(it, add);
+        var f = it.querySelector('.memo-field'); if(f) attachAnswer(f);
+        setupItem(it, gid);
+        it.querySelector('p').focus();
+      });
+      g.appendChild(add);
+    });
   })();
 </script>
 </body>
