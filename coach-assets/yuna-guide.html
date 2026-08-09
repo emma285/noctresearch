@@ -18,7 +18,7 @@
     font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
     letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
   .wrap{max-width:940px;margin:0 auto;padding:36px 24px}
-  section,.block{margin-bottom:28px}
+  section,.block{margin-bottom:28px;clear:both}
   .tabnum{font-variant-numeric:tabular-nums}
 
   /* Hero */
@@ -137,6 +137,12 @@
   .note.red{background:#fbe9e6;border-color:#f1cbc3}
   .note.red .nl{color:#a25a48} .note.red p{color:#6b4a44} .note.red b{color:#8f3d31}
 
+  /* 섹션별 우측 메모 (float) */
+  .secmemo{float:right;width:232px;margin:2px 0 14px 22px;background:#fffdf5;border:1px dashed #d9d2b0;border-radius:8px;padding:12px 14px}
+  .secmemo .sml{font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#9c7a16;margin-bottom:7px}
+  .secmemo .memo-field{margin-top:0;min-height:96px;border:none;background:transparent;padding:0;border-radius:0}
+  .secmemo .memo-field:focus{box-shadow:none;background:transparent}
+
   @media print{body{background:#fff}.wrap{max-width:100%}}
   @media(max-width:760px){
     .wrap{padding:22px 14px}
@@ -148,6 +154,7 @@
     .agrow .at{width:64px}
     .qitem .qx{grid-template-columns:1fr}
     .qitem .qx .memo-field{grid-column:1;margin-top:6px}
+    .secmemo{float:none;width:100%;margin:0 0 14px 0}
   }
 </style>
 </head>
@@ -184,7 +191,7 @@
   </div>
 
   <!-- 이 세션의 목표 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-1" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">GOAL</div>
       <h2>이 세션의 목표</h2>
@@ -205,7 +212,7 @@
   </section>
 
   <!-- 케이스 한눈에 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-2" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">CASE</div>
       <h2>케이스 한눈에 (코치용)</h2>
@@ -224,7 +231,7 @@
   </section>
 
   <!-- 기저선 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-3" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">BASELINE</div>
       <h2>기저선 (문진표 산출 · 실측 전)</h2>
@@ -244,7 +251,7 @@
   </section>
 
   <!-- 세션 아젠다 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-4" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">AGENDA · 60분</div>
       <h2>세션 진행 순서</h2>
@@ -261,7 +268,7 @@
   </section>
 
   <!-- 설명할 내용 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-5" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">EXPLAIN · 1</div>
       <h2>주호소 재정의</h2>
@@ -276,7 +283,7 @@
     </div>
   </section>
 
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-6" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">EXPLAIN · 2</div>
       <h2>인지 개입 · 3가지 메시지</h2>
@@ -369,7 +376,7 @@
   </section>
 
   <!-- 이갈이 답변 준비 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-7" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">Q&amp;A</div>
       <h2>이갈이 질문 답변 준비</h2>
@@ -388,7 +395,7 @@
   </section>
 
   <!-- 안전 · 의뢰 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-8" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">SAFETY</div>
       <h2>안전 · 의뢰 · 보류</h2>
@@ -410,7 +417,7 @@
   </section>
 
   <!-- 과제 & 다음 게이트 -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-9" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">HOMEWORK</div>
       <h2>이번 주 과제 · 다음 게이트</h2>
@@ -428,7 +435,7 @@
   </section>
 
   <!-- 보스턴 원정 프로토콜 (안전 우선 v2) -->
-  <section class="block">
+  <section class="block"><div class="secmemo"><div class="sml">메모</div><div class="memo-field" contenteditable="true" data-k="sec-10" data-ph="이 부분 메모…"></div></div>
     <div class="shead">
       <div class="lab">PROTOCOL</div>
       <h2>보스턴 원정 수면 준비 (안전 우선)</h2>
