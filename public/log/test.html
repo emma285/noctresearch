@@ -128,11 +128,11 @@ svg{display:block}
 .cal{margin:4px 18px 0;background:#fff;border-radius:20px;padding:16px 10px;box-shadow:0 3px 14px rgba(13,27,42,.045)}
 .cal table{width:100%;border-collapse:collapse;table-layout:fixed}
 .cal th{font-size:11px;font-weight:700;color:#aab0bd;padding-bottom:12px}
-.cal td{height:44px;padding:0;text-align:center;vertical-align:top}
-.cal .c{display:block;padding-top:8px}
-.cal .n{display:block;height:20px;line-height:20px;font-size:13px;font-weight:500;color:#3a4257}
+.cal td{height:44px;padding:0;position:relative}
+.cal .c{display:block;height:44px;position:relative}
+.cal .n{position:absolute;top:9px;left:0;right:0;text-align:center;line-height:1;font-size:13px;font-weight:500;color:#3a4257}
 .cal .c.today .n{color:var(--primary);font-weight:700}
-.cal .dot{display:block;width:5px;height:5px;border-radius:50%;margin:4px auto 0;background:transparent}
+.cal .dot{position:absolute;top:31px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:transparent}
 .cal .c.tap{cursor:pointer}
 .cal .c.tap:active{opacity:.55}
 .cal-hint{text-align:center;font-size:12.5px;color:#aab0bd;font-weight:600;margin:12px 18px 0}
