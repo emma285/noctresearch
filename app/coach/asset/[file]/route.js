@@ -35,6 +35,14 @@ export async function GET(_request, { params }) {
       return new NextResponse("파일을 찾을 수 없어요.", { status: 404 });
     }
 
+    // 코치 페이지로 돌아가는 플로팅 버튼 주입 (뒤로가기 없으면 대시보드)
+    const backBar =
+      '<a href="/portal" onclick="if(history.length>1){history.back();return false}" ' +
+      'style="position:fixed;top:14px;left:14px;z-index:99999;background:#0D1B2A;color:#fff;' +
+      "font-family:Pretendard,'Apple SD Gothic Neo',sans-serif;font-size:12.5px;font-weight:700;" +
+      'padding:9px 14px;border-radius:9px;text-decoration:none;box-shadow:0 4px 14px rgba(13,27,42,.28)">← 돌아가기</a>';
+    html = html.replace(/<body([^>]*)>/i, (m) => m + backBar);
+
     return new NextResponse(html, {
       status: 200,
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, max-age=60" },

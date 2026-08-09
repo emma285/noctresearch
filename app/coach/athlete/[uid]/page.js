@@ -114,10 +114,10 @@ export default async function AthleteDetailPage({ params }) {
           <div className="sec-title">선수 자료</div>
           <div className="grid">
             {assets.data
-              ? <a className="tile" href={assets.data} target="_blank" rel="noreferrer"><div><div className="tt">선수 데이터</div><div className="td">사전 질문지 응답 전체</div></div><div className="go">→</div></a>
+              ? <a className="tile" href={assets.data}><div><div className="tt">선수 데이터</div><div className="td">사전 질문지 응답 전체</div></div><div className="go">→</div></a>
               : <div className="tile off"><div><div className="tt">선수 데이터</div><div className="td">아직 연결된 데이터가 없어요</div></div></div>}
             {assets.report
-              ? <a className="tile" href={assets.report} target="_blank" rel="noreferrer"><div><div className="tt">수면 리포트 확인</div><div className="td">1차 수면 평가 리포트</div></div><div className="go">→</div></a>
+              ? <a className="tile" href={assets.report}><div><div className="tt">수면 리포트 확인</div><div className="td">1차 수면 평가 리포트</div></div><div className="go">→</div></a>
               : <div className="tile off"><div><div className="tt">수면 리포트</div><div className="td">아직 만든 리포트가 없어요</div></div></div>}
           </div>
         </div>
@@ -139,8 +139,8 @@ export default async function AthleteDetailPage({ params }) {
                 {s.n === 1 && sessionLabel !== "미배정" && <span className="sday">{sessionLabel}</span>}
               </div>
               <div className="sbtns">
-                {s.guide && <a className="btn primary" href={s.guide} target="_blank" rel="noreferrer">세션 가이드 열기</a>}
-                {s.report && <a className="btn ghost" href={s.report} target="_blank" rel="noreferrer">리포트 확인</a>}
+                {s.guide && <a className="btn primary" href={s.guide}>세션 가이드 열기</a>}
+                {s.report && <a className="btn ghost" href={s.report}>리포트 확인</a>}
               </div>
             </div>
           ))}
