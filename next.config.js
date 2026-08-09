@@ -4,5 +4,14 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/coach/asset/[file]": ["./coach-assets/**"],
   },
+  // 선수 기록 페이지는 개발 중 자주 바뀌므로 캐시 금지(항상 최신 CSS/HTML)
+  async headers() {
+    return [
+      {
+        source: "/log/:path*",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
+    ];
+  },
 };
 module.exports = nextConfig;
