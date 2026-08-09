@@ -72,17 +72,17 @@ export default function AssignForm({ target }) {
           <div className="text-xs font-extrabold tracking-wider text-blue-600">선수별 자료 링크</div>
           <div>
             <label className={label}>수면 리포트 URL</label>
-            <input type="url" className={field} placeholder="https://…"
+            <input type="text" className={field} placeholder="/reports/yuna-report.html 또는 https://…"
               value={reportUrl} onChange={(e) => setReportUrl(e.target.value)} />
           </div>
           <div>
             <label className={label}>코치 가이드 URL</label>
-            <input type="url" className={field} placeholder="https://…"
+            <input type="text" className={field} placeholder="/coach/asset/yuna-guide 또는 https://…"
               value={guideUrl} onChange={(e) => setGuideUrl(e.target.value)} />
           </div>
           <div>
-            <label className={label}>선수 데이터 URL <span className="font-normal text-gray-400">(사전질문지 노션)</span></label>
-            <input type="url" className={field} placeholder="https://www.notion.so/…"
+            <label className={label}>선수 데이터 URL <span className="font-normal text-gray-400">(HTML 또는 노션)</span></label>
+            <input type="text" className={field} placeholder="/coach/asset/yuna-data 또는 https://www.notion.so/…"
               value={dataUrl} onChange={(e) => setDataUrl(e.target.value)} />
           </div>
 
