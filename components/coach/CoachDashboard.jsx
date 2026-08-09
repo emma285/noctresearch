@@ -38,7 +38,11 @@ const CSS = `
 
 .noct-coach .alist{display:flex;flex-direction:column;gap:12px;}
 .noct-coach .acard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(13,27,42,.05);
-  display:grid;grid-template-columns:1fr auto;gap:14px 18px;align-items:center;}
+  display:grid;grid-template-columns:1fr auto;gap:14px 18px;align-items:center;text-decoration:none;color:inherit;
+  transition:transform .14s,box-shadow .14s,border-color .14s;}
+.noct-coach a.acard:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(13,27,42,.1);border-color:#c7cef0;}
+.noct-coach .ago{width:34px;height:34px;border-radius:50%;background:#eef0fb;color:var(--indigo);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;justify-self:end;}
+.noct-coach a.acard:hover .ago{background:var(--indigo);color:#fff;}
 .noct-coach .aname{font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.4px;}
 .noct-coach .aname span{font-size:12.5px;font-weight:600;color:var(--gray2);margin-left:6px;}
 .noct-coach .aemail{font-size:12.5px;color:var(--gray);margin-top:3px;}
@@ -108,7 +112,7 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
         ) : (
           <div className="alist">
             {athletes.map((a) => (
-              <div className="acard" key={a.uid}>
+              <a className="acard" key={a.uid} href={`/coach/athlete/${a.uid}`}>
                 <div>
                   <div className="aname">{a.name}<span>선수</span></div>
                   {a.email && <div className="aemail">{a.email}</div>}
@@ -116,22 +120,10 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
                     <span className={`chip ${a.intakeDone ? "g" : "w"}`}>{a.intakeDone ? "설문 완료" : "설문 대기"}</span>
                     <span className="chip">세션 <b>{a.sessionLabel || (a.firstSessionAt ? a.firstSessionAt.slice(0, 10) : "미배정")}</b></span>
                     <span className="chip">프로그램 <b>{a.programWeeks ? `${a.programWeeks}주` : "미정"}</b></span>
-                    {a.prepDone && <span className="chip g">준비자료 있음</span>}
                   </div>
                 </div>
-                <div className="aact">
-                  {a.dataUrl
-                    ? <a className="btn ghost" href={a.dataUrl} target="_blank" rel="noreferrer">선수 데이터</a>
-                    : <span className="btn off">선수 데이터</span>}
-                  {a.reportUrl
-                    ? <a className="btn ghost" href={a.reportUrl} target="_blank" rel="noreferrer">리포트</a>
-                    : <span className="btn off">리포트</span>}
-                  {a.guideUrl
-                    ? <a className="btn ghost" href={a.guideUrl} target="_blank" rel="noreferrer">코치 가이드</a>
-                    : <span className="btn off">코치 가이드</span>}
-                  <a className="btn primary" href={`/coach/assign?uid=${a.uid}`}>정보 입력</a>
-                </div>
-              </div>
+                <div className="ago">→</div>
+              </a>
             ))}
           </div>
         )}
