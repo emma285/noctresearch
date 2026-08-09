@@ -128,7 +128,7 @@ svg{display:block}
 .cal th{font-size:11px;font-weight:700;color:#aab0bd;padding-bottom:12px}
 .cal td{height:46px;padding:0;text-align:center;vertical-align:middle}
 .cal .c{display:inline-flex;flex-direction:column;align-items:center;gap:5px}
-.cal .n{width:30px;height:30px;line-height:30px;font-size:13px;font-weight:500;color:#3a4257;border-radius:50%;text-align:center}
+.cal .n{width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#3a4257;border-radius:50%}
 .cal .c.today .n{background:var(--primary);color:#fff;font-weight:700}
 .cal .dot{width:5px;height:5px;border-radius:50%;background:transparent}
 .cal .c.tap{cursor:pointer}
@@ -249,6 +249,9 @@ svg{display:block}
 .picker .ptime{font-size:50px;font-weight:700;color:var(--navy);min-width:168px;text-align:center;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .phint{text-align:center;font-size:15px;font-weight:700;color:var(--primary);margin-top:18px}
 .wz-body .journal{margin:28px 0 0;border-radius:20px;box-shadow:0 2px 12px rgba(13,27,42,.04)}
+.mic-tip{display:flex;align-items:flex-start;gap:9px;margin:16px 2px 0;padding:13px 14px;background:#eef0fb;border-radius:14px;font-size:13px;line-height:1.5;color:#4a5270}
+.mic-tip svg{flex-shrink:0;margin-top:1px;color:var(--primary)}
+.mic-tip b{color:var(--primary);font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{padding:9px 15px;border-radius:999px;font-size:13.5px;font-weight:600;background:#fff;color:#475069;border:1.5px solid var(--line);transition:.15s;display:flex;align-items:center;gap:5px}
 .chip:active{transform:scale(.95)}
@@ -379,8 +382,8 @@ svg{display:block}
       </div>
 
       <div class="sect" style="display:flex;justify-content:space-between;align-items:center">
-        <span>2026년 8월</span>
-        <span style="font-weight:600;color:#aab0bd;font-size:11.5px"><span style="color:var(--primary)">●</span> 수면+루틴 &nbsp;<span style="color:var(--sky)">●</span> 루틴만</span>
+        <span id="calMonth">2026년 8월</span>
+        <span style="font-weight:600;color:#aab0bd;font-size:11.5px"><span style="color:var(--primary)">●</span> 수면 &nbsp;<span style="color:var(--sky)">●</span> 루틴만</span>
       </div>
       <div class="cal" id="cal"></div>
       <div class="cal-hint">날짜를 누르면 그날 기록을 볼 수 있어요</div>
@@ -407,6 +410,19 @@ svg{display:block}
             <button class="pstep" onclick="pick('bed',15)">+</button>
           </div>
           <div class="phint" id="ph-bed">밤 11시 45분</div>
+        </div>
+
+        <!-- Q: 입면(잠드는 데 걸린 시간) -->
+        <div class="qstep" data-q="sol">
+          <div class="qtitle">잠드는데 얼마나<br>걸린 것 같아요?</div>
+          <div class="qsub">체감 시간을 기록해주세요.</div>
+          <div class="qchips qcol" id="solChips">
+            <button class="qbtn" onclick="pickOne(this,'sol','바로 잠들어요')">바로 잠들어요<span class="qck"></span></button>
+            <button class="qbtn" onclick="pickOne(this,'sol','15분 이내')">15분 이내<span class="qck"></span></button>
+            <button class="qbtn" onclick="pickOne(this,'sol','30분쯤')">30분쯤<span class="qck"></span></button>
+            <button class="qbtn" onclick="pickOne(this,'sol','1시간쯤')">1시간쯤<span class="qck"></span></button>
+            <button class="qbtn" onclick="pickOne(this,'sol','1시간 이상')">1시간 이상<span class="qck"></span></button>
+          </div>
         </div>
 
         <!-- Q: 깬 시각 -->
@@ -462,9 +478,13 @@ svg{display:block}
         <!-- Q: 메모 -->
         <div class="qstep" data-q="memo">
           <div class="qtitle">더 남기고 싶은 말 있어요?</div>
-          <div class="qsub">없으면 그냥 넘어가도 괜찮아요.</div>
+          <div class="qsub">더 남기고 싶은 말 남겨주세요. 없으면 그냥 넘어가도 괜찮아요.</div>
           <div class="journal">
             <textarea placeholder="자다 깬 이유, 컨디션, 몸 상태, 어제 있었던 일…&#10;떠오르는 대로 편하게 적어주세요."></textarea>
+          </div>
+          <div class="mic-tip">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>
+            <span>키보드의 <b>마이크 버튼</b>으로 음성으로 남겨보세요. 오타가 있어도 괜찮아요.</span>
           </div>
         </div>
       </div>
@@ -546,6 +566,7 @@ const APP_USER="yuna@noct-research.com";
 async function saveLog(kind,data,summary){
   try{const date=new Date().toISOString().slice(0,10);
     await fetch('/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:APP_USER,kind,date,summary,data})});
+    if(typeof loadMonth==='function'){ loadMonth(); }
   }catch(e){}
 }
 /* ---------- 화면 전환 ---------- */
@@ -563,8 +584,8 @@ document.querySelectorAll('.demo-switch button').forEach(b=>b.onclick=()=>go(b.d
 
 /* ---------- 아침: 한 페이지 한 질문 위저드 ---------- */
 /* 수면효율·총수면 같은 분석은 선수한테 안 보임 — 코치(Emma)만 보는 값이라 여기선 계산만 하고 숨김 */
-const AM={bed:23*60+45, wake:7*60, woke:null, waso:null, feel:[], memo:''};
-let flow=['bed','wake','woke','feel','memo']; // woke 답에 따라 waso 삽입
+const AM={bed:23*60+45, sol:null, wake:7*60, woke:null, waso:null, feel:[], memo:''};
+let flow=['bed','sol','wake','woke','feel','memo']; // woke 답에 따라 waso 삽입
 let step=0;
 
 function fmt(min){const h=Math.floor(min/60),m=min%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;}
@@ -580,8 +601,8 @@ function pickWoke(el,n){
   document.querySelectorAll('#wokeChips .qbtn').forEach(x=>x.classList.remove('on'));el.classList.add('on');
   AM.woke=n;
   // 안 깼으면 waso 질문 제외, 깼으면 woke 뒤에 삽입
-  flow=['bed','wake','woke','feel','memo'];
-  if(n>0) flow.splice(3,0,'waso'); else AM.waso=null;
+  flow=['bed','sol','wake','woke','feel','memo'];
+  if(n>0) flow.splice(4,0,'waso'); else AM.waso=null;
   setTimeout(()=>wzNext(),240); // 토스식 자동 진행
 }
 function pickOne(el,key,val){
@@ -607,9 +628,9 @@ function wzNext(){
   else{ // 완료 — 코치용 값은 백그라운드 계산(선수 화면엔 안 보임)
     let dur=AM.wake-AM.bed; if(dur<0)dur+=1440;
     console.log('[코치 전용] 총수면 '+Math.floor(dur/60)+'h '+(dur%60)+'m · 밤중깸 '+AM.woke+'회 · WASO '+(AM.waso||'-'));
-    saveLog('sleep', {bed:AM.bed,wake:AM.wake,woke:AM.woke,waso:AM.waso,feel:AM.feel,memo:AM.memo}, '취침 '+fmt(AM.bed)+' ~ 기상 '+fmt(AM.wake)+' · 밤중깸 '+AM.woke+'회 · WASO '+(AM.waso||'-')+' · 느낌 '+AM.feel.join(','));
+    saveLog('sleep', {bed:AM.bed,sol:AM.sol,wake:AM.wake,woke:AM.woke,waso:AM.waso,feel:AM.feel,memo:AM.memo}, '취침 '+fmt(AM.bed)+' · 입면 '+(AM.sol||'-')+' · 기상 '+fmt(AM.wake)+' · 밤중깸 '+AM.woke+'회 · WASO '+(AM.waso||'-')+' · 느낌 '+AM.feel.join(','));
     toast('아침 기록 완료 ✓ 저장됨');
-    setTimeout(()=>{go('portal');step=0;flow=['bed','wake','woke','feel','memo'];showStep();},800);
+    setTimeout(()=>{go('portal');step=0;flow=['bed','sol','wake','woke','feel','memo'];showStep();},800);
   }
 }
 function wzBack(){ if(step>0){step--;showStep();} else go('portal'); }
@@ -755,19 +776,34 @@ function toast(msg){
 
 /* ---------- 기록 탭: 캘린더 + 하루 상세 ---------- */
 const DOW=['일','월','화','수','목','금','토'];
-// 데모 하루 데이터 (실제론 Daily DB에서 로드)
-const DAYDATA={
-  7:{dow:'목',sleep:{time:'밤 11:45 – 아침 7:00',feel:['개운해요','푹 잤어요'],memo:'훈련 많았던 날이라 잘 잤어요. 그래도 6시 알람 전에 잠깐 깼음.'},
-     routine:[{type:'training',time:'07:30',t:'훈련 · 고강도 · 1시간 30분'},{type:'caffeine',time:'09:00',t:'카페인 · 1잔'},{type:'training',time:'16:00',t:'훈련 · 중간 · 1시간'},{type:'etc',time:'20:00',t:'물리치료'}]},
-  6:{dow:'수',sleep:{time:'밤 12:20 – 아침 6:50',feel:['밤에 2번 깸','몸이 무거워요'],memo:'새벽 4시쯤 깨서 한참 뒤척였어요. 다시 잠들긴 했는데 얕게 잔 느낌.'},
-     routine:[{type:'training',time:'08:00',t:'훈련 · 고강도 · 2시간'},{type:'caffeine',time:'14:00',t:'카페인 · 2잔'},{type:'alcohol',time:'21:00',t:'술 · 1잔'}]},
-  5:{dow:'화',sleep:null,
-     routine:[{type:'training',time:'09:00',t:'훈련 · 중간 · 1시간'},{type:'meal',time:'19:00',t:'식사 · 저녁'}]},
-};
+let RECORDS={}; // "YYYY-MM-DD" -> {sleep, routine, sleepSummary, items[]}
+function pad(n){return String(n).padStart(2,'0');}
+function ymd(y,m,d){return y+'-'+pad(m)+'-'+pad(d);}
+async function loadMonth(){
+  try{
+    const now=new Date();
+    const mm=now.getFullYear()+'-'+pad(now.getMonth()+1);
+    const r=await fetch('/api/log?user='+encodeURIComponent(APP_USER)+'&month='+mm);
+    const j=await r.json(); RECORDS=j.days||{};
+  }catch(e){ RECORDS={}; }
+  renderCal(); updateCardStatus();
+}
+function updateCardStatus(){
+  const now=new Date();
+  const key=ymd(now.getFullYear(),now.getMonth()+1,now.getDate());
+  const rec=RECORDS[key]||{};
+  const sc=document.querySelector('.rec-card.sleep .rc-s');
+  if(sc) sc.innerHTML = rec.sleep ? '<span class="dot green"></span>오늘 기록됨' : '<span class="dot red"></span>지난밤 · 기록 전';
+  const rc=document.querySelector('.rec-card.routine .rc-s');
+  if(rc) rc.innerHTML = (rec.routine>0) ? '<span class="dot green"></span>오늘 '+rec.routine+'개 기록됨' : '<span class="dot red"></span>오늘 · 기록 전';
+}
 function renderCal(){
   const el=document.getElementById('cal');if(!el)return;
-  const full=[1,2,3,4,6,7], routineOnly=[5], first=6, days=31, today=8;
-  // 셀 배열: 앞 빈칸 + 1~31
+  const now=new Date();
+  const year=now.getFullYear(), month=now.getMonth()+1, today=now.getDate();
+  const first=new Date(year,month-1,1).getDay();
+  const days=new Date(year,month,0).getDate();
+  const ml=document.getElementById('calMonth'); if(ml) ml.textContent=year+'년 '+month+'월';
   const seq=[]; for(let i=0;i<first;i++)seq.push(null); for(let d=1;d<=days;d++)seq.push(d);
   while(seq.length%7!==0)seq.push(null);
   let head='<tr>'+DOW.map(x=>`<th>${x}</th>`).join('')+'</tr>';
@@ -777,32 +813,29 @@ function renderCal(){
     for(let c=0;c<7;c++){
       const d=seq[r*7+c];
       if(d===null){body+='<td></td>';continue;}
-      const has=full.includes(d)||routineOnly.includes(d);
-      const col=full.includes(d)?'var(--primary)':routineOnly.includes(d)?'var(--sky)':'transparent';
+      const key=ymd(year,month,d), rec=RECORDS[key];
+      const has=!!rec;
+      const col=!rec?'transparent':(rec.sleep?'var(--primary)':(rec.routine>0?'var(--sky)':'transparent'));
       const cls='c'+(d===today?' today':'')+(has?' tap':'');
-      const click=has?` onclick="openDay(${d})"`:'';
+      const click=has?` onclick="openDay('${key}')"`:'';
       body+=`<td><span class="${cls}"${click}><span class="n">${d}</span><span class="dot" style="background:${col}"></span></span></td>`;
     }
     body+='</tr>';
   }
   el.innerHTML=`<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
-function typeMeta(t){const m={training:['#4355B0','#eef0fb'],caffeine:['#B9770E','#fbf3e6'],nap:['#3aa7cf','#e8f5fb'],meal:['#1F8A4C','#e7f4ec'],alcohol:['#F4978E','#fdeeeb'],etc:['#6b7280','#f1f2f4']};return m[t]||m.etc;}
-function openDay(d){
-  const data=DAYDATA[d];
-  document.getElementById('dayTitle').innerHTML=`8월 ${d}일 <span style="color:var(--mut);font-weight:600">(${data.dow})</span>`;
+function openDay(key){
+  const rec=RECORDS[key]||{};
+  const dt=new Date(key+'T00:00');
+  document.getElementById('dayTitle').innerHTML=`${dt.getMonth()+1}월 ${dt.getDate()}일 <span style="color:var(--mut);font-weight:600">(${DOW[dt.getDay()]})</span>`;
   let html='';
-  // 수면
   html+='<div class="day-sec"><div class="h"><svg width="15" height="15" viewBox="0 0 24 24" fill="#4355B0" stroke="none"><path d="M20.7 13.3a8.6 8.6 0 0 1-11-11 .8.8 0 0 0-1-1 9.9 9.9 0 1 0 13 13 .8.8 0 0 0-1-1z"/></svg>수면 기록</div>';
-  if(data.sleep){
-    html+=`<div class="sleepbox"><div class="tm">${data.sleep.time}</div><div class="fl">${data.sleep.feel.map(f=>`<span>${f}</span>`).join('')}</div>${data.sleep.memo?`<div class="mm">${data.sleep.memo}</div>`:''}</div>`;
-  } else html+='<div class="empty">이 날은 수면 기록이 없어요.</div>';
+  if(rec.sleep){ html+=`<div class="sleepbox"><div class="mm" style="margin-top:0">${rec.sleepSummary||'기록됨'}</div></div>`; }
+  else html+='<div class="empty">이 날은 수면 기록이 없어요.</div>';
   html+='</div>';
-  // 루틴
   html+='<div class="day-sec"><div class="h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3aa7cf" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7l1.4 1.4L8.6 6M4.5 13l1.4 1.4L8.6 12M12 7h7.5M12 13h7.5"/></svg>자기 전 루틴</div>';
-  if(data.routine&&data.routine.length){
-    html+=data.routine.sort((a,b)=>a.time.localeCompare(b.time)).map(r=>{const[c,bg]=typeMeta(r.type);return `<div class="rt"><span class="rtt">${r.time}</span><span class="rti" style="background:${bg}"><span style="width:7px;height:7px;border-radius:50%;background:${c}"></span></span><span class="rtx">${r.t}</span></div>`;}).join('');
-  } else html+='<div class="empty">루틴 기록이 없어요.</div>';
+  if(rec.items&&rec.items.length){ html+=rec.items.map(t=>`<div class="rt"><span class="rtx">${t}</span></div>`).join(''); }
+  else html+='<div class="empty">루틴 기록이 없어요.</div>';
   html+='</div>';
   document.getElementById('dayBody').innerHTML=html;
   document.getElementById('daySheetWrap').classList.add('on');
@@ -884,7 +917,7 @@ function savePrep(){
 }
 
 /* init */
-showStep();renderQuick();renderTimeline();renderCal();renderSessions();
+showStep();renderQuick();renderTimeline();renderCal();loadMonth();renderSessions();
 </script>
 </body>
 </html>
