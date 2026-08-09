@@ -2,8 +2,8 @@
 // (코치 권한 = 이메일 화이트리스트는 /coach 페이지·API 안에서 별도 확인)
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// 로그인 필요한 경로 (선수 개인 포털 + 코치 배정 페이지)
-const isProtectedRoute = createRouteMatcher(["/portal(.*)", "/coach(.*)", "/prep(.*)"]);
+// 로그인 필요한 경로 (선수 개인 포털 + 코치 배정 페이지 + 리포트 열람)
+const isProtectedRoute = createRouteMatcher(["/portal(.*)", "/coach(.*)", "/prep(.*)", "/report/view(.*)"]);
 
 export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) {

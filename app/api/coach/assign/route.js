@@ -23,7 +23,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "코치 권한이 없어요." }, { status: 403 });
     }
 
-    const { uid, firstSessionAt, programWeeks, sessionLabel, reportUrl, guideUrl, dataUrl } = await request.json();
+    const { uid, firstSessionAt, programWeeks, sessionLabel, reportUrl, guideUrl, dataUrl, reportPublished } = await request.json();
     if (!uid) return NextResponse.json({ success: false, message: "대상 선수(uid)가 없어요." }, { status: 400 });
 
     // 부분 업데이트 — 전달된 필드만 반영(빈 문자열은 해제=null)
@@ -34,6 +34,8 @@ export async function POST(request) {
     if (reportUrl !== undefined) publicMetadata.reportUrl = reportUrl || null;
     if (guideUrl !== undefined) publicMetadata.guideUrl = guideUrl || null;
     if (dataUrl !== undefined) publicMetadata.dataUrl = dataUrl || null;
+    // 리포트 공개 토글 — true면 선수 포털에 리포트 카드가 열림. 끄면 null로 해제
+    if (reportPublished !== undefined) publicMetadata.reportPublished = reportPublished === true ? true : null;
 
     await cc.users.updateUserMetadata(uid, { publicMetadata });
     return NextResponse.json({ success: true });

@@ -16,6 +16,7 @@ import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import LogoutButton from "../../components/portal/LogoutButton";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
+import { resolveAssets } from "../../lib/athleteAssets";
 
 async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
@@ -169,6 +170,17 @@ const CSS = `
 .noct-hub .foot{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);
   font-size:12.5px;color:var(--gray2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
+/* 공개된(잠금 해제) 카드 — 리포트 열림 */
+.noct-hub .scard.open{border:1.5px solid rgba(67,85,176,.28);background:rgba(67,85,176,.045);
+  text-decoration:none;color:inherit;cursor:pointer;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
+.noct-hub .scard.open:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(67,85,176,.15);border-color:rgba(67,85,176,.5);}
+.noct-hub .scard.open .sopen{width:40px;height:40px;border-radius:12px;background:var(--grad);color:#fff;
+  display:flex;align-items:center;justify-content:center;}
+.noct-hub .scard.open .sbody h3{color:var(--navy);}
+.noct-hub .scard.open .sbody p{color:var(--gray);}
+.noct-hub .stag.open{color:var(--indigo);background:rgba(67,85,176,.1);}
+
 @media (max-width:720px){
   .noct-hub .wrap{padding:24px 24px 56px;}
   .noct-hub .hero{padding:26px 22px;}
@@ -243,6 +255,12 @@ export default async function PortalPage({ searchParams }) {
   const meta = user?.publicMetadata || {};
   const firstSessionAt = meta.firstSessionAt || (searchParams?.stage === "done" ? "2026-08-09" : null); // 미리보기 기본값
   const programWeeks = meta.programWeeks || (searchParams?.stage === "done" ? 8 : null);
+
+  // 리포트 공개 여부 — 코치가 배정 화면에서 '리포트 공개' 토글을 켜면 true.
+  // 공개돼야 선수 포털의 "내 수면 리포트" 카드가 잠금 해제된다. ?report=open 은 미리보기용.
+  const reportPublished = meta.reportPublished === true || searchParams?.report === "open";
+  const assets = resolveAssets({ name: clientName, email: myEmail, reportUrl: meta.reportUrl, guideUrl: meta.guideUrl, dataUrl: meta.dataUrl });
+  const reportOpen = reportPublished && !!assets.report;
 
   // D-day (UTC 기준, 표시용). 미정이면 null
   const dday = (() => {
@@ -354,19 +372,34 @@ export default async function PortalPage({ searchParams }) {
               <div className="sec-label">My Space</div>
               <div className="sec-title">내 수면 공간</div>
             </div>
-            <span className="count">세션 후 열려요</span>
+            <span className="count">{reportOpen ? "리포트 열렸어요" : "세션 후 열려요"}</span>
           </div>
           <div className="slist">
-            {SPACE.map((c) => (
-              <div className="scard" key={c.h}>
-                <div className="slock"><LockIcon /></div>
-                <div className="sbody">
-                  <h3>{c.h}</h3>
-                  <p>{c.p}</p>
+            {SPACE.map((c) => {
+              // 리포트 카드는 코치가 공개하면 잠금 해제 + 링크로 전환
+              if (c.h === "내 수면 리포트" && reportOpen) {
+                return (
+                  <a className="scard open" key={c.h} href={assets.report} target="_blank" rel="noopener noreferrer">
+                    <div className="sopen"><ChartIcon /></div>
+                    <div className="sbody">
+                      <h3>{c.h}</h3>
+                      <p>코치가 리포트를 공개했어요. 눌러서 확인해보세요.</p>
+                    </div>
+                    <span className="stag open"><ArrowIcon /> 열기</span>
+                  </a>
+                );
+              }
+              return (
+                <div className="scard" key={c.h}>
+                  <div className="slock"><LockIcon /></div>
+                  <div className="sbody">
+                    <h3>{c.h}</h3>
+                    <p>{c.p}</p>
+                  </div>
+                  <span className="stag"><LockIcon /> 오픈 예정</span>
                 </div>
-                <span className="stag"><LockIcon /> 오픈 예정</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

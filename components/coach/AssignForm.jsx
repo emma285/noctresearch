@@ -22,6 +22,7 @@ export default function AssignForm({ target }) {
   const [reportUrl, setReportUrl] = useState(target.reportUrl || "");
   const [guideUrl, setGuideUrl] = useState(target.guideUrl || "");
   const [dataUrl, setDataUrl] = useState(target.dataUrl || "");
+  const [reportPublished, setReportPublished] = useState(target.reportPublished === true);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(""); // "" | "ok" | error message
 
@@ -41,6 +42,7 @@ export default function AssignForm({ target }) {
           reportUrl,
           guideUrl,
           dataUrl,
+          reportPublished,
         }),
       });
       const j = await res.json();
@@ -72,8 +74,19 @@ export default function AssignForm({ target }) {
           <div className="text-xs font-extrabold tracking-wider text-blue-600">선수별 자료 링크</div>
           <div>
             <label className={label}>수면 리포트 URL</label>
-            <input type="text" className={field} placeholder="/reports/yuna-report.html 또는 https://…"
+            <input type="text" className={field} placeholder="/report/view/yuna-report 또는 https://…"
               value={reportUrl} onChange={(e) => setReportUrl(e.target.value)} />
+          </div>
+          <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+            <div>
+              <div className="text-sm font-bold text-gray-800">리포트 선수에게 공개</div>
+              <div className="text-xs text-gray-400 mt-0.5">켜면 선수 포털 "내 수면 리포트"가 열려요</div>
+            </div>
+            <button type="button" role="switch" aria-checked={reportPublished}
+              onClick={() => setReportPublished((v) => !v)}
+              className={`relative shrink-0 w-12 h-7 rounded-full transition-colors ${reportPublished ? "bg-blue-600" : "bg-gray-300"}`}>
+              <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${reportPublished ? "translate-x-5" : ""}`} />
+            </button>
           </div>
           <div>
             <label className={label}>코치 가이드 URL</label>
