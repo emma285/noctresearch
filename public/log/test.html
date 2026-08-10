@@ -11,6 +11,18 @@
 <meta name="theme-color" content="#0D1B2A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="NOCT Sleep">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="NOCT Sleep">
+<meta property="og:title" content="수면·루틴 기록 · NOCT Sleep">
+<meta property="og:description" content="오늘의 수면과 하루 루틴을 기록해요.">
+<meta property="og:image" content="https://noctresearch.vercel.app/icons/og-noct-sleep.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="수면·루틴 기록 · NOCT Sleep">
+<meta name="twitter:description" content="오늘의 수면과 하루 루틴을 기록해요.">
+<meta name="twitter:image" content="https://noctresearch.vercel.app/icons/og-noct-sleep.png">
+
 
 <style>
 :root{
@@ -507,7 +519,7 @@ svg{display:block}
         <button class="wz-home" onclick="go('portal')" aria-label="홈"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
       </div>
       <div class="jhead" style="padding-bottom:0">
-        <h1 style="font-size:21px">오늘 하루, 타임라인</h1>
+        <h1 style="font-size:21px">타임라인</h1>
         <p>오늘 일과를 기록해주세요.</p>
       </div>
       <div class="dsum" id="dsum"></div>
@@ -681,7 +693,7 @@ function subLine(b){return [b.detail,b.dur].filter(Boolean).join(' · ');}
 function renderTimeline(){
   const tl=document.getElementById('timeline');
   const sorted=[...blocks].sort((a,b)=>tmin(a.time)-tmin(b.time));
-  if(!sorted.length){tl.innerHTML='<div class="tl-empty">아직 기록이 없어요.<br>아래에서 오늘 일과를 눌러보세요.</div>';renderSum();return;}
+  if(!sorted.length){tl.innerHTML='<div class="tl-empty">아직 기록이 없어요.<br>오늘 일과를 추가하세요.</div>';renderSum();return;}
   tl.innerHTML=sorted.map((b)=>{
     const T=TYPES[b.type];
     return `<div class="block">
