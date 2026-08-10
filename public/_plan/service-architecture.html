@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>수면코칭 서비스 설계 · NOCT RESEARCH</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  :root{
+    --bg:#F2F3F6; --soft:#F6F7F9; --ink:#141414; --navy:#0D1B2A;
+    --gray:#5c636e; --gray2:#9aa3ad; --line:#e9e9ee;
+    --indigo:#4355B0; --sky:#7EC8E3; --lav:#A0B0FF; --coral:#F4978E; --mint:#46d39a;
+    --grad:linear-gradient(90deg,#4355B0,#7EC8E3);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--ink);
+    line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+  .wrap{max-width:680px;margin:0 auto;padding:0 18px 80px;}
+
+  /* top */
+  .top{display:flex;align-items:center;justify-content:space-between;padding:18px 2px 22px;}
+  .top .brand{font-size:13px;font-weight:800;letter-spacing:.5px;color:var(--navy);}
+  .top .brand b{color:var(--indigo);}
+  .top .tag{font-size:11px;font-weight:700;color:var(--gray2);}
+
+  /* hero */
+  .hero{position:relative;overflow:hidden;border-radius:22px;padding:30px 26px;color:#fff;
+    background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%);box-shadow:0 16px 44px rgba(13,27,42,.22);}
+  .hero::after{content:"";position:absolute;right:-70px;top:-100px;width:300px;height:300px;border-radius:50%;
+    background:radial-gradient(circle,rgba(126,200,227,.28),transparent 70%);pointer-events:none;}
+  .hero .eyebrow{font-size:11.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#9fd3ea;position:relative;z-index:1;}
+  .hero h1{font-size:26px;font-weight:800;letter-spacing:-.7px;margin-top:12px;line-height:1.32;position:relative;z-index:1;}
+  .hero p{font-size:14px;color:rgba(255,255,255,.76);margin-top:14px;position:relative;z-index:1;line-height:1.62;}
+  .hero .date{font-size:11.5px;color:rgba(255,255,255,.5);margin-top:16px;position:relative;z-index:1;font-weight:600;}
+
+  /* section framing */
+  section{margin-top:40px;}
+  .sec-label{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--indigo);}
+  .sec-title{font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--navy);margin-top:5px;line-height:1.35;}
+  .sec-sub{font-size:13.5px;color:var(--gray);margin-top:9px;line-height:1.6;}
+
+  /* tldr */
+  .tldr{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
+  .tldr .row{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;
+    background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 16px;}
+  .tldr .n{width:30px;height:30px;border-radius:9px;background:rgba(67,85,176,.09);color:var(--indigo);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+  .tldr .t{font-size:14px;font-weight:700;color:var(--navy);}
+  .tldr .t span{display:block;font-size:12.5px;font-weight:500;color:var(--gray);margin-top:4px;line-height:1.55;}
+
+  /* problem cards */
+  .cards{margin-top:16px;display:flex;flex-direction:column;gap:11px;}
+  .pcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;}
+  .pcard h4{font-size:14.5px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  .pcard h4 .x{width:18px;height:18px;border-radius:6px;background:rgba(244,151,142,.16);color:#d9705f;
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+  .pcard p{font-size:13px;color:var(--gray);margin-top:8px;line-height:1.6;}
+  .pcard .fix{font-size:12.5px;color:var(--indigo);font-weight:700;margin-top:9px;display:flex;gap:7px;align-items:flex-start;}
+  .pcard .fix b{color:var(--mint);font-weight:800;}
+
+  /* principle grid */
+  .plist{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
+  .pl{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:start;padding:2px;}
+  .pl .dot{width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;
+    justify-content:center;font-size:13px;font-weight:800;}
+  .pl b{font-size:14px;color:var(--navy);font-weight:800;}
+  .pl span{display:block;font-size:12.5px;color:var(--gray);margin-top:3px;line-height:1.55;font-weight:400;}
+
+  /* big picture: 2 apps 1 data */
+  .arch{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 16px;}
+  .apps{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .app{border-radius:14px;padding:16px 14px;color:#fff;position:relative;overflow:hidden;}
+  .app.client{background:linear-gradient(140deg,#4355B0,#5b6fd0);}
+  .app.coach{background:linear-gradient(140deg,#0D1B2A,#31507f);}
+  .app .role{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.72;}
+  .app .who{font-size:16px;font-weight:800;margin-top:5px;letter-spacing:-.3px;}
+  .app ul{margin-top:11px;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;}
+  .app li{font-size:12px;color:rgba(255,255,255,.86);padding-left:14px;position:relative;line-height:1.45;}
+  .app li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.6);}
+  .flowdown{display:flex;flex-direction:column;align-items:center;margin:14px 0 12px;color:var(--gray2);font-size:18px;}
+  .db{border-radius:14px;padding:16px 16px;background:var(--soft);border:1.5px solid rgba(67,85,176,.22);}
+  .db .role{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--indigo);}
+  .db .who{font-size:15.5px;font-weight:800;color:var(--navy);margin-top:5px;}
+  .db p{font-size:12.5px;color:var(--gray);margin-top:8px;line-height:1.55;}
+
+  /* journey timeline */
+  .tl{margin-top:18px;margin-left:8px;}
+  .tli{position:relative;padding:0 0 22px 26px;border-left:2px solid var(--line);}
+  .tli:last-child{border-left-color:transparent;padding-bottom:0;}
+  .tli::before{content:"";position:absolute;left:-7px;top:2px;width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid #cfd3dc;}
+  .tli.now::before{background:var(--indigo);border-color:var(--indigo);box-shadow:0 0 0 4px rgba(67,85,176,.15);}
+  .tli.goal::before{background:var(--sky);border-color:var(--sky);box-shadow:0 0 0 4px rgba(126,200,227,.2);}
+  .tli .st{font-size:11px;font-weight:800;letter-spacing:.3px;color:var(--gray2);}
+  .tli .h{font-size:15px;font-weight:800;color:var(--navy);margin:3px 0 5px;letter-spacing:-.3px;}
+  .tli .d{font-size:13px;color:var(--gray);line-height:1.58;}
+  .tli .see{margin-top:8px;font-size:12px;color:var(--indigo);background:rgba(67,85,176,.07);
+    border:1px solid rgba(67,85,176,.16);border-radius:9px;padding:8px 11px;line-height:1.5;font-weight:600;}
+  .tli .see b{font-weight:800;}
+
+  /* flow compare */
+  .flow{margin-top:18px;display:flex;flex-direction:column;gap:14px;}
+  .fbox{border-radius:16px;padding:17px 17px;}
+  .fbox.bad{background:#fff;border:1.5px dashed #e0b9b3;}
+  .fbox.good{background:#fff;border:1.5px solid rgba(70,211,154,.4);box-shadow:0 8px 26px rgba(70,211,154,.08);}
+  .fbox .flabel{font-size:11.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;}
+  .fbox.bad .flabel{color:#c9705f;}
+  .fbox.good .flabel{color:#1f9d6d;}
+  .fchain{margin-top:12px;display:flex;flex-direction:column;gap:0;}
+  .fstep{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--navy);font-weight:600;}
+  .fstep .ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;flex-shrink:0;}
+  .fbox.bad .fstep .ic{background:rgba(244,151,142,.15);color:#d9705f;}
+  .fbox.good .fstep .ic{background:rgba(70,211,154,.16);color:#1f9d6d;}
+  .farrow{margin:3px 0 3px 11px;color:var(--gray2);font-size:13px;height:16px;}
+  .fbox .note{font-size:12px;color:var(--gray);margin-top:11px;line-height:1.55;}
+  .fbox.bad .note b{color:#c9705f;}
+  .fbox.good .note b{color:#1f9d6d;}
+
+  /* ERD */
+  .erd{margin-top:18px;display:flex;flex-direction:column;gap:12px;}
+  .ent{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;}
+  .ent.master{border:1.5px solid var(--indigo);box-shadow:0 10px 30px rgba(67,85,176,.12);}
+  .ent .ehead{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--soft);border-bottom:1px solid var(--line);}
+  .ent.master .ehead{background:linear-gradient(135deg,#0D1B2A,#31507f);border-bottom:none;}
+  .ent .ename{font-size:14.5px;font-weight:800;color:var(--navy);}
+  .ent.master .ename{color:#fff;}
+  .ent .ekind{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--gray2);background:#fff;border:1px solid var(--line);padding:3px 8px;border-radius:6px;}
+  .ent.master .ekind{color:#bcd6ea;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);}
+  .ent .ebody{padding:12px 16px 14px;}
+  .ent .fld{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--gray);padding:5px 0;line-height:1.5;
+    border-bottom:1px dashed #f0f0f3;}
+  .ent .fld:last-child{border-bottom:none;}
+  .ent .fld b{color:var(--navy);font-weight:700;}
+  .ent .rel{font-size:11px;font-weight:700;color:var(--indigo);background:rgba(67,85,176,.08);padding:1px 7px;border-radius:5px;}
+  .ent .owns{font-size:11.5px;color:var(--gray);margin-top:9px;font-style:normal;line-height:1.5;}
+  .relmap{margin-top:2px;text-align:center;color:var(--gray2);font-size:12px;}
+
+  /* source-of-truth table */
+  .sot{margin-top:16px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;}
+  .sot .r{display:grid;grid-template-columns:1.1fr 1fr;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);}
+  .sot .r:last-child{border-bottom:none;}
+  .sot .r.head{background:var(--soft);}
+  .sot .k{font-size:12.5px;font-weight:700;color:var(--navy);}
+  .sot .r.head .k,.sot .r.head .v{font-size:11px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:var(--gray2);}
+  .sot .v{font-size:12.5px;color:var(--gray);}
+  .sot .v .src{font-weight:800;color:var(--indigo);}
+  .sot .v .acc{font-weight:800;color:#1f9d6d;}
+
+  /* roadmap */
+  .road{margin-top:16px;display:flex;flex-direction:column;gap:12px;}
+  .rphase{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px 17px;}
+  .rphase .rp{display:flex;align-items:center;gap:9px;}
+  .rphase .badge{font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:4px 9px;border-radius:999px;}
+  .rphase.done .badge{color:#1f9d6d;background:rgba(70,211,154,.14);}
+  .rphase.next .badge{color:var(--indigo);background:rgba(67,85,176,.1);}
+  .rphase.later .badge{color:var(--gray2);background:#eef0f3;}
+  .rphase .rt{font-size:14.5px;font-weight:800;color:var(--navy);}
+  .rphase ul{margin:11px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px;}
+  .rphase li{font-size:12.5px;color:var(--gray);padding-left:18px;position:relative;line-height:1.5;}
+  .rphase li::before{content:"";position:absolute;left:2px;top:7px;width:6px;height:6px;border-radius:2px;}
+  .rphase.done li::before{background:var(--mint);}
+  .rphase.next li::before{background:var(--indigo);}
+  .rphase.later li::before{background:#cfd3dc;}
+  .rphase li b{color:var(--navy);font-weight:700;}
+
+  .foot{margin-top:46px;padding-top:20px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--gray2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+
+  @media (max-width:520px){
+    .apps{grid-template-columns:1fr;}
+    .hero h1{font-size:23px;}
+    .sot .r{grid-template-columns:1fr;gap:3px;}
+    .sot .r.head{display:none;}
+    .sot .k::after{content:"";}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand"><b>NOCT</b> RESEARCH</div>
+    <div class="tag">내부 설계 문서 · 비공개</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow">Service Architecture</div>
+    <h1>코치와 선수가<br>한 시스템 안에서 움직이는<br>수면코칭 서비스</h1>
+    <p>지금은 코칭 노트를 따로 만들어 붙이고, 상태가 여기저기 흩어져 있어요. 이 문서는 <b>선수·코치가 각자 앱에서 자연스럽게 일하고, 데이터가 마스터 하나로 흐르는</b> 구조를 UX와 DB 양쪽으로 그린 설계안이에요.</p>
+    <div class="date">2026 · 운동선수 수면코칭 (프로골퍼 1호 윤이나 기준)</div>
+  </div>
+
+  <!-- TL;DR -->
+  <section>
+    <div class="sec-label">TL;DR</div>
+    <div class="sec-title">한 줄로 바뀌는 것 3가지</div>
+    <div class="tldr">
+      <div class="row"><div class="n">1</div><div class="t">데이터는 마스터 하나로<span>선수 상태·세션·리포트·기록이 전부 Notion 마스터에서 나오고, 앱은 그걸 읽기만 해요. (Clerk은 로그인만)</span></div></div>
+      <div class="row"><div class="n">2</div><div class="t">코치는 앱 안에서 일해요<span>세션 노트를 로컬 문서로 따로 쓰고 "붙여줘"가 아니라, 코치 콘솔에서 바로 작성 → 자동으로 세션·리포트·선수 포털에 흘러요.</span></div></div>
+      <div class="row"><div class="n">3</div><div class="t">선수는 자기 여정만 봐요<span>내 진행 단계·다음 세션·리포트 아카이브만 깔끔하게. 코치용 SOAP 노트 같은 건 안 보여요.</span></div></div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section>
+    <div class="sec-label">As-is</div>
+    <div class="sec-title">지금 구조의 문제</div>
+    <div class="sec-sub">돌아가긴 하는데, 손이 많이 가고 데이터가 흩어져 있어요.</div>
+    <div class="cards">
+      <div class="pcard">
+        <h4><span class="x">✕</span>세션 노트를 따로 만들어 첨부</h4>
+        <p>코치가 SOAP 노트를 로컬 md로 쓰고, 개발자(=나)한테 "이거 앱에 붙여줘"라고 넘겨요. 매 세션마다 수작업 + 사람 개입이 필요해요.</p>
+        <div class="fix">→ <b>To-be</b>&nbsp;코치 콘솔에서 노트 작성 → 세션 DB에 바로 저장.</div>
+      </div>
+      <div class="pcard">
+        <h4><span class="x">✕</span>상태가 세 군데에 흩어짐</h4>
+        <p>여정 상태는 Clerk 메타데이터, 날짜·문구는 코드에 하드코딩, 실제 데이터는 DB. 같은 사실이 여러 곳에 있어 어긋나기 쉬워요.</p>
+        <div class="fix">→ <b>To-be</b>&nbsp;마스터 `상태`·`다음 세션`이 유일한 진실. (이미 이관 시작함)</div>
+      </div>
+      <div class="pcard">
+        <h4><span class="x">✕</span>리포트가 코드에 박혀 있음</h4>
+        <p>리포트 제목·날짜·설명이 코드(레지스트리)에 하드코딩. 새 리포트/새 선수마다 개발자가 코드를 고쳐야 해요.</p>
+        <div class="fix">→ <b>To-be</b>&nbsp;리포트 DB에서 관리, 코치가 발행·공개.</div>
+      </div>
+      <div class="pcard">
+        <h4><span class="x">✕</span>마스터에 1명만 등록</h4>
+        <p>지금은 윤이나만 마스터에 있고, 나머지는 옛 경로(Clerk)로 돎. 선수가 늘면 수동 등록/불일치 위험.</p>
+        <div class="fix">→ <b>To-be</b>&nbsp;가입·초대 시 마스터 행 자동 생성(백필 + upsert).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINCIPLES -->
+  <section>
+    <div class="sec-label">Principles</div>
+    <div class="sec-title">설계 원칙 5</div>
+    <div class="plist">
+      <div class="pl"><div class="dot">1</div><div><b>단일 소스(Single Source)</b><span>모든 사실은 마스터(+하위 DB)에 한 번만 저장. 앱·리포트·포털은 거기서 읽는다.</span></div></div>
+      <div class="pl"><div class="dot">2</div><div><b>코치는 도구 안에서 일한다</b><span>노트·리포트·스케줄을 앱에서 만들고, 그 행위가 곧 데이터가 된다. 사후 수작업 없음.</span></div></div>
+      <div class="pl"><div class="dot">3</div><div><b>선수는 필요한 것만 본다</b><span>내 여정·다음 세션·리포트. 코치 내부 노트/개념화는 비공개.</span></div></div>
+      <div class="pl"><div class="dot">4</div><div><b>계정과 데이터를 분리</b><span>Clerk = 로그인(신원)만. 코칭 데이터는 마스터. 이메일로 연결.</span></div></div>
+      <div class="pl"><div class="dot">5</div><div><b>자동으로 흐르게</b><span>세션 저장 → 다음세션·주차 갱신, 리포트 발행 → 아카이브 노출. 상태 전이는 이벤트로.</span></div></div>
+    </div>
+  </section>
+
+  <!-- BIG PICTURE -->
+  <section>
+    <div class="sec-label">Big Picture</div>
+    <div class="sec-title">두 개의 앱, 하나의 데이터</div>
+    <div class="arch">
+      <div class="apps">
+        <div class="app client">
+          <div class="role">선수 앱</div>
+          <div class="who">선수 포털</div>
+          <ul>
+            <li>내 수면 여정</li>
+            <li>다음 세션 일정</li>
+            <li>리포트 아카이브</li>
+            <li>수면 로그·기록</li>
+            <li>준비자료 업로드</li>
+          </ul>
+        </div>
+        <div class="app coach">
+          <div class="role">코치 앱</div>
+          <div class="who">코치 콘솔</div>
+          <ul>
+            <li>선수 목록·상태</li>
+            <li>세션 노트 작성</li>
+            <li>리포트 발행·공개</li>
+            <li>다음 세션 배정</li>
+            <li>기록·진행 모니터</li>
+          </ul>
+        </div>
+      </div>
+      <div class="flowdown">↕</div>
+      <div class="db">
+        <div class="role">Single Source of Truth</div>
+        <div class="who">Notion 마스터 + 하위 DB</div>
+        <p>코칭 클라이언트(마스터)를 중심으로 intake·세션·리포트·기록·인터벤션이 relation으로 연결. 두 앱은 이 데이터를 읽고 쓴다. 로그인만 Clerk.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLIENT JOURNEY -->
+  <section>
+    <div class="sec-label">Client UX</div>
+    <div class="sec-title">선수 여정 — 화면 흐름</div>
+    <div class="sec-sub">선수는 각 단계에서 "지금 할 일"과 "쌓인 결과"만 본다.</div>
+    <div class="tl">
+      <div class="tli">
+        <div class="st">1 · 초대</div>
+        <div class="h">코치가 선수를 등록</div>
+        <div class="d">코치 콘솔에서 이름·이메일·종목·티어 입력 → 마스터 행 생성(상태: 초대됨).</div>
+        <div class="see">선수 화면: <b>초대 링크</b> 수신 → 로그인 안내</div>
+      </div>
+      <div class="tli">
+        <div class="st">2 · 로그인</div>
+        <div class="h">한 계정으로 로그인</div>
+        <div class="d">이메일로 가입/로그인(Clerk). 이메일이 마스터와 매칭되며 상태: 로그인.</div>
+        <div class="see">선수 화면: <b>포털 진입</b> · "사전 질문지 작성" 하나만 활성</div>
+      </div>
+      <div class="tli">
+        <div class="st">3 · 진단</div>
+        <div class="h">사전 수면 질문지</div>
+        <div class="d">68문항 제출 → intake DB 저장 + 마스터 상태: intake제출.</div>
+        <div class="see">선수 화면: <b>여정 1단계 완료</b> · 첫 세션 준비 안내</div>
+      </div>
+      <div class="tli">
+        <div class="st">4 · 첫 리포트</div>
+        <div class="h">코치가 첫 리포트 발행</div>
+        <div class="d">코치가 진단 기반 리포트를 만들고 공개 → 리포트 DB + 마스터 공개 리포트.</div>
+        <div class="see">선수 화면: <b>리포트 아카이브에 1차 리포트 오픈</b></div>
+      </div>
+      <div class="tli now">
+        <div class="st">5 · 세션 (반복)</div>
+        <div class="h">1:1 코칭 세션 진행</div>
+        <div class="d">세션마다 코치가 앱에서 노트 작성 → 세션 DB. 회차·다음세션 자동 갱신. 상태: 진행중.</div>
+        <div class="see">선수 화면: <b>진행 N회차 · 다음 세션 일정</b> (미정이면 "조율 중")</div>
+      </div>
+      <div class="tli">
+        <div class="st">6 · 기록</div>
+        <div class="h">매일 수면 로그 + 워치</div>
+        <div class="d">30초 로그·루틴 체크·워치 캡처 업로드 → 기록/주간 데이터 DB. (로그 앱 = PWA 홈화면)</div>
+        <div class="see">선수 화면: <b>루틴 타임라인 · 오늘 기록</b></div>
+      </div>
+      <div class="tli">
+        <div class="st">7 · 점검</div>
+        <div class="h">주기적 점검 리포트</div>
+        <div class="d">코치가 기록 기반 점검 리포트를 발행 → 아카이브에 차곡차곡.</div>
+        <div class="see">선수 화면: <b>아카이브에 리포트 누적</b> (최신순)</div>
+      </div>
+      <div class="tli goal">
+        <div class="st">목표</div>
+        <div class="h">흔들리지 않는 회복 루틴</div>
+        <div class="d">세션마다 목표를 다듬고, 성취가 포털에 쌓인다.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COACH CONSOLE -->
+  <section>
+    <div class="sec-label">Coach UX</div>
+    <div class="sec-title">코치 콘솔 — 한 선수를 끝까지</div>
+    <div class="sec-sub">핵심은 "세션 노트를 앱에서 바로 쓴다"예요.</div>
+    <div class="cards">
+      <div class="pcard">
+        <h4>① 선수 목록</h4>
+        <p>내 담당 선수들. 각 카드에 상태·다음 세션·마지막 기록·미확인 표시. 눌러서 상세로.</p>
+      </div>
+      <div class="pcard">
+        <h4>② 선수 상세 — 개요</h4>
+        <p>intake 요약, 종목·티어, 진행 회차, 다음 세션, 최근 로그·워치. 한 화면에서 이 선수 상태를 파악.</p>
+      </div>
+      <div class="pcard">
+        <h4>③ 세션 노트 작성 <span class="rel" style="margin-left:6px">핵심</span></h4>
+        <p>세션 후 코치가 이 화면에서 <b>SOAP 노트를 바로 입력</b>(주관/객관/평가/계획 + 다룬 토픽·인터벤션). 저장하면 세션 DB에 회차로 쌓이고, 마스터 회차·다음 세션이 갱신돼요. <b>로컬 md·수동 첨부 없음.</b></p>
+      </div>
+      <div class="pcard">
+        <h4>④ 리포트 발행·공개</h4>
+        <p>리포트를 만들고(또는 연결) 선수에게 공개 토글. 리포트 DB + 마스터 공개 리포트에 반영 → 선수 아카이브에 자동 노출.</p>
+      </div>
+      <div class="pcard">
+        <h4>⑤ 다음 세션 배정</h4>
+        <p>다음 세션 날짜를 잡으면 마스터 다음 세션 갱신 → 선수 포털 D-day/일정에 즉시 반영. 미정이면 "조율 중".</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- KEY FLOW -->
+  <section>
+    <div class="sec-label">Key Flow</div>
+    <div class="sec-title">세션 → 노트 → 리포트 → 포털</div>
+    <div class="sec-sub">이 흐름이 사람 손 없이 이어지는 게 목표예요.</div>
+    <div class="flow">
+      <div class="fbox bad">
+        <div class="flabel">지금 (수작업)</div>
+        <div class="fchain">
+          <div class="fstep"><span class="ic">1</span>코치가 로컬 md로 노트 작성</div>
+          <div class="farrow">↓</div>
+          <div class="fstep"><span class="ic">2</span>"앱에 붙여줘" 요청</div>
+          <div class="farrow">↓</div>
+          <div class="fstep"><span class="ic">3</span>개발자가 수동 반영</div>
+          <div class="farrow">↓</div>
+          <div class="fstep"><span class="ic">4</span>선수 포털에 노출</div>
+        </div>
+        <div class="note">문제: <b>매 세션 사람 개입</b> · 지연 · 불일치 · 확장 안 됨.</div>
+      </div>
+      <div class="fbox good">
+        <div class="flabel">To-be (자동)</div>
+        <div class="fchain">
+          <div class="fstep"><span class="ic">1</span>코치가 콘솔에서 노트 저장</div>
+          <div class="farrow">↓</div>
+          <div class="fstep"><span class="ic">2</span>세션 DB에 회차로 기록</div>
+          <div class="farrow">↓</div>
+          <div class="fstep"><span class="ic">3</span>마스터 회차·다음세션 갱신 / 리포트 발행</div>
+          <div class="farrow">↓</div>
+          <div class="fstep"><span class="ic">4</span>선수 포털·아카이브 자동 반영</div>
+        </div>
+        <div class="note">효과: <b>코치가 앱만 쓰면 끝</b> · 즉시 반영 · 단일 소스 · 선수 무한 확장.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA MODEL -->
+  <section>
+    <div class="sec-label">Data Model</div>
+    <div class="sec-title">DB 구조 — 마스터 중심</div>
+    <div class="sec-sub">마스터 1행 = 선수 1명. 나머지는 relation으로 매단다.</div>
+    <div class="erd">
+      <div class="ent master">
+        <div class="ehead"><span class="ename">코칭 클라이언트 (마스터)</span><span class="ekind">Hub</span></div>
+        <div class="ebody">
+          <div class="fld"><b>이메일</b> · 매칭 키(Clerk 로그인)</div>
+          <div class="fld"><b>상태</b> · 초대됨→로그인→intake제출→리포트게시→온보딩완료→진행중→종료</div>
+          <div class="fld"><b>이름·종목·티어·시작일·다음 세션·회차</b></div>
+          <div class="fld"><b>공개 리포트</b> · 아카이브 오픈 게이트</div>
+          <div class="owns">relation ↓ &nbsp;Intake · 코칭 세션 · 리포트 · 기록/주간데이터 · 인터벤션 · 준비자료</div>
+        </div>
+      </div>
+      <div class="relmap">▲ 아래 DB들이 마스터에 1:N으로 연결 ▲</div>
+      <div class="ent">
+        <div class="ehead"><span class="ename">Intake (사전질문지)</span><span class="ekind">1:1</span></div>
+        <div class="ebody">
+          <div class="fld"><b>68문항 응답</b> · 제출일 · 종합 진단</div>
+          <div class="owns">선수 제출 시 생성 → 마스터 상태를 intake제출로.</div>
+        </div>
+      </div>
+      <div class="ent">
+        <div class="ehead"><span class="ename">코칭 세션 (노트)</span><span class="ekind">1:N</span></div>
+        <div class="ebody">
+          <div class="fld"><b>회차 · 일시 · 길이</b></div>
+          <div class="fld"><b>SOAP 노트</b>(주관/객관/평가/계획) · 다룬 토픽</div>
+          <div class="fld">인터벤션 <span class="rel">→ 인터벤션 DB</span></div>
+          <div class="owns">코치가 콘솔에서 작성 → 회차·다음세션 갱신의 근거.</div>
+        </div>
+      </div>
+      <div class="ent">
+        <div class="ehead"><span class="ename">리포트</span><span class="ekind">1:N</span></div>
+        <div class="ebody">
+          <div class="fld"><b>제목 · 날짜 · 차수 · 유형</b></div>
+          <div class="fld"><b>본문/URL · 공개여부</b></div>
+          <div class="owns">코치가 발행·공개 → 선수 아카이브에 노출. (지금은 코드 → DB로 이관 대상)</div>
+        </div>
+      </div>
+      <div class="ent">
+        <div class="ehead"><span class="ename">기록 · 주간 데이터</span><span class="ekind">1:N</span></div>
+        <div class="ebody">
+          <div class="fld"><b>수면 로그 · 루틴 · 워치 캡처</b></div>
+          <div class="fld">주간 집계(효율·총수면·각성)</div>
+          <div class="owns">선수가 매일 입력(로그 PWA) → 점검 리포트의 원천.</div>
+        </div>
+      </div>
+      <div class="ent">
+        <div class="ehead"><span class="ename">준비 자료</span><span class="ekind">1:N</span></div>
+        <div class="ebody">
+          <div class="fld"><b>경기·원정·비행·훈련 일정 + 첨부</b></div>
+          <div class="owns">선수가 언제든 업로드 → 코치가 세션 준비에 참고.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOURCE OF TRUTH -->
+  <section>
+    <div class="sec-label">Source of Truth</div>
+    <div class="sec-title">무엇을 어디서 읽나</div>
+    <div class="sot">
+      <div class="r head"><div class="k">데이터</div><div class="v">진실 소스 · 상태</div></div>
+      <div class="r"><div class="k">로그인/신원</div><div class="v"><span class="src">Clerk</span> · 계정만</div></div>
+      <div class="r"><div class="k">여정 상태</div><div class="v"><span class="src">마스터 상태</span> <span class="acc">✓ 이관됨</span></div></div>
+      <div class="r"><div class="k">다음 세션·회차</div><div class="v"><span class="src">마스터</span> <span class="acc">✓ 이관됨</span></div></div>
+      <div class="r"><div class="k">리포트 공개</div><div class="v"><span class="src">마스터 공개 리포트</span> <span class="acc">✓ 이관됨</span></div></div>
+      <div class="r"><div class="k">세션 노트</div><div class="v"><span class="src">코칭 세션 DB</span> · 코치 콘솔서 작성(예정)</div></div>
+      <div class="r"><div class="k">리포트 카탈로그</div><div class="v"><span class="src">리포트 DB</span> · 코드→DB 이관 예정</div></div>
+      <div class="r"><div class="k">수면 로그·기록</div><div class="v"><span class="src">기록/주간 DB</span> · 이메일 키</div></div>
+      <div class="r"><div class="k">프로그램 길이</div><div class="v"><span class="src">마스터</span> · 필드 추가 예정</div></div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <div class="sec-label">Roadmap</div>
+    <div class="sec-title">어디까지 왔고, 뭐가 남았나</div>
+    <div class="road">
+      <div class="rphase done">
+        <div class="rp"><span class="badge">완료</span><span class="rt">마스터 읽기 배선</span></div>
+        <ul>
+          <li><b>상태·다음세션·회차·이름</b>을 마스터에서 읽어 포털 렌더</li>
+          <li><b>진행중 뷰</b>(N회차·조율 중) + <b>리포트 아카이브</b>(지수 미러)</li>
+          <li><b>리포트 공개상태 마스터 이관</b> + 코치 토글이 마스터도 기록</li>
+          <li>프로덕션 배포됨(윤이나 라이브)</li>
+        </ul>
+      </div>
+      <div class="rphase next">
+        <div class="rp"><span class="badge">다음</span><span class="rt">코치가 앱에서 일하게</span></div>
+        <ul>
+          <li><b>세션 노트 작성 UI</b>(코치 콘솔) → 세션 DB 저장 · 회차/다음세션 자동 갱신</li>
+          <li><b>리포트 DB</b> 신설 → 카탈로그·발행·공개를 코드에서 DB로</li>
+          <li>코치 상세에 <b>세션 노트 열람</b>(선수엔 비공개)</li>
+          <li>남은 <b>쓰기 경로</b>(intake·prep·log·배정)를 마스터 상태 전이로</li>
+        </ul>
+      </div>
+      <div class="rphase later">
+        <div class="rp"><span class="badge">나중</span><span class="rt">확장·자동화</span></div>
+        <ul>
+          <li><b>선수 백필 + 가입 시 마스터 자동 생성</b>(upsert)</li>
+          <li>로그 <b>PWA</b>(홈화면 설치·세션 유지)로 매일 기록 정착</li>
+          <li>주간 데이터 <b>자동 집계</b> → 점검 리포트 반자동</li>
+          <li>프로그램 길이 등 잔여 필드 마스터화, Clerk 메타 폐기</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>NOCT RESEARCH · 서비스 설계</span>
+    <span>내부 문서 · 비공개</span>
+  </div>
+
+</div>
+</body>
+</html>
