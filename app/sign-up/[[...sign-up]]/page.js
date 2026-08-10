@@ -97,7 +97,7 @@ export default function SignUpPage() {
   const err = error ? <div className="text-[13px] text-[#ffc4bb] bg-white/[0.06] border border-white/10 rounded-lg px-3.5 py-3">{error}</div> : null;
 
   return step === "form" ? (
-    <AuthLayout eyebrow="수면코칭" title={"수면 코칭을\n시작해 볼까요."} sub="코치에게 안내받은 이메일로 가입해 주세요.">
+    <AuthLayout eyebrow="수면코칭" title="회원가입">
       <form onSubmit={onCreate} className="flex flex-col gap-3">
         {err}
         <input type="text" autoComplete="name" placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} required className={INPUT} />
