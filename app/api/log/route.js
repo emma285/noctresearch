@@ -22,7 +22,7 @@ export async function POST(request) {
     const data = body.data || {};
     const title = `${user} · ${date} · ${kind}`;
 
-    await notion.pages.create({
+    const page = await notion.pages.create({
       parent: { database_id: LOG_DB },
       properties: {
         "제목": { title: rt(title) },
@@ -33,12 +33,39 @@ export async function POST(request) {
         "데이터": { rich_text: rt(JSON.stringify(data)) },
       },
     });
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, id: page.id });
   } catch (e) {
     return NextResponse.json(
       { success: false, error: e?.body?.message || e?.message || "save failed" },
       { status: 500 }
     );
+  }
+}
+
+// ── 수정 (블록 1개) ──  PATCH { id, summary, data }
+export async function PATCH(request) {
+  try {
+    const { id, summary, data } = await request.json();
+    if (!id) return NextResponse.json({ success: false, message: "id 없음" }, { status: 400 });
+    const props = {};
+    if (summary !== undefined) props["요약"] = { rich_text: rt(summary) };
+    if (data !== undefined) props["데이터"] = { rich_text: rt(JSON.stringify(data)) };
+    await notion.pages.update({ page_id: id, properties: props });
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ success: false, error: e?.body?.message || e?.message }, { status: 500 });
+  }
+}
+
+// ── 삭제(아카이브) ──  DELETE { id }
+export async function DELETE(request) {
+  try {
+    const { id } = await request.json();
+    if (!id) return NextResponse.json({ success: false, message: "id 없음" }, { status: 400 });
+    await notion.pages.update({ page_id: id, archived: true });
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ success: false, error: e?.body?.message || e?.message }, { status: 500 });
   }
 }
 
@@ -86,7 +113,7 @@ export async function GET(request) {
           try {
             const raw = (pr["데이터"]?.rich_text || []).map((x) => x.plain_text).join("");
             const d = raw ? JSON.parse(raw) : null;
-            if (d && (d.time || d.type)) days[date].blocks.push(d);
+            if (d && (d.time || d.type)) days[date].blocks.push({ nid: p.id, ...d });
           } catch {}
         }
       }

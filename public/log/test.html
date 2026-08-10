@@ -567,10 +567,14 @@ svg{display:block}
 const APP_USER="contact@noct-research.com";
 async function saveLog(kind,data,summary){
   try{const date=new Date().toISOString().slice(0,10);
-    await fetch('/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:APP_USER,kind,date,summary,data})});
+    const r=await fetch('/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:APP_USER,kind,date,summary,data})});
+    const j=await r.json().catch(()=>({}));
     if(typeof loadMonth==='function'){ loadMonth(); }
-  }catch(e){}
+    return j.id||null;
+  }catch(e){ return null; }
 }
+async function updateLog(nid,data,summary){ try{ await fetch('/api/log',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:nid,summary,data})}); if(typeof loadMonth==='function'){loadMonth();} }catch(e){} }
+async function deleteLog(nid){ try{ await fetch('/api/log',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:nid})}); if(typeof loadMonth==='function'){loadMonth();} }catch(e){} }
 /* ---------- 화면 전환 ---------- */
 const BARFOR={portal:'',morning:'morning',evening:'evening'};
 function go(v){
@@ -701,7 +705,7 @@ function renderSum(){
 function removeBlock(id){
   if(!confirm('이 기록을 삭제할까요?'))return;
   const i=blocks.findIndex(b=>b.id===id);
-  if(i>-1){blocks.splice(i,1);renderTimeline();toast('삭제됐어요');}
+  if(i>-1){const b=blocks[i];blocks.splice(i,1);renderTimeline();toast('삭제됐어요');if(b&&b.nid)deleteLog(b.nid);}
 }
 
 // 빠른추가 바
@@ -759,8 +763,9 @@ function addBlock(){
   const T=TYPES[curType];
   const detailVal=T.text?document.getElementById('sheetText').value.trim():(curDetail||'');
   const data={type:curType,time,detail:detailVal,dur:T.dur?(curDur||''):undefined};
-  if(editId){const b=blocks.find(x=>x.id===editId);Object.assign(b,data);toast('수정됐어요 · '+time);}
-  else{blocks.push({id:seq++,...data});saveLog('routine',data,T.label+' '+time+' '+detailVal+' '+(data.dur||''));toast(TYPES[curType].label+' 추가됨 ✓ 저장됨 · '+time);}
+  const summary=T.label+' '+time+' '+detailVal+' '+(data.dur||'');
+  if(editId){const b=blocks.find(x=>x.id===editId);Object.assign(b,data);toast('수정됐어요 · '+time);if(b.nid)updateLog(b.nid,data,summary);}
+  else{const nb={id:seq++,...data};blocks.push(nb);toast(TYPES[curType].label+' 추가됨 ✓ 저장됨 · '+time);saveLog('routine',data,summary).then(id=>{if(id)nb.nid=id;});}
   closeSheet();renderTimeline();
 }
 
