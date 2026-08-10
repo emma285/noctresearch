@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
+import { getAthleteByEmail, setPublishedReports } from "../../../../lib/master";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,14 @@ export async function POST(request) {
     const publishedReports = Array.from(set);
 
     await cc.users.updateUserMetadata(uid, { publicMetadata: { publishedReports } });
+
+    // 마스터(단일 소스)에도 반영 — 이메일로 마스터 행 찾아 `공개 리포트` 갱신. 실패해도 Clerk 저장은 유지.
+    try {
+      const email = target?.emailAddresses?.[0]?.emailAddress || "";
+      const row = email ? await getAthleteByEmail(email) : null;
+      if (row?.pageId) await setPublishedReports(row.pageId, publishedReports);
+    } catch (e) { console.error("publish-report master sync failed:", e?.message); }
+
     return NextResponse.json({ success: true, published: publishedReports });
   } catch (e) {
     console.error("publish-report failed:", e?.message);
