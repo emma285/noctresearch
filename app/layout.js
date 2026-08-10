@@ -3,6 +3,11 @@ import { ClerkProvider } from "@clerk/nextjs";
 
 export const viewport = {
   themeColor: "#0D1B2A",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export const metadata = {
