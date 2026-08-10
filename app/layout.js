@@ -28,7 +28,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/portal"
+      signUpFallbackRedirectUrl="/portal"
+    >
       <html lang="ko">
         <body className="bg-slate-950 antialiased">{children}</body>
       </html>
