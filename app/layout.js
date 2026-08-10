@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
       signUpFallbackRedirectUrl="/portal"
     >
       <html lang="ko">
-        <body className="bg-slate-950 antialiased">{children}</body>
+        <body className="antialiased">{children}</body>
       </html>
     </ClerkProvider>
   );
