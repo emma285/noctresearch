@@ -65,6 +65,8 @@ function ddayOf(iso) {
   return Math.round((target - today) / 86400000);
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function PortalPage({ searchParams }) {
   const user = await currentUser();
   const myEmail = user?.emailAddresses?.[0]?.emailAddress;

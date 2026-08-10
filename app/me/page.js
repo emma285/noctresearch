@@ -5,6 +5,7 @@ import { Surface, Row, SectionHeader } from "../../components/app/primitives";
 import LogoutAction from "../../components/app/LogoutAction";
 
 export const metadata = { title: "내 정보 | NOCT" };
+export const dynamic = "force-dynamic";
 
 export default async function MePage() {
   const user = await currentUser();

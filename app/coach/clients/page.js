@@ -5,6 +5,7 @@ import { getAllAthletes } from "../../../lib/master";
 import { Surface, Row, StatusBadge } from "../../../components/app/primitives";
 
 export const metadata = { title: "코치 콘솔 | NOCT" };
+export const dynamic = "force-dynamic";
 
 export default async function CoachClientsPage() {
   const user = await currentUser();

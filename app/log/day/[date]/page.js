@@ -9,6 +9,7 @@ import { TYPES } from "../../../../components/app/routineTypes";
 import { getDayEntries } from "../../../../lib/log";
 
 export const metadata = { title: "기록 상세 | NOCT" };
+export const dynamic = "force-dynamic";
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 const fmtMin = (m) => (typeof m === "number" ? `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}` : m || "-");

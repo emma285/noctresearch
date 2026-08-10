@@ -8,6 +8,7 @@ import { resolveAssets, publishedReportSet } from "../../lib/athleteAssets";
 import { isCoachEmail } from "../../lib/coach";
 
 export const metadata = { title: "리포트 | NOCT" };
+export const dynamic = "force-dynamic";
 
 export default async function ReportsPage({ searchParams }) {
   const user = await currentUser();

@@ -7,6 +7,7 @@ import { Surface, SectionHeader, Streak, Row } from "../../components/app/primit
 import { getLogDays, kstToday } from "../../lib/log";
 
 export const metadata = { title: "기록 | NOCT" };
+export const dynamic = "force-dynamic";
 
 const DOW_FULL = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
 
