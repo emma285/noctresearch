@@ -1,13 +1,11 @@
 "use client";
-
-// 코칭 준비 자료 — NOCT 톤(인디고 #4355B0 / 스카이 #7EC8E3, 네이비), 이모지 없음, UX는 토스풍.
+// 코칭 준비 자료 (v2 디자인). 로직(업로드·아이템·제출) 보존. 하단 4탭 유지.
 import { useState, useRef } from "react";
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Camera, ImagePlus, X, Check, Paperclip } from "lucide-react";
-
-const GRAD = "linear-gradient(90deg,#4355B0,#7EC8E3)";
-const INDIGO = "#4355B0";
+import { ChevronLeft, Camera, ImagePlus, X, Check, Paperclip } from "lucide-react";
+import { cn } from "../../lib/utils";
+import BottomNav from "../app/BottomNav";
 
 const TYPES = [
   { key: "경기·대회", ph: "예: 8/15(금) 오전 9시 티오프, ○○ 오픈 1라운드" },
@@ -16,24 +14,13 @@ const TYPES = [
   { key: "메모", ph: "코치가 알면 좋을 내용을 편하게 적어 주세요" },
 ];
 
-function Header({ onBack }) {
-  return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3.5 bg-white/90 backdrop-blur-md border-b border-gray-100">
-      <img src="/noct-logo.png" alt="NOCT Research" className="h-5 w-auto" />
-      <button onClick={onBack} className="flex items-center gap-1 text-sm font-medium text-gray-500 active:text-gray-700">
-        <ArrowLeft className="w-4 h-4" /> 포털
-      </button>
-    </div>
-  );
-}
-
 export default function PrepForm({ name }) {
   const router = useRouter();
   const [type, setType] = useState("경기·대회");
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
   const [files, setFiles] = useState([]);
-  const [pending, setPending] = useState([]); // 업로드 중 [{id,name,pct}]
+  const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const albumRef = useRef(null);
@@ -48,12 +35,8 @@ export default function PrepForm({ name }) {
     setItems((p) => [...p, { type, text: t }]);
     setText("");
   }
-  function onKeyDown(e) {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); addItem(); }
-  }
   const removeItem = (i) => setItems((p) => p.filter((_, idx) => idx !== i));
 
-  // 동시 업로드 — 각 파일 개별 진행률. 업로드 중에도 다른 파일 추가 가능.
   function doUpload(list) {
     for (const file of list) {
       const id = ++idRef.current;
@@ -61,8 +44,7 @@ export default function PrepForm({ name }) {
       upload(file.name, file, {
         access: "private",
         handleUploadUrl: "/api/upload",
-        onUploadProgress: (ev) =>
-          setPending((p) => p.map((x) => (x.id === id ? { ...x, pct: Math.min(99, Math.round(ev?.percentage ?? 0)) } : x))),
+        onUploadProgress: (ev) => setPending((p) => p.map((x) => (x.id === id ? { ...x, pct: Math.min(99, Math.round(ev?.percentage ?? 0)) } : x))),
       })
         .then((b) => {
           setPending((p) => p.map((x) => (x.id === id ? { ...x, pct: 100 } : x)));
@@ -83,156 +65,102 @@ export default function PrepForm({ name }) {
     if (!items.length && !files.length) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/prep", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, files }),
-      });
+      const res = await fetch("/api/prep", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, files }) });
       const j = await res.json();
       if (j.success) setDone(true);
       else alert(j.message || "전송에 실패했어요.");
-    } catch {
-      alert("네트워크 오류가 발생했어요.");
-    }
+    } catch { alert("네트워크 오류가 발생했어요."); }
     setLoading(false);
   }
 
   if (done) {
     return (
-      <main className="min-h-screen bg-[#F2F3F6] flex flex-col items-center justify-center px-6 text-center" style={{ fontFamily: "'Pretendard',sans-serif" }}>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5" style={{ background: GRAD }}>
-          <Check className="w-8 h-8 text-white" strokeWidth={3} />
-        </div>
-        <h1 className="text-[22px] font-extrabold text-[#0D1B2A] mb-2">코치에게 전달됐어요</h1>
-        <p className="text-[15px] text-gray-500 leading-relaxed mb-8">보내주신 정보로 맞춤 수면 루틴을<br />준비할게요.</p>
-        <button onClick={() => router.push("/portal")}
-          className="w-full max-w-xs py-4 rounded-2xl text-white font-bold text-base active:scale-[0.99] transition-transform" style={{ background: GRAD }}>
-          포털로 돌아가기
-        </button>
-      </main>
+      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-8 text-center mx-auto w-full max-w-[430px]">
+        <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mb-5"><Check className="w-8 h-8 text-navy" strokeWidth={3} /></div>
+        <h1 className="text-[22px] font-bold text-foreground mb-2">코치에게 전달됐어요</h1>
+        <p className="text-[15px] text-muted-foreground leading-relaxed mb-8">보내주신 정보로 맞춤 코칭을<br />준비할게요.</p>
+        <button onClick={() => router.push("/portal")} className="w-full max-w-xs py-4 rounded-xl bg-primary text-white font-semibold text-base active:opacity-90">홈으로</button>
+      </div>
     );
   }
 
-  const empty = items.length === 0 && files.length === 0;
-  const uploading = pending.length > 0;
-  const cardShadow = "0 2px 16px rgba(13,27,42,0.05)";
-  const ctaDisabled = empty || loading || uploading;
-  const ctaLabel = loading ? "보내는 중…" : uploading ? "파일 업로드 중…" : empty ? "일정을 추가해 주세요" : "자료 업로드";
+  const canSubmit = (items.length || files.length) && !loading;
 
   return (
-    <main className="min-h-screen bg-[#F2F3F6] pb-28 overflow-x-hidden" style={{ fontFamily: "'Pretendard',sans-serif" }}>
-      <Header onBack={() => router.push("/portal")} />
+    <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[430px] pb-[calc(62px+env(safe-area-inset-bottom))]">
+      <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-2 flex items-center gap-3">
+        <button onClick={() => router.push("/portal")} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></button>
+        <h1 className="text-[20px] font-bold tracking-[-0.3px]">코칭 준비 자료</h1>
+      </div>
 
-      <div className="max-w-md mx-auto px-5 pt-20">
-        {/* 타이틀 */}
-        <h1 className="text-[24px] font-extrabold text-[#0D1B2A] leading-snug tracking-[-0.02em]">코칭 준비 자료</h1>
-        <p className="text-[15px] text-gray-500 mt-2 leading-relaxed">
-          {name ? `${name}님, ` : ""}코칭 전에 수면 루틴을 만드는 데<br />도움될 만한 정보를 공유해 주세요.
-        </p>
+      <div className="px-5 pt-2 pb-6">
+        <p className="text-sm text-muted-foreground leading-relaxed">경기·원정·훈련 일정이나 코치가 알면 좋을 내용을 언제든 올려주세요.</p>
 
-        {/* ── 입력 블럭 (액션) ── */}
-        <div className="mt-6 bg-white rounded-3xl p-5" style={{ boxShadow: cardShadow }}>
-          <div className="text-[14px] font-bold text-[#0D1B2A] mb-3">일정·메모 추가</div>
-          <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1" style={{ scrollbarWidth: "none" }}>
-            {TYPES.map((t) => {
-              const on = t.key === type;
-              return (
-                <button key={t.key} type="button" onClick={() => setType(t.key)}
-                  className="shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors"
-                  style={on ? { background: INDIGO, color: "#fff" } : { background: "#EEF0F5", color: "#6b7280" }}>
-                  {t.key}
-                </button>
-              );
-            })}
+        {/* 일정·메모 추가 */}
+        <div className="mt-6 bg-card border border-border rounded-2xl p-4">
+          <div className="flex flex-wrap gap-2">
+            {TYPES.map((t) => (
+              <button key={t.key} type="button" onClick={() => setType(t.key)}
+                className={cn("px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors", type === t.key ? "bg-primary/10 border-primary text-primary" : "bg-card border-border text-foreground")}>{t.key}</button>
+            ))}
           </div>
-          <textarea
-            value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown}
-            placeholder={cur?.ph} rows={3}
-            className="mt-4 w-full bg-[#F2F3F6] rounded-2xl p-4 text-[15px] text-[#0D1B2A] outline-none resize-none placeholder:text-gray-400 focus:bg-white focus:ring-2 transition-all"
-            style={{ caretColor: INDIGO }}
-          />
+          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder={cur.ph}
+            className="w-full mt-3 rounded-xl border border-border bg-background p-3.5 text-[15px] leading-relaxed resize-none focus:outline-none focus:border-primary" />
           <button type="button" onClick={addItem} disabled={!text.trim()}
-            className="mt-3 w-full py-3.5 rounded-2xl font-bold text-[15px] active:scale-[0.99] transition-all disabled:bg-gray-200 disabled:text-gray-400"
-            style={!text.trim() ? {} : { background: "#0D1B2A", color: "#fff" }}>
-            추가하기
-          </button>
+            className="w-full mt-3 py-3 rounded-xl bg-primary/10 text-primary text-[15px] font-semibold active:opacity-90 disabled:opacity-40">추가</button>
         </div>
 
-        {/* ── 추가된 항목 (콘텐츠, 액션 블럭과 구분) ── */}
-        {items.length > 0 && (
-          <div className="mt-5">
-            <div className="text-[13px] font-bold text-gray-400 px-1 mb-2">추가한 항목 {items.length}개</div>
-            <div className="flex flex-col gap-2">
-              {items.map((it, i) => (
-                <div key={i} className="bg-white rounded-2xl px-4 py-3.5 flex items-start gap-3 border border-gray-100">
-                  <span className="shrink-0 mt-0.5 px-2 py-0.5 rounded-md text-[11px] font-bold" style={{ background: "#EEF0FB", color: INDIGO }}>{it.type}</span>
-                  <div className="flex-1 min-w-0 text-[15px] text-[#0D1B2A] leading-relaxed whitespace-pre-wrap break-words">{it.text}</div>
-                  <button onClick={() => removeItem(i)} className="shrink-0 text-gray-300 active:text-gray-500 mt-0.5"><X className="w-4 h-4" /></button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── 파일 첨부 블럭 (액션) ── */}
-        <div className="mt-5 bg-white rounded-3xl p-5" style={{ boxShadow: cardShadow }}>
-          <div className="text-[14px] font-bold text-[#0D1B2A]">파일 첨부</div>
-          <div className="text-[13px] text-gray-400 mt-1 leading-relaxed">
-            팀 스케줄표, 항공권, 훈련 계획 등 일정 관련 기록은 스크린샷으로 편하게 올려 주세요.
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => cameraRef.current?.click()}
-              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[15px] active:scale-[0.99] transition-all"
-              style={{ background: "#EEF0FB", color: INDIGO }}>
-              <Camera className="w-4 h-4" /> 사진 촬영
-            </button>
-            <button type="button" onClick={() => albumRef.current?.click()}
-              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[15px] active:scale-[0.99] transition-all"
-              style={{ background: "#EEF0FB", color: INDIGO }}>
-              <ImagePlus className="w-4 h-4" /> 앨범·파일
-            </button>
-          </div>
-          <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={(e) => doUpload(Array.from(e.target.files || []))} className="hidden" />
-          <input ref={albumRef} type="file" accept="image/*,application/pdf" multiple onChange={(e) => doUpload(Array.from(e.target.files || []))} className="hidden" />
-
-          {/* 업로드 진행 (개별) */}
-          {pending.map((p) => (
-            <div key={p.id} className="mt-3">
-              <div className="flex justify-between text-[12px] font-semibold text-gray-500 mb-1">
-                <span className="truncate mr-2">{p.name}</span><span>{p.pct}%</span>
+        {/* 추가된 항목 */}
+        {items.length ? (
+          <div className="mt-4 bg-card border border-border rounded-2xl overflow-hidden">
+            {items.map((it, i) => (
+              <div key={i} className="flex items-start gap-3 p-4 first:border-t-0 border-t border-border">
+                <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-md shrink-0 mt-0.5">{it.type}</span>
+                <div className="flex-1 text-[14px] text-foreground leading-relaxed">{it.text}</div>
+                <button onClick={() => removeItem(i)} className="text-muted-foreground active:text-foreground shrink-0"><X className="w-4 h-4" /></button>
               </div>
-              <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-200" style={{ width: `${p.pct}%`, background: GRAD }} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        ) : null}
 
-          {files.length > 0 && (
-            <div className="mt-3 flex flex-col gap-2">
-              {files.map((f, i) => (
-                <div key={i} className="flex items-center gap-2 bg-[#F2F3F6] rounded-xl px-3 py-2.5">
-                  <Paperclip className="w-4 h-4 text-gray-400 shrink-0" />
-                  <span className="flex-1 min-w-0 truncate text-[14px] text-gray-700">{f.name}</span>
-                  <span className="shrink-0 text-[12px] text-[#4355B0] font-semibold">첨부됨</span>
-                  <button onClick={() => removeFile(i)} className="shrink-0 text-gray-300 active:text-gray-500"><X className="w-4 h-4" /></button>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* 사진·파일 첨부 */}
+        <div className="text-[15px] font-bold text-foreground mt-7 mb-3">사진·파일 첨부</div>
+        <div className="grid grid-cols-2 gap-2.5">
+          <button type="button" onClick={() => albumRef.current?.click()} className="flex items-center justify-center gap-2 py-3.5 rounded-xl border border-border bg-card text-[14px] font-semibold text-foreground active:bg-muted"><ImagePlus className="w-5 h-5 text-primary" />앨범</button>
+          <button type="button" onClick={() => cameraRef.current?.click()} className="flex items-center justify-center gap-2 py-3.5 rounded-xl border border-border bg-card text-[14px] font-semibold text-foreground active:bg-muted"><Camera className="w-5 h-5 text-primary" />카메라</button>
         </div>
+        <input ref={albumRef} type="file" accept="image/*,application/pdf" multiple hidden onChange={(e) => doUpload(Array.from(e.target.files || []))} />
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => doUpload(Array.from(e.target.files || []))} />
+
+        {/* 업로드 진행 */}
+        {pending.map((p) => (
+          <div key={p.id} className="mt-2.5 bg-card border border-border rounded-xl p-3">
+            <div className="flex justify-between text-[13px]"><span className="text-foreground truncate">{p.name}</span><span className="text-muted-foreground">{p.pct}%</span></div>
+            <div className="h-1.5 rounded-full bg-border mt-2 overflow-hidden"><div className="h-full bg-primary transition-all" style={{ width: `${p.pct}%` }} /></div>
+          </div>
+        ))}
+
+        {/* 첨부된 파일 */}
+        {files.length ? (
+          <div className="mt-3 bg-card border border-border rounded-2xl overflow-hidden">
+            {files.map((f, i) => (
+              <div key={i} className="flex items-center gap-3 p-3.5 first:border-t-0 border-t border-border">
+                <Paperclip className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 text-[14px] text-foreground truncate">{f.name}</div>
+                <button onClick={() => removeFile(i)} className="text-muted-foreground active:text-foreground shrink-0"><X className="w-4 h-4" /></button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {/* 제출 */}
+        <button type="button" onClick={submit} disabled={!canSubmit}
+          className="w-full mt-7 py-4 rounded-xl bg-primary text-white text-base font-semibold active:opacity-90 disabled:opacity-40">
+          {loading ? "보내는 중…" : "코치에게 보내기"}
+        </button>
       </div>
 
-      {/* 하단 고정 CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#F2F3F6] via-[#F2F3F6] to-transparent pt-6 pb-5 px-5">
-        <div className="max-w-md mx-auto">
-          <button onClick={submit} disabled={ctaDisabled}
-            className="w-full py-4 rounded-2xl text-white font-bold text-[16px] disabled:bg-gray-200 disabled:text-gray-400 active:scale-[0.99] transition-all"
-            style={ctaDisabled ? {} : { background: GRAD }}>
-            {ctaLabel}
-          </button>
-        </div>
-      </div>
-    </main>
+      <BottomNav />
+    </div>
   );
 }

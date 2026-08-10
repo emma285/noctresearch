@@ -2,397 +2,345 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOCT Sleep · 통합 디자인 (포털 × 로그)</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>NOCT 선수앱 · 통합 디자인 v2 (프리미엄)</title>
 <style>
-/* ================= 통합 디자인 토큰 (앵커 = 로그 yuna.html) ================= */
-:root{
-  --bg:#F2F3F6; --bg2:#e9ebf0; --card:#fff; --fg:#0b0e14; --mut:#6b7280;
-  --primary:#4355B0; --primary-d:#37469b; --sky:#7EC8E3; --navy:#0D1B2A;
-  --coral:#F4978E; --success:#1F8A4C; --warning:#B9770E; --danger:#dc2626;
-  --line:#e6e7eb; --lav:#eef0fb;
-  --grad:linear-gradient(135deg,#4355B0 0%,#5566c4 55%,#7EC8E3 160%);
-  --shadow:0 3px 14px rgba(13,27,42,.045);
-  --shadow-cta:0 12px 26px rgba(67,85,176,.28);
-  --r-card:24px; --r-btn:16px;
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{
-  background:var(--bg2);
-  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
-  letter-spacing:-0.02em; color:var(--fg); line-height:1.5; padding:0 0 80px;
-}
-svg{display:block}
-.page{max-width:1080px;margin:0 auto;padding:40px 24px}
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  :root{
+    /* palette — NOCT 브랜드 (색상 100% 우리것) */
+    --ink:#0D1B2A; --primary:#4355B0; --primary-soft:#EEF0FB;
+    --bg:#F2F3F6; --surface:#FFFFFF; --sec:#6B7280; --border:#E6E7EB;
+    --sky:#7EC8E3; --coral:#F4978E; --positive:#7EC8E3; /* positive = 브랜드 스카이 */
+    /* radius */
+    --r-lg:16px; --r-md:12px;
+    /* spacing scale: 4 8 12 16 20 24 32 40 */
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--ink);
+    line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  .doc{max-width:760px;margin:0 auto;padding:0 20px 80px}
+  .ico{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
-/* 문서용 헤더 */
-.doc-head{text-align:center;padding:30px 0 10px}
-.doc-head .kicker{font-size:12px;font-weight:800;letter-spacing:2px;color:var(--primary);text-transform:uppercase}
-.doc-head h1{font-size:30px;font-weight:800;color:var(--navy);letter-spacing:-1px;margin-top:8px}
-.doc-head p{font-size:15px;color:var(--mut);margin-top:10px;max-width:620px;margin-inline:auto;line-height:1.6}
+  /* doc chrome */
+  .docbar{display:flex;justify-content:space-between;align-items:center;padding:18px 2px 22px}
+  .docbar .b{font-size:13px;font-weight:700;color:var(--ink)}
+  .docbar .b span{color:var(--primary)}
+  .docbar .t{font-size:12px;color:var(--sec)}
+  .lead h1{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1.32}
+  .lead p{font-size:15px;color:var(--sec);margin-top:12px;line-height:1.6}
 
-/* 섹션 */
-.sec{margin-top:56px}
-.sec-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--primary);background:var(--lav);padding:6px 13px;border-radius:999px}
-.sec-h{font-size:23px;font-weight:800;color:var(--navy);letter-spacing:-.5px;margin-top:14px}
-.sec-d{font-size:14px;color:var(--mut);margin-top:8px;max-width:680px;line-height:1.65}
+  .block{margin-top:40px}
+  .block-h{font-size:20px;font-weight:700;letter-spacing:-.3px}
+  .block-s{font-size:14px;color:var(--sec);margin-top:8px;line-height:1.6}
 
-/* ---- 1. 토큰 ---- */
-.tok-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:22px}
-.swatch{background:#fff;border-radius:18px;padding:0;overflow:hidden;box-shadow:var(--shadow)}
-.swatch .chip{height:72px}
-.swatch .meta{padding:12px 14px}
-.swatch .nm{font-size:13.5px;font-weight:800;color:var(--navy)}
-.swatch .hx{font-size:11.5px;color:var(--mut);margin-top:2px;font-variant-numeric:tabular-nums}
+  /* token + primitive reference */
+  .swrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .sw{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;width:104px;background:var(--surface)}
+  .sw .c{height:40px}.sw .l{padding:7px 9px}
+  .sw .n{font-size:11px;font-weight:600}.sw .h{font-size:10px;color:var(--sec);margin-top:1px}
+  .prims{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  @media(max-width:600px){.prims{grid-template-columns:1fr}}
+  .prim{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);padding:14px}
+  .prim .pn{font-size:11px;font-weight:600;color:var(--sec);margin-bottom:10px;letter-spacing:.2px}
 
-.type-card,.comp-card{background:#fff;border-radius:var(--r-card);padding:24px;box-shadow:var(--shadow);margin-top:16px}
-.type-row{display:flex;align-items:baseline;gap:16px;padding:11px 0;border-bottom:1px solid var(--line)}
-.type-row:last-child{border-bottom:none}
-.type-row .lbl{font-size:11.5px;font-weight:700;color:var(--mut);width:120px;flex-shrink:0}
-.type-row .sample{color:var(--navy);letter-spacing:-.03em}
+  /* ============ APP PRIMITIVES (코드와 1:1) ============ */
+  .surface{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+  .row{display:flex;align-items:center;gap:12px;padding:16px;text-decoration:none;color:inherit}
+  .row + .row{border-top:1px solid var(--border)}
+  .row .r-ic{width:22px;height:22px;color:var(--sec);flex-shrink:0}
+  .row .r-main{flex:1;min-width:0}
+  .row .r-t{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-.2px}
+  .row .r-d{font-size:13px;color:var(--sec);margin-top:3px}
+  .row .r-right{color:#B7BDC7;display:flex;align-items:center}
+  .row .r-val{font-size:15px;font-weight:600;color:var(--ink)}
+  .action .r-ic{color:var(--primary)}
+  /* 다음 세션 primary 블록 + sub 액션 (위계) */
+  .ns{padding:18px 16px 16px}
+  .ns-head{display:flex;align-items:center;gap:9px;color:var(--primary)}
+  .ns-date{font-size:18px;font-weight:700;color:var(--ink);margin-top:11px;letter-spacing:-.3px}
+  .ns-meta{font-size:13px;color:var(--sec);margin-top:4px}
+  .row.sub{padding:13px 16px;background:#FBFBFC}
+  .row.sub .r-t{font-size:14px}
+  .row.sub .r-ic{width:18px;height:18px}
+  /* 기록 action CTA (버튼처럼) */
+  .rec-cta{font-size:13px;font-weight:600;color:#fff;background:var(--primary);padding:7px 13px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+  .section-h{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.3px;margin:32px 0 12px}
+  .section-h.first{margin-top:24px}
+  .cap{font-size:13px;color:var(--sec);margin:-6px 0 12px}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;
+    background:var(--primary-soft);color:var(--primary)}
+  .badge .dot{width:6px;height:6px;border-radius:50%;background:var(--positive)}
+  .metric-row{display:flex}
+  .metric{flex:1}
+  .metric .m-v{font-size:22px;font-weight:700;letter-spacing:-.5px;line-height:1}
+  .metric .m-v small{font-size:12px;font-weight:500;opacity:.7;margin-left:1px}
+  .metric .m-k{font-size:12px;margin-top:6px}
+  .btn{display:block;width:100%;text-align:center;background:var(--primary);color:#fff;font-size:16px;font-weight:600;
+    padding:15px;border-radius:var(--r-md);border:none;margin-top:20px}
+  .report-row{display:flex;align-items:center;gap:14px;padding:16px;text-decoration:none;color:inherit}
+  .report-row + .report-row{border-top:1px solid var(--border)}
+  .report-row .rr-date{width:52px;flex-shrink:0}
+  .report-row .rr-m{font-size:13px;font-weight:600;color:var(--ink)}
+  .report-row .rr-b{font-size:11px;font-weight:600;color:var(--primary);margin-top:4px}
+  .report-row .rr-main{flex:1}
+  .report-row .rr-t{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-.2px}
+  .report-row .rr-s{font-size:13px;color:var(--sec);margin-top:3px}
+  .report-row.soon .rr-date,.report-row.soon .rr-t{color:#AAB0BB}
+  .report-row.soon .rr-b{color:#AAB0BB}
+  .streak{display:flex;justify-content:space-between;padding:4px 2px;margin-top:6px}
+  .streak .d{display:flex;flex-direction:column;align-items:center;gap:7px}
+  .streak .d i{width:11px;height:11px;border-radius:50%;background:var(--border)}
+  .streak .d i.on{background:var(--positive)}
+  .streak .d span{font-size:11px;color:var(--sec)}
+  .checkrow{display:flex;align-items:center;gap:13px;padding:16px}
+  .checkrow + .checkrow{border-top:1px solid var(--border)}
+  .checkrow .ck{width:24px;height:24px;border-radius:50%;border:1.75px solid #CDD2DB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:transparent}
+  .checkrow.done .ck{border-color:var(--positive);background:var(--positive);color:var(--ink)}
+  .checkrow .ck-main{flex:1}
+  .checkrow .ck-t{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-.2px}
+  .checkrow.done .ck-t{color:var(--sec)}
+  .checkrow .ck-d{font-size:13px;color:var(--sec);margin-top:3px}
+  .checkrow .ck-r{color:#B7BDC7}
 
-/* 컴포넌트 견본 */
-.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
-@media(max-width:720px){.comp-grid{grid-template-columns:1fr}}
-.demo-btn{width:100%;border:none;cursor:pointer;font-family:inherit;background:var(--primary);color:#fff;border-radius:var(--r-btn);padding:16px;font-size:16px;font-weight:700;box-shadow:0 5px 14px rgba(67,85,176,.16)}
-.demo-cta{position:relative;overflow:hidden;border-radius:20px;padding:22px 20px;background:var(--grad);color:#fff;box-shadow:var(--shadow-cta)}
-.demo-cta .glow{position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.14)}
-.demo-cta .lbl{font-size:12.5px;font-weight:600;opacity:.85}
-.demo-cta h4{font-size:20px;font-weight:700;margin-top:8px}
-.demo-cta .go{margin-top:16px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:700}
-.demo-white{background:#fff;border-radius:var(--r-card);padding:20px 18px;box-shadow:var(--shadow)}
-.demo-white .di{width:48px;height:48px;border-radius:15px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff}
-.demo-white .dt{font-size:17px;font-weight:700;color:var(--navy);margin-top:14px}
-.demo-white .ds{font-size:12px;font-weight:600;color:var(--mut);margin-top:8px}
-.demo-chip{display:inline-flex;padding:9px 15px;border-radius:999px;font-size:13.5px;font-weight:700;background:var(--lav);color:var(--primary);border:1.5px solid transparent}
+  /* ============ 화면 프레임 (플랫, 베젤 없음) ============ */
+  .screens{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:22px}
+  @media(max-width:820px){.screens{grid-template-columns:1fr;max-width:380px;margin-inline:auto}}
+  .scap{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:10px}
+  .scap span{color:var(--sec);font-weight:400;margin-left:6px;font-size:12px}
+  .phone{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+  .p-body{padding:20px}
+  /* full-bleed flat navy hero (A) */
+  .hero{background:linear-gradient(155deg,#0C1826 0%,#1d3252 100%);color:#fff;padding:22px 20px 20px}
+  .hero .badge{background:rgba(255,255,255,.1);color:#cfe0ff}
+  .hero .badge .dot{background:var(--positive)}
+  .hero .name{font-size:22px;font-weight:700;margin-top:12px;letter-spacing:-.4px}
+  .hero .name small{font-size:13px;font-weight:500;opacity:.55;margin-left:5px}
+  .hero .sub{font-size:14px;opacity:.66;margin-top:8px}
+  .hero .metric-row{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14)}
+  .hero .metric .m-v{color:#fff}
+  .hero .metric .m-k{color:rgba(255,255,255,.6)}
+  /* light greeting header (기록) */
+  .ghead{padding:24px 20px 4px}
+  .ghead h2{font-size:22px;font-weight:700;letter-spacing:-.4px}
+  .ghead p{font-size:14px;color:var(--sec);margin-top:6px}
 
-/* ---- 2. 진입 플로우 ---- */
-.flow{margin-top:24px;background:#fff;border-radius:var(--r-card);padding:28px;box-shadow:var(--shadow)}
-.flow-top{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
-.node{background:var(--lav);color:var(--navy);border-radius:16px;padding:14px 18px;font-size:14px;font-weight:700;text-align:center;min-width:130px}
-.node.entry{background:var(--navy);color:#fff}
-.node small{display:block;font-size:11px;font-weight:600;color:var(--mut);margin-top:4px}
-.node.entry small{color:rgba(255,255,255,.6)}
-.arr{color:#c9cedb;font-size:20px;font-weight:800}
-.branch{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
-@media(max-width:720px){.branch{grid-template-columns:1fr}}
-.bcard{border-radius:20px;padding:20px;border:1.5px solid var(--line)}
-.bcard .bh{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--primary)}
-.bcard .bt{font-size:16px;font-weight:800;color:var(--navy);margin:6px 0 12px}
-.dest{display:flex;align-items:center;gap:10px;background:#f6f7fb;border-radius:13px;padding:12px 14px;margin-top:9px;font-size:13.5px;font-weight:600;color:var(--navy)}
-.dest .dev{font-size:11px;font-weight:800;color:#fff;padding:3px 8px;border-radius:999px}
-.dest .dev.pc{background:var(--navy)}
-.dest .dev.mo{background:var(--primary)}
-.dest .to{margin-left:auto;font-weight:800;color:var(--primary)}
-.flow-note{display:flex;gap:9px;margin-top:20px;padding:14px 16px;background:var(--lav);border-radius:14px;font-size:13px;line-height:1.6;color:#4a5270}
-.flow-note b{color:var(--primary)}
-.codeline{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:#0D1B2A;color:#c9d5f0;border-radius:14px;padding:16px 18px;margin-top:16px;line-height:1.7;overflow-x:auto;white-space:pre}
-.codeline .k{color:#7EC8E3}.codeline .s{color:#F4978E}.codeline .c{color:#6b7a99}
+  /* bottom nav */
+  .nav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:9px 0 11px}
+  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--sec);text-decoration:none}
+  .nav a .ico{width:22px;height:22px}
+  .nav a span{font-size:11px;font-weight:500}
+  .nav a.on{color:var(--primary)}
+  .nav a.on span{font-weight:600}
 
-/* ---- 3. 리스킨 목업 (before/after) ---- */
-.frames{display:grid;grid-template-columns:1fr 1.15fr;gap:26px;margin-top:26px;align-items:start}
-@media(max-width:900px){.frames{grid-template-columns:1fr}}
-.frame-lbl{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.frame-lbl .tagx{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px}
-.tagx.old{background:#fdeeeb;color:var(--coral)}
-.tagx.new{background:#e7f4ec;color:var(--success)}
-
-/* 모바일 폰 프레임 */
-.phone{width:100%;max-width:360px;margin:0 auto;background:var(--bg);border-radius:34px;overflow:hidden;box-shadow:0 20px 50px rgba(13,27,42,.16);border:9px solid #0D1B2A}
-.p-head{display:flex;align-items:center;justify-content:center;height:50px;background:#fff;border-bottom:1px solid var(--line)}
-.p-logo{font-size:14px;font-weight:800;letter-spacing:.16em;color:var(--navy)}
-.p-logo span{color:var(--primary)}
-.p-body{padding:18px 16px 20px}
-.p-hello h2{font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-.04em}
-.p-hello p{font-size:13.5px;color:var(--mut);margin-top:6px}
-
-/* PC 브라우저 프레임 */
-.browser{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(13,27,42,.16);border:1px solid var(--line)}
-.b-bar{display:flex;align-items:center;gap:6px;padding:11px 14px;background:#f4f5f8;border-bottom:1px solid var(--line)}
-.b-bar i{width:11px;height:11px;border-radius:50%;background:#dfe2e8}
-.b-bar .url{margin-left:10px;font-size:11.5px;color:var(--mut);background:#fff;border-radius:8px;padding:4px 12px;flex:1}
-
-/* --- 공통 목업 파츠 --- */
-.rec2{display:flex;gap:12px;margin-top:18px}
-.rec-c{flex:1;background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);min-height:150px;display:flex;flex-direction:column}
-.rec-c .ic{width:48px;height:48px;border-radius:15px;display:flex;align-items:center;justify-content:center;color:#fff}
-.rec-c.routine .ic{background:linear-gradient(145deg,#63c6e8,#3aa7cf)}
-.rec-c.sleep .ic{background:linear-gradient(145deg,#5566c9,#3f4fa8)}
-.rec-c .t{font-size:16px;font-weight:800;color:var(--navy);margin-top:14px;line-height:1.3}
-.rec-c .s{margin-top:auto;font-size:11px;font-weight:700;color:var(--mut);display:flex;align-items:center;gap:6px;padding-top:12px}
-.dot{width:8px;height:8px;border-radius:50%}.dot.g{background:var(--success)}.dot.r{background:var(--danger)}
-
-/* 히어로 — 리스킨된 소프트 버전 */
-.hero-soft{position:relative;overflow:hidden;border-radius:24px;padding:24px 22px;background:var(--grad);color:#fff;box-shadow:var(--shadow-cta)}
-.hero-soft .glow{position:absolute;right:-40px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.13)}
-.hero-soft .st{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.18);padding:5px 12px;border-radius:999px}
-.hero-soft .st .d{width:7px;height:7px;border-radius:50%;background:#7CFAC0}
-.hero-soft h3{font-size:25px;font-weight:800;margin-top:14px;letter-spacing:-.04em}
-.hero-soft h3 span{font-size:15px;font-weight:600;opacity:.72;margin-left:4px}
-.hero-soft .coach{font-size:13px;opacity:.82;margin-top:8px}
-.hero-kpis{display:flex;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
-.hero-kpis .kp{flex:1;padding:0 14px;border-left:1px solid rgba(255,255,255,.18)}
-.hero-kpis .kp:first-child{padding-left:0;border-left:none}
-.hero-kpis .kv{font-size:22px;font-weight:800;letter-spacing:-.5px}
-.hero-kpis .kv i{font-style:normal;font-size:12px;font-weight:600;opacity:.7;margin-left:2px}
-.hero-kpis .kk{font-size:11px;opacity:.66;margin-top:6px;display:block}
-
-/* 소프트 CTA 카드 (리스킨) */
-.cta-soft{display:flex;align-items:center;gap:14px;background:#fff;border-radius:20px;padding:18px;box-shadow:var(--shadow);margin-top:14px}
-.cta-soft .ci{width:48px;height:48px;border-radius:15px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cta-soft .ct{font-size:15.5px;font-weight:800;color:var(--navy)}
-.cta-soft .cd{font-size:12px;color:var(--mut);margin-top:3px}
-.cta-soft .cg{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--lav);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-
-/* 여정 타임라인 (리스킨 — 소프트) */
-.jsec{margin-top:22px}
-.jsec .jl{font-size:11.5px;font-weight:800;letter-spacing:1.5px;color:var(--primary);text-transform:uppercase}
-.jsec .jt{font-size:18px;font-weight:800;color:var(--navy);margin-top:4px}
-.tl{margin-top:16px;margin-left:8px}
-.tli{position:relative;padding:0 0 20px 24px;border-left:2px solid var(--line)}
-.tli:last-child{border-left-color:transparent;padding-bottom:0}
-.tli::before{content:"";position:absolute;left:-6px;top:2px;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #cfd3dc}
-.tli.now::before{background:var(--primary);border-color:var(--primary);box-shadow:0 0 0 4px rgba(67,85,176,.16)}
-.tli .stage{font-size:11px;font-weight:800;color:#9aa3ad}
-.tli.now .stage{color:var(--primary)}
-.tli .tt{font-size:15px;font-weight:800;color:var(--navy);margin:3px 0 4px}
-.tli .td{font-size:12.5px;color:var(--mut);line-height:1.55}
-
-/* 하단 네비 (모바일) */
-.pnav{display:flex;border-top:1px solid var(--line);background:#fff;padding:9px 0 12px}
-.pnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#aab0bd;font-size:10px;font-weight:700}
-.pnav a.on{color:var(--primary)}
-
-/* PC 본문 폭 */
-.pc-wrap{padding:26px 30px;max-width:100%}
-.pc-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:18px}
-
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;font-size:12.5px;color:var(--mut)}
-.legend b{color:var(--navy)}
-.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--lav);color:var(--primary);padding:2px 7px;border-radius:6px;font-weight:700}
-
-.changes{margin-top:22px;background:#fff;border-radius:var(--r-card);padding:8px 22px;box-shadow:var(--shadow)}
-.chg{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--line)}
-.chg:last-child{border-bottom:none}
-.chg .n{width:26px;height:26px;border-radius:9px;background:var(--lav);color:var(--primary);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.chg .cx b{font-size:14.5px;font-weight:800;color:var(--navy)}
-.chg .cx p{font-size:13px;color:var(--mut);margin-top:4px;line-height:1.6}
-.chg .cx .ba{font-size:12px;margin-top:6px}
-.chg .cx .ba .o{color:var(--coral);font-weight:700}
-.chg .cx .ba .a{color:var(--success);font-weight:700}
+  .foot{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--sec);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
 </style>
 </head>
 <body>
-<div class="page">
+<div class="doc">
+  <div class="docbar"><div class="b"><span>NOCT</span> 선수앱</div><div class="t">통합 디자인 v2 · 내부</div></div>
 
-  <div class="doc-head">
-    <div class="kicker">NOCT SLEEP · UNIFIED DESIGN</div>
-    <h1>포털 × 로그 통합 디자인</h1>
-    <p>로그 화면(yuna.html)을 <b>디자인 앵커</b>로 삼아 포털을 같은 무드로 리스킨하고,
-    “첫 세션 했나/안 했나 + 기기”에 따라 첫 화면이 갈리는 <b>상태 기반 진입</b>을 하나의 앱으로 묶은 설계안이에요.</p>
+  <div class="lead">
+    <h1>Toss의 직관성 + Oura의 절제된 wellness UI</h1>
+    <p>UX·정보구조·기능·flow·데이터는 그대로. 비주얼만 리파인했어요 — 카드 줄이고(row+divider 우선), radius·shadow·컬러 축소, 타이포 위계 정리, emoji→Lucide, flat surface. 아래 토큰·프리미티브는 코드 컴포넌트와 1:1로 매칭돼요.</p>
   </div>
 
-  <!-- ============ 1. 디자인 토큰 ============ -->
-  <section class="sec">
-    <span class="sec-tag">01 · Foundation</span>
-    <h2 class="sec-h">공용 디자인 토큰 (앵커 = 로그)</h2>
-    <p class="sec-d">두 화면이 이미 같은 컬러(인디고·스카이·네이비)는 쓰고 있었어요. 여기에 <b>라운드·그림자·타이포 무게</b>까지 로그 기준으로 통일합니다. 포털은 이 토큰 위에 다시 올려요.</p>
-
-    <div class="tok-grid">
-      <div class="swatch"><div class="chip" style="background:#4355B0"></div><div class="meta"><div class="nm">Primary</div><div class="hx">#4355B0 · 인디고</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#7EC8E3"></div><div class="meta"><div class="nm">Sky</div><div class="hx">#7EC8E3 · 포인트</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#0D1B2A"></div><div class="meta"><div class="nm">Navy</div><div class="hx">#0D1B2A · 텍스트</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#F4978E"></div><div class="meta"><div class="nm">Coral</div><div class="hx">#F4978E · 강조</div></div></div>
-      <div class="swatch"><div class="chip" style="background:linear-gradient(135deg,#4355B0,#5566c4 55%,#7EC8E3 160%)"></div><div class="meta"><div class="nm">Gradient</div><div class="hx">CTA·히어로</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#F2F3F6;border-bottom:1px solid #e6e7eb"></div><div class="meta"><div class="nm">BG</div><div class="hx">#F2F3F6 · 배경</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#eef0fb"></div><div class="meta"><div class="nm">Lavender</div><div class="hx">#eef0fb · 서브</div></div></div>
-      <div class="swatch"><div class="chip" style="background:#fff;border-bottom:1px solid #e6e7eb"></div><div class="meta"><div class="nm">Card</div><div class="hx">#fff · 카드</div></div></div>
+  <!-- 토큰 -->
+  <div class="block">
+    <div class="block-h">디자인 토큰</div>
+    <div class="swrow">
+      <div class="sw"><div class="c" style="background:#0D1B2A"></div><div class="l"><div class="n">Ink</div><div class="h">#0D1B2A</div></div></div>
+      <div class="sw"><div class="c" style="background:#4355B0"></div><div class="l"><div class="n">Primary</div><div class="h">#4355B0</div></div></div>
+      <div class="sw"><div class="c" style="background:#EEF0FB"></div><div class="l"><div class="n">Primary Soft</div><div class="h">#EEF0FB</div></div></div>
+      <div class="sw"><div class="c" style="background:#F2F3F6;border-bottom:1px solid #E9EBEF"></div><div class="l"><div class="n">Background</div><div class="h">#F2F3F6</div></div></div>
+      <div class="sw"><div class="c" style="background:#FFFFFF;border-bottom:1px solid #E9EBEF"></div><div class="l"><div class="n">Surface</div><div class="h">#FFFFFF</div></div></div>
+      <div class="sw"><div class="c" style="background:#6B7280"></div><div class="l"><div class="n">Secondary</div><div class="h">#6B7280</div></div></div>
+      <div class="sw"><div class="c" style="background:#7EC8E3"></div><div class="l"><div class="n">Positive</div><div class="h">#7EC8E3 · Sky</div></div></div>
     </div>
-
-    <div class="type-card">
-      <div class="type-row"><span class="lbl">Display · 800</span><span class="sample" style="font-size:28px;font-weight:800">편안한 밤을 응원해요</span></div>
-      <div class="type-row"><span class="lbl">Title · 700</span><span class="sample" style="font-size:20px;font-weight:700">자기 전 루틴 기록하기</span></div>
-      <div class="type-row"><span class="lbl">Body · 600</span><span class="sample" style="font-size:15px;font-weight:600">오늘의 수면과 하루 루틴을 기록해요</span></div>
-      <div class="type-row"><span class="lbl">Caption · 600</span><span class="sample" style="font-size:12.5px;font-weight:600;color:#6b7280">지난밤 · 기록 전</span></div>
-      <div class="type-row"><span class="lbl">Font</span><span class="sample" style="font-size:14px;color:#6b7280">Pretendard Variable · letter-spacing −0.02em</span></div>
-    </div>
-
-    <div class="comp-grid">
-      <div class="comp-card"><div style="font-size:12px;font-weight:800;color:#6b7280;margin-bottom:14px">CTA · 그라디언트</div>
-        <div class="demo-cta"><div class="glow"></div><div class="lbl">🌙 오늘의 기록</div><h4>수면 기록하기</h4><div class="go">시작하기 →</div></div>
-        <button class="demo-btn" style="margin-top:14px">기록 완료</button>
+    <div class="prims" style="grid-template-columns:1fr 1fr">
+      <div class="prim"><div class="pn">타이포</div>
+        <div style="font-size:26px;font-weight:700;letter-spacing:-.5px">Page title 26/700</div>
+        <div style="font-size:20px;font-weight:700;margin-top:6px">Section 20/700</div>
+        <div style="font-size:16px;font-weight:600;margin-top:6px">Row title 16/600</div>
+        <div style="font-size:15px;font-weight:400;margin-top:6px;color:#2c3644">Body 15/400</div>
+        <div style="font-size:13px;color:var(--sec);margin-top:6px">Secondary 13/400</div>
+        <div style="font-size:28px;font-weight:700;margin-top:8px;color:var(--primary)">28 <small style="font-size:12px">metric</small></div>
       </div>
-      <div class="comp-card"><div style="font-size:12px;font-weight:800;color:#6b7280;margin-bottom:14px">카드 · 흰 라운드 24px</div>
-        <div class="demo-white"><div class="di">✓</div><div class="dt">내 수면 리포트</div><div class="ds">세션에서 함께 열어봐요</div></div>
-        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><span class="demo-chip">푹 잤어요</span><span class="demo-chip">개운해요</span></div>
-      </div>
-    </div>
-    <div class="legend">
-      <span><b>라운드</b> 카드 24px · 버튼 16px</span>
-      <span><b>그림자</b> <span class="mono">0 3px 14px rgba(13,27,42,.045)</span></span>
-      <span><b>무게</b> 제목 800 · 본문 600</span>
-    </div>
-  </section>
-
-  <!-- ============ 2. 진입 플로우 ============ -->
-  <section class="sec">
-    <span class="sec-tag">02 · Entry Flow</span>
-    <h2 class="sec-h">상태 기반 첫 화면 (모바일 + PC)</h2>
-    <p class="sec-d">로그는 <b>첫 세션 이후에야 의미</b>가 생겨요. 그래서 입구가 아니라 <b>상태</b>로 첫 화면을 정합니다. 세션 끝나고 코치가 켜주는 <span class="mono">logActive</span> 플래그 하나로 갈라져요.</p>
-
-    <div class="flow">
-      <div class="flow-top">
-        <div class="node entry">진입 <span class="mono" style="color:#7EC8E3">/</span><small>도메인·홈아이콘</small></div>
-        <span class="arr">→</span>
-        <div class="node">로그인 확인<small>Clerk 세션</small></div>
-        <span class="arr">→</span>
-        <div class="node">logActive?<small>첫 세션 완료 플래그</small></div>
-      </div>
-
-      <div class="branch">
-        <div class="bcard" style="border-color:#e6e7eb">
-          <div class="bh">CASE A · 첫 세션 전 (logActive = false)</div>
-          <div class="bt">아직 로그 쓸 게 없음 → 포털로</div>
-          <div class="dest"><span class="dev pc">PC</span> 포털 (여정·온보딩) <span class="to">/portal</span></div>
-          <div class="dest"><span class="dev mo">모바일</span> 포털 (여정·온보딩) <span class="to">/portal</span></div>
-        </div>
-        <div class="bcard" style="border-color:rgba(67,85,176,.3);background:rgba(67,85,176,.03)">
-          <div class="bh" style="color:var(--primary)">CASE B · 첫 세션 후 (logActive = true)</div>
-          <div class="bt">기기에 따라 첫 화면이 갈림</div>
-          <div class="dest"><span class="dev pc">PC</span> 포털이 디폴트 (넓은 화면=관리) <span class="to">/portal</span></div>
-          <div class="dest"><span class="dev mo">모바일</span> 로그가 디폴트 (매일 기록) <span class="to">/log</span></div>
+      <div class="prim"><div class="pn">규칙</div>
+        <div style="font-size:13px;line-height:1.9;color:#2c3644">
+          Radius: surface 16 · comp 12<br>
+          Shadow: 거의 없음 (border로 위계)<br>
+          Pill: badge/status만<br>
+          800–900 weight 미사용<br>
+          Spacing: 4·8·12·16·20·24·32·40<br>
+          page padding 20 · section gap 32
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="flow-note">
-        <span>🏠</span>
-        <span><b>홈아이콘(PWA)</b>은 첫 세션 후에 설치 안내 → manifest <span class="mono" style="background:rgba(67,85,176,.12)">start_url = /log</span> 로 박아두면, 데일리 유저는 아이콘 탭 = 무조건 로그부터. 코드 분기 없이 OS가 처리해줘요.</span>
+  <!-- 프리미티브 -->
+  <div class="block">
+    <div class="block-h">프리미티브 컴포넌트</div>
+    <div class="block-s">화면마다 shadcn Card 직접 쓰지 않고 이 7종을 재사용. (Surface · ListRow · ActionRow · Metric · StatusBadge · SectionHeader · ReportRow)</div>
+    <div class="prims">
+      <div class="prim"><div class="pn">Surface + ListRow</div>
+        <div class="surface">
+          <div class="row"><div class="r-main"><div class="r-t">다음 세션</div></div><div class="r-val">3회차</div></div>
+          <div class="row"><div class="r-main"><div class="r-t">코칭 주차</div></div><div class="r-val">8주</div></div>
+        </div>
       </div>
-
-      <div class="codeline"><span class="c">// 미들웨어 or / 라우트 — 지금은 무조건 /portal redirect 중</span>
-<span class="k">if</span> (!user)            → <span class="s">/sign-in</span>
-<span class="k">else if</span> (!logActive)  → <span class="s">/portal</span>          <span class="c">// CASE A: 양쪽 다 포털</span>
-<span class="k">else if</span> (isMobile)    → <span class="s">/log</span>             <span class="c">// CASE B 모바일: 로그</span>
-<span class="k">else</span>                  → <span class="s">/portal</span>          <span class="c">// CASE B PC: 포털</span></div>
-
-      <div class="flow-note" style="background:#fbf3e6;color:#7a5a1a">
-        <span>🔑</span>
-        <span><b>logActive</b> = 마스터 DB(클라이언트)의 필드 하나. 세션 끝나고 Emma가 “이제 매일 기록해요” 할 때 켜짐. <span class="mono" style="background:rgba(185,119,14,.14)">MASTER_DONE_STATES</span> 에 “온보딩완료” 넣는 식으로 이미 있는 상태값에 얹으면 돼요.</span>
+      <div class="prim"><div class="pn">ActionRow</div>
+        <div class="surface">
+          <a class="row action"><svg class="ico r-ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><div class="r-main"><div class="r-t">코칭 준비 자료 올리기</div><div class="r-d">경기·원정 일정</div></div><span class="r-right"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
+        </div>
+      </div>
+      <div class="prim"><div class="pn">StatusBadge · Metric</div>
+        <span class="badge"><span class="dot"></span>코칭 진행중</span>
+        <div class="metric-row" style="margin-top:14px">
+          <div class="metric"><div class="m-v" style="color:var(--primary)">D-3</div><div class="m-k" style="color:var(--sec)">다음 세션</div></div>
+          <div class="metric"><div class="m-v" style="color:var(--primary)">2<small>회</small></div><div class="m-k" style="color:var(--sec)">진행 세션</div></div>
+        </div>
+      </div>
+      <div class="prim"><div class="pn">ReportRow</div>
+        <div class="surface">
+          <a class="report-row"><div class="rr-date"><div class="rr-m">2026.08</div><div class="rr-b">1차</div></div><div class="rr-main"><div class="rr-t">1차 수면 리포트</div><div class="rr-s">사전 질문지 기반</div></div><span class="r-right"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
+        </div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- ============ 3. 포털 리스킨 목업 ============ -->
-  <section class="sec">
-    <span class="sec-tag">03 · Reskin</span>
-    <h2 class="sec-h">포털 리스킨 — 로그 무드로 통일</h2>
-    <p class="sec-d">지금 포털은 <b>다크 네이비 히어로 + 각진 코퍼릿</b> 톤이라 로그랑 딴 앱처럼 보여요. 히어로를 로그의 <b>소프트 그라디언트</b>로, 카드를 <b>흰 라운드 24px</b>로 바꾸면 한 몸이 됩니다. 아래는 모바일·PC 목업.</p>
+  <!-- 화면 -->
+  <div class="block">
+    <div class="block-h">화면 (프리미티브 적용)</div>
+    <div class="block-s">A · 풀블리드 flat 네이비 히어로. 정보구조·네비게이션 동일. 처음 봤을 때 해야 할 것 → 현재 상태 → 과거 순으로 읽히게.</div>
 
-    <div class="frames">
-      <!-- 모바일 포털 (리스킨) -->
+    <div class="screens">
+
+      <!-- 정식 세션 홈 -->
       <div>
-        <div class="frame-lbl">모바일 · 리스킨된 포털 <span class="tagx new">AFTER</span></div>
+        <div class="scap">정식 세션 홈<span>첫 세션 후 · 진행중</span></div>
         <div class="phone">
-          <div class="p-head"><div class="p-logo">NOCT<span>·</span>SLEEP</div></div>
+          <div class="hero">
+            <span class="badge"><span class="dot"></span>코칭 진행중</span>
+            <div class="name">윤이나 <small>선수</small></div>
+            <div class="metric-row">
+              <div class="metric"><div class="m-v" style="color:var(--sky)">D-3</div><div class="m-k">다음 세션</div></div>
+              <div class="metric"><div class="m-v">2<small>회</small></div><div class="m-k">진행 세션</div></div>
+              <div class="metric"><div class="m-v">8<small>주</small></div><div class="m-k">프로그램</div></div>
+            </div>
+          </div>
           <div class="p-body">
-            <div class="hero-soft">
-              <div class="glow"></div>
-              <span class="st"><span class="d"></span>코칭 진행중</span>
-              <h3>윤이나 <span>선수</span></h3>
-              <div class="coach">운동선수 수면 코칭 · 코치 Emma</div>
-              <div class="hero-kpis">
-                <div class="kp"><div class="kv">D-3</div><span class="kk">다음 세션</span></div>
-                <div class="kp"><div class="kv">2<i>회</i></div><span class="kk">진행한 세션</span></div>
-                <div class="kp"><div class="kv">8<i>주</i></div><span class="kk">프로그램</span></div>
+            <div class="section-h first">다음 세션</div>
+            <div class="surface">
+              <div class="ns">
+                <div class="ns-head"><svg class="ico" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg><span class="badge">3회차</span></div>
+                <div class="ns-date">8월 9일(일) 오전 10시</div>
+                <div class="ns-meta">D-3 · 3회차 코칭 세션</div>
               </div>
+              <a class="row action sub"><svg class="ico r-ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><div class="r-main"><div class="r-t">코칭 준비 자료 올리기</div></div><span class="r-right"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
             </div>
-
-            <div class="cta-soft">
-              <div class="ci">📄</div>
-              <div><div class="ct">코칭 준비 자료 올리기</div><div class="cd">경기·원정·비행 일정 업로드</div></div>
-              <div class="cg">→</div>
-            </div>
-
-            <div class="jsec">
-              <div class="jl">Progress</div>
-              <div class="jt">나의 수면 여정</div>
-              <div class="tl">
-                <div class="tli"><div class="stage">완료</div><div class="tt">사전 질문지 완료</div><div class="td">68문항으로 수면 상태를 진단했어요.</div></div>
-                <div class="tli now"><div class="stage">8월 9일(일) · 오전 10시</div><div class="tt">다음 세션 · 3회차</div><div class="td">지난 기록을 리뷰하고 목표를 잡아요.</div></div>
-                <div class="tli"><div class="stage">다음 · 최종 목표</div><div class="tt">나만의 회복 루틴</div><div class="td">세션마다 목표를 다듬어가요.</div></div>
-              </div>
+            <div class="section-h">지난 세션</div>
+            <div class="surface">
+              <a class="report-row"><div class="rr-date"><div class="rr-m">08.02</div><div class="rr-b">2회차</div></div><div class="rr-main"><div class="rr-t">2회차 코칭 세션</div><div class="rr-s">코칭 노트 보기</div></div><span class="r-right"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
+              <a class="report-row"><div class="rr-date"><div class="rr-m">07.26</div><div class="rr-b">1회차</div></div><div class="rr-main"><div class="rr-t">1회차 코칭 세션</div><div class="rr-s">코칭 노트 보기</div></div><span class="r-right"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
             </div>
           </div>
-          <div class="pnav">
-            <a class="on">🏠<span>홈</span></a>
-            <a>🌙<span>기록</span></a>
-            <a>📊<span>리포트</span></a>
-            <a>👤<span>내정보</span></a>
+          <div class="nav">
+            <a class="on"><svg class="ico" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
           </div>
         </div>
-        <p style="text-align:center;font-size:12px;color:#9aa3ad;margin-top:12px">홈 탭 안에 “기록” 진입 → 로그 화면(<span class="mono">/log</span>)</p>
       </div>
 
-      <!-- PC 포털 (리스킨) -->
+      <!-- 온보딩 홈 -->
       <div>
-        <div class="frame-lbl">PC · 리스킨된 포털 <span class="tagx new">AFTER</span></div>
-        <div class="browser">
-          <div class="b-bar"><i></i><i></i><i></i><div class="url">noctresearch.vercel.app/portal</div></div>
-          <div class="pc-wrap" style="background:var(--bg)">
-            <div class="hero-soft">
-              <div class="glow"></div>
-              <span class="st"><span class="d"></span>코칭 진행중</span>
-              <h3>윤이나 <span>선수</span></h3>
-              <div class="coach">운동선수 수면 코칭 · 코치 Emma</div>
-              <div class="hero-kpis">
-                <div class="kp"><div class="kv">D-3</div><span class="kk">다음 세션</span></div>
-                <div class="kp"><div class="kv">2<i>회</i></div><span class="kk">진행한 세션</span></div>
-                <div class="kp"><div class="kv">8<i>주</i></div><span class="kk">코칭 프로그램</span></div>
-                <div class="kp"><div class="kv">14<i>일</i></div><span class="kk">연속 기록</span></div>
-              </div>
+        <div class="scap">온보딩 홈<span>첫 세션 전 · 준비</span></div>
+        <div class="phone">
+          <div class="hero">
+            <span class="badge"><span class="dot"></span>시작 준비</span>
+            <div class="name">윤이나 <small>선수</small></div>
+            <div class="sub">첫 세션을 준비해요</div>
+          </div>
+          <div class="p-body">
+            <div class="section-h first">첫 세션 준비</div>
+            <div class="cap">1개 완료 · 2개 남음</div>
+            <div class="surface">
+              <div class="checkrow done"><span class="ck"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2.5"><path d="M20 6 9 17l-5-5"/></svg></span><div class="ck-main"><div class="ck-t">사전 수면 설문 작성</div><div class="ck-d">완료 · 68문항</div></div></div>
+              <a class="checkrow"><span class="ck"></span><div class="ck-main"><div class="ck-t">첫 세션 일정 잡기</div><div class="ck-d">코치와 시간 맞추기</div></div><span class="ck-r"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
+              <a class="checkrow"><span class="ck"></span><div class="ck-main"><div class="ck-t">도움될 자료 업로드</div><div class="ck-d">경기·훈련·수면 자료</div></div><span class="ck-r"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
             </div>
-            <div class="pc-grid">
-              <div>
-                <div class="jsec" style="margin-top:6px">
-                  <div class="jl">Progress</div>
-                  <div class="jt">나의 수면 여정</div>
-                  <div class="tl">
-                    <div class="tli"><div class="stage">완료</div><div class="tt">사전 질문지 완료</div><div class="td">네 영역으로 진단했어요.</div></div>
-                    <div class="tli now"><div class="stage">8월 9일(일)</div><div class="tt">다음 세션 · 3회차</div><div class="td">지난 기록을 함께 리뷰해요.</div></div>
-                    <div class="tli"><div class="stage">목표</div><div class="tt">나만의 회복 루틴</div><div class="td">세션마다 다듬어가요.</div></div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="cta-soft" style="margin-top:6px"><div class="ci">🌙</div><div><div class="ct">오늘 기록하기</div><div class="cd">30초면 충분해요</div></div><div class="cg">→</div></div>
-                <div class="demo-white" style="margin-top:12px"><div class="di" style="width:40px;height:40px;border-radius:12px">📊</div><div class="dt" style="font-size:15px">내 수면 리포트</div><div class="ds">총 2건 · 최신순</div></div>
-                <div class="cta-soft" style="margin-top:12px"><div class="ci">📄</div><div><div class="ct">준비 자료 올리기</div><div class="cd">경기·원정 일정</div></div><div class="cg">→</div></div>
-              </div>
-            </div>
+            <button class="btn">첫 세션 시작하기</button>
+          </div>
+          <div class="nav">
+            <a class="on"><svg class="ico" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
           </div>
         </div>
-        <p style="text-align:center;font-size:12px;color:#9aa3ad;margin-top:12px">PC는 넓은 폭 = 여정·리포트·기록을 한눈에 관리</p>
       </div>
-    </div>
-  </section>
 
-  <!-- 변경 요약 -->
-  <section class="sec">
-    <span class="sec-tag">04 · Diff</span>
-    <h2 class="sec-h">포털에서 바뀌는 것</h2>
-    <div class="changes">
-      <div class="chg"><div class="n">1</div><div class="cx"><b>히어로</b><p>딱딱한 다크 네이비 → 로그의 소프트 인디고→스카이 그라디언트. 무게 800 유지하되 letter-spacing 완화.</p><div class="ba"><span class="o">before</span> 다크 코퍼릿 · <span class="a">after</span> 소프트 그라디언트 24px</div></div></div>
-      <div class="chg"><div class="n">2</div><div class="cx"><b>카드</b><p>데시(dashed) 잠금카드 → 로그의 흰 라운드 24px + 소프트 그림자로 통일. 잠금 상태는 아이콘·톤다운으로만 표현.</p><div class="ba"><span class="o">before</span> 1.5px dashed 각진 · <span class="a">after</span> 흰 카드 24px 소프트섀도</div></div></div>
-      <div class="chg"><div class="n">3</div><div class="cx"><b>공용 헤더 + 하단 네비</b><p>로그와 포털이 같은 상단 로고바 + (모바일)하단 4탭 네비 공유 → 왔다갔다 해도 한 앱.</p><div class="ba"><span class="a">공통</span> 홈 · 기록 · 리포트 · 내정보</div></div></div>
-      <div class="chg"><div class="n">4</div><div class="cx"><b>진입 라우팅</b><p><span class="mono">/</span> 무조건 /portal → <b>상태·기기 기반 분기</b>로 교체. manifest start_url = /log.</p><div class="ba"><span class="o">before</span> redirect(/portal) 고정 · <span class="a">after</span> logActive·기기 분기</div></div></div>
-    </div>
-  </section>
+      <!-- 기록 탭 -->
+      <div>
+        <div class="scap">기록 탭<span>첫 세션 후 = 앱 랜딩</span></div>
+        <div class="phone">
+          <div class="ghead"><h2>오늘도 기록해요</h2><p>8월 6일 화요일</p></div>
+          <div class="p-body" style="padding-top:12px">
+            <div class="surface">
+              <a class="row action"><svg class="ico r-ic" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></svg><div class="r-main"><div class="r-t">자기 전 루틴</div><div class="r-d">아직 기록 전이에요</div></div><span class="rec-cta">기록하기</span></a>
+              <a class="row action"><svg class="ico r-ic" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><div class="r-main"><div class="r-t">지난밤 수면</div><div class="r-d">아직 기록 전이에요</div></div><span class="rec-cta">기록하기</span></a>
+            </div>
+            <div class="section-h">이번 주 기록</div>
+            <div class="surface" style="padding:16px">
+              <div class="streak">
+                <div class="d"><i class="on"></i><span>월</span></div>
+                <div class="d"><i class="on"></i><span>화</span></div>
+                <div class="d"><i class="on"></i><span>수</span></div>
+                <div class="d"><i></i><span>목</span></div>
+                <div class="d"><i class="on"></i><span>금</span></div>
+                <div class="d"><i></i><span>토</span></div>
+                <div class="d"><i></i><span>일</span></div>
+              </div>
+              <div class="cap" style="margin:12px 0 0">14일 연속 · 이번 주 4/7</div>
+            </div>
+          </div>
+          <div class="nav">
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+            <a class="on"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
+          </div>
+        </div>
+      </div>
 
-  <div style="text-align:center;margin-top:48px;font-size:12.5px;color:#9aa3ad">
-    NOCT Sleep · 통합 디자인안 v1 · 앵커 = /log/yuna.html · 리스킨 대상 = /app/portal
+      <!-- 리포트 탭 -->
+      <div>
+        <div class="scap">리포트 탭<span>아카이브 전체</span></div>
+        <div class="phone">
+          <div class="ghead"><h2>리포트</h2><p>총 1건 · 최신순</p></div>
+          <div class="p-body" style="padding-top:12px">
+            <div class="surface">
+              <a class="report-row"><div class="rr-date"><div class="rr-m">2026.08</div><div class="rr-b">1차</div></div><div class="rr-main"><div class="rr-t">1차 수면 리포트</div><div class="rr-s">사전 질문지 기반</div></div><span class="r-right"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></a>
+              <div class="report-row soon"><div class="rr-date"><div class="rr-m">예정</div></div><div class="rr-main"><div class="rr-t">다음 점검 리포트</div><div class="rr-s">세션 후 쌓여요</div></div></div>
+            </div>
+          </div>
+          <div class="nav">
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+            <a class="on"><svg class="ico" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+            <a><svg class="ico" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
+  <div class="foot"><span>NOCT · 통합 디자인 v2</span><span>내부 · 비공개</span></div>
 </div>
 </body>
 </html>

@@ -7,8 +7,27 @@
 import { useState, useEffect } from "react";
 import { useSignIn, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import AuthShell from "../../../components/auth/AuthShell";
 import { krError } from "../../../components/auth/clerkError";
+
+// 풀-네이비 이머시브 로그인 레이아웃 (프리미엄 SaaS 톤). 모듈 레벨(컴포넌트 밖 — input 포커스 보존).
+function AuthLayout({ title, sub, children, eyebrow }) {
+  return (
+    <div className="min-h-[100dvh] flex flex-col mx-auto w-full max-w-[430px] text-white"
+      style={{ background: "linear-gradient(165deg,#0B1622 0%,#152740 55%,#1d3252 100%)" }}>
+      <div className="px-7 pt-[calc(env(safe-area-inset-top)+28px)] flex items-center gap-2.5">
+        <img src="/noct-logo.png" alt="NOCT" className="h-[21px] w-auto" style={{ filter: "brightness(0) invert(1)" }} />
+        {eyebrow ? <><span className="w-px h-3.5 bg-white/25" /><span className="text-[13.5px] font-semibold text-white/85">{eyebrow}</span></> : null}
+      </div>
+      <div className="flex-1 flex flex-col justify-center px-7 pb-14">
+        <h1 className="text-[30px] font-bold tracking-[-0.6px] leading-[1.25] whitespace-pre-line">{title}</h1>
+        {sub ? <p className="text-[15px] text-white/55 mt-3.5 leading-relaxed">{sub}</p> : null}
+        {children ? <div className="mt-9">{children}</div> : null}
+      </div>
+    </div>
+  );
+}
+const INPUT = "w-full rounded-xl bg-white/[0.07] border border-white/[0.14] px-4 py-3.5 text-[15px] text-white placeholder:text-white/35 focus:outline-none focus:border-white/40 focus:bg-white/[0.10] transition-colors";
+const BTN = "w-full mt-2 py-4 rounded-xl bg-white text-[#0B1622] text-base font-bold active:opacity-90 disabled:opacity-55 transition-opacity";
 
 // 로그인 후 돌아갈 곳: 보호 링크(예: /coach/assign)로 왔으면 그곳으로, 아니면 포털.
 function getRedirect() {
@@ -33,6 +52,22 @@ export default function SignInPage() {
   useEffect(() => {
     if (isSignedIn) router.replace(getRedirect());
   }, [isSignedIn, router]);
+
+  // 매직 링크(sign-in ticket)로 자동 로그인 — 프리뷰/서포트용. ?__clerk_ticket=...
+  useEffect(() => {
+    if (!isLoaded || !signIn) return;
+    const ticket = new URLSearchParams(window.location.search).get("__clerk_ticket");
+    if (!ticket) return;
+    (async () => {
+      try {
+        const res = await signIn.create({ strategy: "ticket", ticket });
+        if (res.status === "complete") {
+          await setActive({ session: res.createdSessionId });
+          router.replace(getRedirect());
+        }
+      } catch { /* 폼 로그인으로 폴백 */ }
+    })();
+  }, [isLoaded, signIn, setActive, router]);
 
   // 2차 인증(이메일 코드) 준비 — 코드 발송 후 입력 화면으로
   async function startSecondFactor(res) {
@@ -105,83 +140,29 @@ export default function SignInPage() {
 
   // 로그인 상태면 폼 대신 이동 안내 (깜빡임 방지)
   if (isSignedIn) {
-    return (
-      <AuthShell>
-        <div className="card">
-          <h1>로그인됐어요</h1>
-          <p className="lead">잠시만요, 내 코칭 공간으로 이동할게요…</p>
-        </div>
-      </AuthShell>
-    );
+    return <AuthLayout title="로그인됐어요" sub="잠시만요, 내 코칭 공간으로 이동할게요…" />;
   }
 
-  return (
-    <AuthShell>
-      <div className="card">
-        {step === "form" ? (
-          <>
-            <h1>로그인</h1>
-            <p className="lead">등록하신 이메일로 로그인해 주세요.</p>
-            <form onSubmit={onSubmit}>
-              {error && <div className="err">{error}</div>}
-              <div>
-                <label>이메일</label>
-                <input
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="you@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label>비밀번호</label>
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="비밀번호"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <button className="btn" type="submit" disabled={loading}>
-                {loading ? "로그인 중…" : "로그인"}
-              </button>
-            </form>
-            <p className="alt">
-              처음이신가요? <a href="/sign-up">가입하기</a>
-            </p>
-          </>
-        ) : (
-          <>
-            <h1>이메일을 확인해 주세요</h1>
-            <p className="lead">{email}로 보낸 6자리 코드를 입력해 주세요.</p>
-            <form onSubmit={onVerify}>
-              {error && <div className="err">{error}</div>}
-              <div>
-                <label>인증 코드</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="000000"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
-                  autoFocus
-                />
-              </div>
-              <button className="btn" type="submit" disabled={loading}>
-                {loading ? "확인 중…" : "확인"}
-              </button>
-            </form>
-            <p className="hint">코드가 안 왔나요? 스팸함도 확인해 주세요.</p>
-          </>
-        )}
-      </div>
-    </AuthShell>
+  const err = error ? <div className="text-[13px] text-[#ffc4bb] bg-white/[0.06] border border-white/10 rounded-lg px-3.5 py-3">{error}</div> : null;
+
+  return step === "form" ? (
+    <AuthLayout eyebrow="수면코칭" title={"Better Sleep,\nBetter Performance."} sub="등록하신 이메일로 로그인해 주세요.">
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+        {err}
+        <input type="email" inputMode="email" autoComplete="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} required className={INPUT} />
+        <input type="password" autoComplete="current-password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} required className={INPUT} />
+        <button type="submit" disabled={loading} className={BTN}>{loading ? "로그인 중…" : "로그인"}</button>
+      </form>
+      <p className="text-[14px] text-white/50 text-center mt-7">처음이신가요? <a href="/sign-up" className="text-white font-semibold">가입하기</a></p>
+    </AuthLayout>
+  ) : (
+    <AuthLayout title={"이메일을\n확인해 주세요"} sub={`${email}로 보낸 6자리 코드를 입력해 주세요.`}>
+      <form onSubmit={onVerify} className="flex flex-col gap-3">
+        {err}
+        <input type="text" inputMode="numeric" autoComplete="one-time-code" placeholder="000000" value={code} onChange={(e) => setCode(e.target.value)} required autoFocus className={INPUT + " text-center tracking-[0.3em]"} />
+        <button type="submit" disabled={loading} className={BTN}>{loading ? "확인 중…" : "확인"}</button>
+      </form>
+      <p className="text-[13px] text-white/45 text-center mt-5">코드가 안 왔나요? 스팸함도 확인해 주세요.</p>
+    </AuthLayout>
   );
 }
