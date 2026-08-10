@@ -17,6 +17,10 @@ import LogoutButton from "../../components/portal/LogoutButton";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import { resolveAssets, publishedReportSet } from "../../lib/athleteAssets";
+import { getAthleteByEmail } from "../../lib/master";
+
+// 마스터 `상태` → intake 완료(여정 done) 여부. 초대됨/로그인 = 미완료, 그 이후 = 완료.
+const MASTER_DONE_STATES = ["intake제출", "리포트게시", "온보딩완료", "진행중", "종료"];
 
 async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
@@ -239,21 +243,30 @@ export default async function PortalPage({ searchParams }) {
     return <CoachDashboard coachName={coachName} athletes={athletes} />;
   }
 
+  // ── 마스터(단일 소스) 조회. 있으면 상태·다음세션을 여기서 가져오고, 없으면 Clerk 폴백 ──
+  const athlete = myEmail ? await getAthleteByEmail(myEmail) : null;
+  const masterDone = athlete?.status ? MASTER_DONE_STATES.includes(athlete.status) : null;
+
   const clientName =
+    athlete?.name ||
     user?.unsafeMetadata?.name ||
     user?.firstName ||
     user?.username ||
     user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
     CLIENT.name;
-  // intake 완료 여부 = Clerk publicMetadata (제출 시 서버가 설정). ?stage=done 은 미리보기용
-  const done = user?.publicMetadata?.intakeDone === true || searchParams?.stage === "done";
+  // intake 완료 여부: 마스터에 있으면 마스터 `상태`가 진실, 없으면 Clerk publicMetadata. ?stage=done 은 미리보기용
+  const done =
+    athlete
+      ? masterDone
+      : user?.publicMetadata?.intakeDone === true || searchParams?.stage === "done";
   const prepDone = user?.publicMetadata?.prepDone === true;
   const JOURNEY = done ? JOURNEY_DONE : JOURNEY_PRE;
   const status = done ? "첫 세션 준비 중" : "시작 준비";
 
-  // ── 선수별 배정 정보 (가입하면 코치가 슬랙에서 골라줌 → publicMetadata에 기록). 없으면 '미정' ──
+  // ── 선수별 배정 정보 ── 마스터 `다음 세션`이 있으면 그게 진실, 없으면 Clerk publicMetadata 폴백
   const meta = user?.publicMetadata || {};
-  const firstSessionAt = meta.firstSessionAt || (searchParams?.stage === "done" ? "2026-08-09" : null); // 미리보기 기본값
+  const firstSessionAt =
+    athlete?.nextSession || meta.firstSessionAt || (searchParams?.stage === "done" ? "2026-08-09" : null); // 미리보기 기본값
   const programWeeks = meta.programWeeks || (searchParams?.stage === "done" ? 8 : null);
 
   // 리포트 공개 — 코치가 리포트마다 공개 토글을 켜면 그 slug가 publishedReports에 들어간다.
