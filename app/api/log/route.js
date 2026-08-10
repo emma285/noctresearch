@@ -75,13 +75,19 @@ export async function GET(request) {
         if (!date) continue;
         const kind = pr["종류"]?.select?.name;
         const summary = (pr["요약"]?.rich_text || []).map((x) => x.plain_text).join("");
-        if (!days[date]) days[date] = { sleep: false, routine: 0, sleepSummary: "", items: [] };
+        if (!days[date]) days[date] = { sleep: false, routine: 0, sleepSummary: "", items: [], blocks: [] };
         if (kind === "수면") {
           days[date].sleep = true;
           if (summary) days[date].sleepSummary = summary;
         } else {
           days[date].routine += 1;
           if (summary) days[date].items.push(summary);
+          // 루틴 블록 원본 데이터(시각·종류·상세) → 타임라인 복원용
+          try {
+            const raw = (pr["데이터"]?.rich_text || []).map((x) => x.plain_text).join("");
+            const d = raw ? JSON.parse(raw) : null;
+            if (d && (d.time || d.type)) days[date].blocks.push(d);
+          } catch {}
         }
       }
       cursor = res.has_more ? res.next_cursor : undefined;

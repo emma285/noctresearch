@@ -663,11 +663,7 @@ const TYPES={
 
 // 초기 샘플 블록
 let seq=1;
-let blocks=[
-  {id:seq++,type:'training',time:'07:30',detail:'고강도',dur:'1시간 30분'},
-  {id:seq++,type:'caffeine',time:'09:00',detail:'1잔'},
-  {id:seq++,type:'training',time:'16:00',detail:'중간',dur:'1시간'},
-];
+let blocks=[];  // 초기 빈 상태 — 오늘 기록은 loadMonth에서 노션에서 불러옴
 
 function tmin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
 function subLine(b){return [b.detail,b.dur].filter(Boolean).join(' · ');}
@@ -787,8 +783,11 @@ async function loadMonth(){
     const mm=now.getFullYear()+'-'+pad(now.getMonth()+1);
     const r=await fetch('/api/log?user='+encodeURIComponent(APP_USER)+'&month='+mm);
     const j=await r.json(); RECORDS=j.days||{};
+    const tkey=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+    const tb=(RECORDS[tkey]&&RECORDS[tkey].blocks)||[];
+    blocks=tb.map(b=>({id:seq++, ...b}));
   }catch(e){ RECORDS={}; }
-  renderCal(); updateCardStatus();
+  renderCal(); updateCardStatus(); renderTimeline();
 }
 function updateCardStatus(){
   const now=new Date();
