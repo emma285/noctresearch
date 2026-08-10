@@ -88,7 +88,7 @@ export default function SleepWizard({ email }) {
   const back = () => (step === 0 ? router.push("/log") : setStep((s) => s - 1));
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background mx-auto w-full max-w-[430px] pb-[calc(78px+env(safe-area-inset-bottom))]">
+    <div className="h-[100dvh] flex flex-col bg-background mx-auto w-full max-w-[430px] pb-[76px]">
       {/* 헤더: 뒤로 + 진행 */}
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-3">
         <div className="flex items-center gap-3">
