@@ -323,11 +323,11 @@ svg{display:block}
 /* 하단 고정 바 — 스크롤 영역 밖(폰 프레임 기준 고정) */
 .botbar{position:absolute;left:0;right:0;bottom:0;z-index:40;display:none}
 .botbar.on{display:block}
-.quickbar{background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:12px 12px calc(12px + env(safe-area-inset-bottom));display:flex;gap:7px}
-.qchip{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;background:#f5f6fa;border-radius:15px;padding:11px 4px;transition:transform .14s,background .14s}
+.quickbar{background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:12px 10px calc(12px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.qchip{min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:#f5f6fa;border-radius:14px;padding:10px 2px;transition:transform .14s,background .14s}
 .qchip:active{transform:scale(.92);background:#e9ebf3}
 .qchip .qi{width:24px;height:24px;display:flex;align-items:center;justify-content:center}
-.qchip .ql{font-size:11px;font-weight:600;color:#475069}
+.qchip .ql{font-size:10.5px;font-weight:600;color:#475069;white-space:nowrap}
 
 /* 하단 고정 CTA */
 .cta-fixed{padding:14px 18px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 34%)}
@@ -627,11 +627,10 @@ function pickWoke(el,n){
   // 안 깼으면 waso 질문 제외, 깼으면 woke 뒤에 삽입
   flow=['bed','sol','wake','woke','feel','memo'];
   if(n>0) flow.splice(4,0,'waso'); else AM.waso=null;
-  setTimeout(()=>wzNext(),240); // 토스식 자동 진행
 }
 function pickOne(el,key,val){
   el.parentElement.querySelectorAll('.qbtn').forEach(x=>x.classList.remove('on'));el.classList.add('on');
-  AM[key]=val; setTimeout(()=>wzNext(),240);
+  AM[key]=val;
 }
 document.querySelectorAll('#feelChips [data-f]').forEach(c=>c.onclick=()=>{
   c.classList.toggle('on');
