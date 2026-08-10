@@ -80,7 +80,7 @@ export default function RoutineLog({ email }) {
   const SheetIcon = T?.icon;
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background mx-auto w-full max-w-[430px] pb-[76px]">
+    <div className="h-[100dvh] flex flex-col bg-background mx-auto w-full max-w-[430px] pb-[calc(72px+env(safe-area-inset-bottom))]">
       {/* header */}
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-3 flex items-center gap-3">
         <button onClick={() => router.push("/log")} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></button>

@@ -6,7 +6,7 @@ import { cn } from "../../lib/utils";
 /* props: nav(하단 네비 표시 여부, 기본 true), bodyClassName */
 export default function AppShell({ children, nav = true, className, bodyClassName }) {
   return (
-    <div className={cn("min-h-[100dvh] bg-background mx-auto w-full max-w-[430px]", nav && "pb-[76px]", className)}>
+    <div className={cn("min-h-[100dvh] bg-background mx-auto w-full max-w-[430px]", nav && "pb-[calc(72px+env(safe-area-inset-bottom))]", className)}>
       <main className={bodyClassName}>{children}</main>
       {nav ? <BottomNav /> : null}
     </div>

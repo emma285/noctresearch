@@ -16,7 +16,7 @@ const TABS = [
 export default function BottomNav() {
   const pathname = usePathname() || "";
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 flex bg-card border-t border-border pt-[10px] pb-[max(10px,calc(env(safe-area-inset-bottom)-14px))]">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 flex bg-card border-t border-border pt-[10px] pb-[max(16px,calc(env(safe-area-inset-bottom)+6px))]">
       {TABS.map((t) => {
         const on = t.match(pathname);
         const Icon = t.icon;

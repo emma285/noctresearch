@@ -48,18 +48,14 @@ html {
   overflow-x: hidden;
 }
 
-html { height: 100%; }
 body {
-  background: #ffffff;
+  background: #f9fafb;
   color: #1e293b;
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   max-width: 100%;
-  min-height: 100%;
-  /* iOS 홈화면 웹앱(standalone): 하단 고정 네비 아래 유령 여백/고무줄 방지 */
-  overscroll-behavior-y: none;
 }
 /* 데스크탑: 모바일 앱을 중앙에 놓인 것처럼 — 배경만 톤 다운 (선수는 폰 사용) */
 @media (min-width: 600px) {
