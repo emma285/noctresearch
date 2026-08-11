@@ -3,6 +3,8 @@
 // 인증 없음 — body/쿼리의 user(이메일 식별자)로 어느 선수 기록인지 구분.
 import { Client } from "@notionhq/client";
 import { NextResponse } from "next/server";
+import { notifyCoaching } from "../../../lib/notify";
+import { getAthleteByEmail } from "../../../lib/master";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const LOG_DB = process.env.NOTION_LOG_DATABASE_ID || "3b7565bc-0343-8190-a7ac-f326e916d318";
@@ -33,6 +35,16 @@ export async function POST(request) {
         "데이터": { rich_text: rt(JSON.stringify(data)) },
       },
     });
+
+    // 슬립로그(수면)만 즉시 슬랙 알림 — 루틴은 밤 11:59 일괄(cron)이라 여기선 제외.
+    if (kind === "수면") {
+      try {
+        const athlete = await getAthleteByEmail(user);
+        const who = athlete?.name || user;
+        await notifyCoaching(`🌙 *슬립로그 도착* — ${who}\n${date}${summary ? `\n${summary}` : ""}`);
+      } catch { /* 알림 실패가 저장을 막지 않도록 무시 */ }
+    }
+
     return NextResponse.json({ success: true, id: page.id });
   } catch (e) {
     return NextResponse.json(
