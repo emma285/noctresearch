@@ -46,9 +46,10 @@ export async function GET(request) {
 
   const date = kstToday();
   try {
-    // 진행중 선수만 대상 (종료/온보딩 전 제외)
+    // 진행중 선수만 대상 (종료/온보딩 전 제외). 데모/내부 계정은 제외.
+    const EXCLUDE = new Set(["contact@noct-research.com"]);
     const all = await getAllAthletes();
-    const targets = all.filter((a) => a.email && a.status === "진행중");
+    const targets = all.filter((a) => a.email && a.status === "진행중" && !EXCLUDE.has(a.email.toLowerCase()));
 
     if (!targets.length) {
       return NextResponse.json({ ok: true, date, note: "진행중 선수 없음" });

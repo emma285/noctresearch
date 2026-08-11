@@ -1,7 +1,7 @@
 // app/coach/clients/[email]/page.js — 코치 콘솔 v2 · 선수 상세. 세션 목록 → 노트 편집.
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByEmail, getSessionsByAthlete } from "../../../../lib/master";
 import { Surface, SectionHeader } from "../../../../components/app/primitives";
@@ -34,7 +34,19 @@ export default async function CoachClientDetail({ params }) {
       </div>
 
       <div className="px-5 py-4">
-        <SectionHeader title="세션 · 코칭 노트" caption="세션을 눌러 코칭 노트를 작성/수정해요." className="mt-2" />
+        <SectionHeader title="선수 기록" caption="선수가 남긴 수면·루틴 로그를 확인해요." className="mt-2" />
+        <Surface>
+          <Link href={`/coach/clients/${encodeURIComponent(email)}/logs`} className="flex items-center gap-3 p-4 active:bg-muted/40 transition-colors">
+            <span className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><ClipboardList className="w-[18px] h-[18px]" /></span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[15px] font-semibold text-foreground">수면·루틴 기록 보기</div>
+              <div className="text-[13px] text-muted-foreground mt-0.5">일별 수면 필드 · 루틴 타임라인</div>
+            </div>
+            <ChevronRight className="w-[18px] h-[18px] text-[#B7BDC7] shrink-0" />
+          </Link>
+        </Surface>
+
+        <SectionHeader title="세션 · 코칭 노트" caption="세션을 눌러 코칭 노트를 작성/수정해요." />
         {sessions.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-10">아직 세션이 없어요.</div>
         ) : (
