@@ -5,7 +5,6 @@ import { Client } from "@notionhq/client";
 import { NextResponse } from "next/server";
 import { notifyCoaching } from "../../../../lib/notify";
 import { getAllAthletes } from "../../../../lib/master";
-import { kstToday } from "../../../../lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +43,10 @@ export async function GET(request) {
     }
   }
 
-  const date = kstToday();
+  // 이 크론은 23:59 KST(=14:59 UTC) 스케줄이지만, 실행이 자정을 몇 분만 넘겨도(콜드스타트·큐 지연)
+  // 단순 kstToday()는 '내일'로 롤오버 → 방금 끝난 그날이 아니라 텅 빈 새 날을 집계해 전원 '미등록'으로 오보된다.
+  // 그래서 집계 기준일은 '실행시각 - 20분'의 KST 날짜로 고정한다(정상 실행 및 최대 ~20분 지연 모두 그날로 수렴).
+  const date = new Date(Date.now() - 20 * 60 * 1000 + 9 * 3600 * 1000).toISOString().slice(0, 10);
   try {
     // 진행중 선수만 대상 (종료/온보딩 전 제외). 데모/내부 계정은 제외.
     const EXCLUDE = new Set(["contact@noct-research.com"]);
