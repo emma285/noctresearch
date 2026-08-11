@@ -114,7 +114,7 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
         ) : (
           <div className="alist">
             {athletes.map((a) => (
-              <a className="acard" key={a.uid} href={`/coach/athlete/${a.uid}`}>
+              <a className="acard" key={a.uid} href={a.email ? `/coach/clients/${encodeURIComponent(a.email)}` : `/coach/athlete/${a.uid}`}>
                 <div>
                   <div className="aname">{a.name}<span>선수</span></div>
                   {a.email && <div className="aemail">{a.email}</div>}
