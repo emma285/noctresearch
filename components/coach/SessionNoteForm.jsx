@@ -39,6 +39,8 @@ export default function SessionNoteForm({ session }) {
   const [comment, setComment] = useState(session.comment || "");
   const [published, setPublished] = useState(!!session.published);
   const [audioUrl, setAudioUrl] = useState(session.audioUrl || "");
+  const [audioName, setAudioName] = useState(session.audioUrl ? decodeURIComponent(session.audioUrl.split("/").pop().split("?")[0]) : "");
+  const [dragOver, setDragOver] = useState(false);
   const [upPct, setUpPct] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -49,9 +51,10 @@ export default function SessionNoteForm({ session }) {
   const dateLabel = m ? `${+m[2]}월 ${+m[3]}일 (${DOW[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()]})` : "";
   const title = session.n ? `${session.n}회차 코칭 세션` : (session.title || "코칭 세션");
 
-  async function onPickAudio(e) {
-    const file = e.target.files?.[0];
+  async function doUpload(file) {
     if (!file) return;
+    if (!/audio\//.test(file.type) && !/\.(m4a|mp3|wav|aac|ogg)$/i.test(file.name)) { alert("오디오 파일만 올릴 수 있어요."); return; }
+    setAudioName(file.name);
     setUpPct(0);
     try {
       const b = await upload(file.name, file, {
@@ -69,6 +72,8 @@ export default function SessionNoteForm({ session }) {
     }
     if (fileRef.current) fileRef.current.value = "";
   }
+  const onPickAudio = (e) => doUpload(e.target.files?.[0]);
+  const onDrop = (e) => { e.preventDefault(); setDragOver(false); doUpload(e.dataTransfer.files?.[0]); };
 
   async function save() {
     setSaving(true); setSaved(false);
@@ -96,16 +101,34 @@ export default function SessionNoteForm({ session }) {
       </div>
 
       <div className="px-5 py-5">
-        {/* 세션 녹음 업로드 */}
-        <div className="flex items-center gap-3 border border-border rounded-xl p-3 bg-card">
-          <span className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><Mic className="w-[18px] h-[18px]" /></span>
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] font-semibold text-foreground truncate">{audioUrl ? "녹음 업로드됨" : "세션 녹음 업로드"}</div>
-            <div className="text-[12px] text-muted-foreground mt-0.5">{upPct !== null ? `업로드 중… ${upPct}%` : audioUrl ? "저장됨 · 초안은 코치가 정리" : "m4a·mp3 등"}</div>
+        {/* 세션 녹음 업로드 (드래그드롭 + 클릭) */}
+        {audioUrl && upPct === null ? (
+          <div className="flex items-center gap-3 border border-border rounded-xl p-3 bg-card">
+            <span className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><Mic className="w-[18px] h-[18px]" /></span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] font-semibold text-foreground truncate">{audioName || "세션 녹음"}</div>
+              <div className="text-[12px] text-muted-foreground mt-0.5">업로드 완료</div>
+            </div>
+            <button type="button" onClick={() => fileRef.current?.click()} className="text-[12.5px] font-bold text-primary shrink-0">다시 업로드</button>
           </div>
-          <button type="button" onClick={() => fileRef.current?.click()} className="text-[12.5px] font-bold text-primary shrink-0">{audioUrl ? "다시 업로드" : "업로드"}</button>
-          <input ref={fileRef} type="file" accept="audio/*,.m4a" hidden onChange={onPickAudio} />
-        </div>
+        ) : (
+          <button type="button" onClick={() => fileRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            className={cn("w-full flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-7 px-4 transition-colors", dragOver ? "border-primary bg-primary/5" : "border-border bg-card")}>
+            <span className="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center"><Mic className="w-5 h-5" /></span>
+            {upPct !== null ? (
+              <div className="text-[13px] font-semibold text-primary">업로드 중… {upPct}%</div>
+            ) : (
+              <>
+                <div className="text-[14px] font-semibold text-foreground">세션 녹음을 끌어다 놓거나 눌러서 업로드</div>
+                <div className="text-[12px] text-muted-foreground">m4a · mp3 · wav</div>
+              </>
+            )}
+          </button>
+        )}
+        <input ref={fileRef} type="file" accept="audio/*,.m4a" hidden onChange={onPickAudio} />
 
         {/* 탭 */}
         <div className="flex bg-background border border-border rounded-xl p-[3px] mt-4">
