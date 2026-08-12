@@ -27,11 +27,32 @@ const BLOB = process.env.BLOB_READ_WRITE_TOKEN;
 const OPENAI = process.env.OPENAI_API_KEY;      // 전사(Whisper)용
 const ANTHROPIC = process.env.ANTHROPIC_API_KEY; // 초안 생성용
 const SESSIONS_DB = process.env.NOTION_SESSIONS_DATABASE_ID || "349e906e42e94e1592679d390fbe2916";
+const MASTER_DB = process.env.NOTION_MASTER_DATABASE_ID || "2aed85ca21de485f812b6e4ccfc5ffce";
 if (!NOTION || !BLOB || !OPENAI || !ANTHROPIC) { console.error("env 부족: NOTION_API_KEY·BLOB_READ_WRITE_TOKEN·OPENAI_API_KEY·ANTHROPIC_API_KEY"); process.exit(1); }
 const notion = new Client({ auth: NOTION });
 const rtText = (arr) => (arr || []).map((t) => t.plain_text).join("");
 const rtLong = (s) => { const out = []; const str = String(s || ""); for (let i = 0; i < str.length; i += 1900) out.push({ type: "text", text: { content: str.slice(i, i + 1900) } }); return out; };
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
+
+// ── 상태 자동 승격: 첫 세션 날짜(다음 세션)가 도래한 선수를 진행중으로 ──
+async function advanceStatuses() {
+  const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  const res = await notion.databases.query({
+    database_id: MASTER_DB,
+    filter: {
+      and: [
+        { property: "다음 세션", date: { on_or_before: today } },
+        { or: ["초대됨", "로그인", "intake제출", "온보딩완료"].map((s) => ({ property: "상태", select: { equals: s } })) },
+      ],
+    },
+    page_size: 50,
+  });
+  for (const p of res.results) {
+    await notion.pages.update({ page_id: p.id, properties: { "상태": { select: { name: "진행중" } } } });
+    const name = (p.properties["이름"]?.title || []).map((t) => t.plain_text).join("");
+    log(`상태 승격: ${name || p.id.slice(0, 8)} → 진행중 (첫 세션 날짜 도래)`);
+  }
+}
 
 // ── 대기 세션 찾기: 녹음 URL 있고 상세 노트 비어있음 ──
 async function pending() {
@@ -149,6 +170,7 @@ async function processOne(s) {
     list = [{ id: p.id, url: p.properties["녹음 URL"]?.url, n: p.properties["회차"]?.number }];
     if (!list[0].url) { console.error("이 세션에 녹음 URL이 없어요."); process.exit(1); }
   } else {
+    try { await advanceStatuses(); } catch (e) { log(`상태 승격 실패: ${e.message}`); }
     list = await pending();
     log(`대기 세션 ${list.length}건`);
   }

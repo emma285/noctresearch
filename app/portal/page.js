@@ -10,7 +10,7 @@ import AppShell, { AppBody } from "../../components/app/AppShell";
 import Hero from "../../components/app/Hero";
 import { Surface, SectionHeader, Row, StatusBadge, Metric, MetricRow, ReportRow, CheckRow } from "../../components/app/primitives";
 
-const MASTER_DONE_STATES = ["intake제출", "리포트게시", "온보딩완료", "진행중", "종료"];
+const MASTER_DONE_STATES = ["intake제출", "온보딩완료", "진행중", "종료"];
 const CLIENT = { name: "선수" };
 
 async function getClerk() {
