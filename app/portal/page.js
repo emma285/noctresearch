@@ -86,8 +86,11 @@ export default async function PortalPage({ searchParams }) {
   const masterDone = athlete?.status ? MASTER_DONE_STATES.includes(athlete.status) : null;
 
   const clientName = athlete?.name || user?.unsafeMetadata?.name || user?.firstName || myEmail?.split("@")[0] || CLIENT.name;
-  const done = athlete ? masterDone : (meta.intakeDone === true || searchParams?.stage === "done");
-  const prepDone = meta.prepDone === true;
+  // 설문(인테이크) 완료 — 마스터 상태·인테이크 relation·Clerk 메타 중 하나라도 있으면 완료로.
+  // (마스터 행이 있어도 Clerk intakeDone을 무시하지 않게: 어느 소스든 양성이면 체크)
+  const intakeDone = !!(masterDone || (athlete?.relations?.intake?.length) || meta.intakeDone === true || searchParams?.stage === "done");
+  // 자료 업로드 완료 — 마스터 준비자료 relation 또는 Clerk 메타.
+  const prepDone = !!((athlete?.relations?.prep?.length) || meta.prepDone === true);
 
   const sessionCount = athlete?.relations?.sessions?.length || 0;
   const ongoing = (!!athlete && sessionCount >= 1) || searchParams?.stage === "ongoing";
@@ -96,14 +99,15 @@ export default async function PortalPage({ searchParams }) {
 
   const nextSessionAt = athlete?.nextSession || (ongoing ? null : meta.firstSessionAt) || (searchParams?.stage === "done" ? "2026-08-09" : null);
   const programWeeks = meta.programWeeks || ((searchParams?.stage === "done" || searchParams?.stage === "ongoing") ? 8 : null);
+  const scheduleDone = !!nextSessionAt;
   const dday = ddayOf(nextSessionAt);
   const ddayText = dday === null ? "미정" : dday > 0 ? `D-${dday}` : dday === 0 ? "D-day" : "진행중";
 
   // 정식(ongoing)이면 지난 세션 목록 (마스터 pageId로 코칭 세션 DB 조회)
   const sessions = ongoing && athlete?.pageId ? await getSessionsByAthlete(athlete.pageId) : [];
 
-  const statusLabel = ongoing ? "코칭 진행중" : done ? "첫 세션 준비 중" : "시작 준비";
-  const showMetrics = done || ongoing;
+  const statusLabel = ongoing ? "코칭 진행중" : intakeDone ? "첫 세션 준비 중" : "시작 준비";
+  const showMetrics = intakeDone || ongoing;
 
   return (
     <AppShell>
@@ -123,16 +127,16 @@ export default async function PortalPage({ searchParams }) {
       </Hero>
 
       <AppBody>
-        {!done ? (
-          /* ── 온보딩 홈: 첫 세션 준비 체크리스트 ── */
+        {!ongoing ? (
+          /* ── 온보딩 홈: 첫 세션 전까지 유지되는 준비 체크리스트 (항목별 독립 완료) ── */
           <>
             <SectionHeader title="첫 세션 준비" caption="아래를 준비하면 첫 세션 준비 끝이에요." className="mt-6" />
             <Surface>
-              <CheckRow title="사전 수면 설문 작성" desc={done ? "완료" : "68문항 · 약 15분"} done={done} href={done ? undefined : "/athlete"} />
+              <CheckRow title="사전 수면 설문 작성" desc={intakeDone ? "완료" : "68문항 · 약 15분"} done={intakeDone} href={intakeDone ? undefined : "/athlete"} />
               <CheckRow
                 title="첫 세션 일정 잡기"
-                desc={nextSessionAt ? fullDate(nextSessionAt) : "코치가 일정을 잡아드려요"}
-                done={!!nextSessionAt}
+                desc={scheduleDone ? fullDate(nextSessionAt) : "코치가 일정을 잡아드려요"}
+                done={scheduleDone}
               />
               <CheckRow title="도움될 자료 업로드" desc={prepDone ? "완료" : "경기·훈련·수면 관련 자료"} done={prepDone} href={prepDone ? undefined : "/prep"} />
             </Surface>
