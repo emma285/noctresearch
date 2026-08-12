@@ -99,6 +99,10 @@ export default async function PortalPage({ searchParams }) {
 
   const nextSessionAt = athlete?.nextSession || (ongoing ? null : meta.firstSessionAt) || (searchParams?.stage === "done" ? "2026-08-09" : null);
   const programWeeks = meta.programWeeks || ((searchParams?.stage === "done" || searchParams?.stage === "ongoing") ? 8 : null);
+  // 프로그램: 마스터 선택값(3주 수면 리셋/8주 수면 셋업/수면 케어) → 히어로엔 짧게(3주·8주·케어). 없으면 주차 폴백.
+  const programLabel = athlete?.program
+    ? (/(\d+주)/.exec(athlete.program)?.[1] || (athlete.program.includes("케어") ? "케어" : athlete.program))
+    : (programWeeks ? `${programWeeks}주` : "미정");
   const scheduleDone = !!nextSessionAt;
   const dday = ddayOf(nextSessionAt);
   const ddayText = dday === null ? "미정" : dday > 0 ? `D-${dday}` : dday === 0 ? "D-day" : "진행중";
@@ -121,7 +125,7 @@ export default async function PortalPage({ searchParams }) {
           <MetricRow>
             <Metric value={ddayText} label="다음 세션" valueClassName="text-accent" labelClassName="text-white/60" />
             <Metric value={effectiveCount} unit="회" label="진행 세션" valueClassName="text-white" labelClassName="text-white/60" />
-            <Metric value={programWeeks || "미정"} unit={programWeeks ? "주" : ""} label="프로그램" valueClassName="text-white" labelClassName="text-white/60" />
+            <Metric value={programLabel} label="프로그램" valueClassName="text-white" labelClassName="text-white/60" />
           </MetricRow>
         ) : null}
       </Hero>

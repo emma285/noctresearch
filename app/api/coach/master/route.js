@@ -21,10 +21,10 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "코치 권한이 없어요." }, { status: 403 });
     }
 
-    const { pageId, nextSession, status, week, sport, tier } = await request.json();
+    const { pageId, nextSession, status, week, program, sport, tier } = await request.json();
     if (!pageId) return NextResponse.json({ success: false, message: "선수(pageId)가 없어요." }, { status: 400 });
 
-    const ok = await updateMasterFields(pageId, { nextSession, status, week, sport, tier });
+    const ok = await updateMasterFields(pageId, { nextSession, status, week, program, sport, tier });
     if (!ok) return NextResponse.json({ success: false, message: "저장할 내용이 없거나 실패했어요." }, { status: 400 });
     return NextResponse.json({ success: true });
   } catch (e) {

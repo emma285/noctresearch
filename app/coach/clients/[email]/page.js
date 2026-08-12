@@ -36,7 +36,7 @@ export default async function CoachClientDetail({ params }) {
 
       <div className="px-5 py-4">
         <SectionHeader title="배정 · 상태" caption="여기서 정한 건 선수 화면에 바로 반영돼요." className="mt-2" />
-        <CoachManageForm athlete={{ pageId: athlete.pageId, nextSession: athlete.nextSession, status: athlete.status, week: athlete.week }} />
+        <CoachManageForm athlete={{ pageId: athlete.pageId, nextSession: athlete.nextSession, status: athlete.status, program: athlete.program }} />
 
         <SectionHeader title="선수 기록" caption="선수가 남긴 수면·루틴 로그를 확인해요." />
         <Surface>
