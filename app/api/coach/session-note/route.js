@@ -50,7 +50,23 @@ export async function POST(request) {
     if (transcript !== undefined) props["전사"] = { rich_text: rtLong(transcript) };
 
     if (Object.keys(props).length === 0) return NextResponse.json({ success: false, message: "저장할 내용이 없어요." }, { status: 400 });
-    await notion.pages.update({ page_id: id, properties: props });
+    const updated = await notion.pages.update({ page_id: id, properties: props });
+
+    // 코치가 세션 노트 내용을 저장 = 세션 진행·검토됨 → 마스터 상태를 진행중으로 자동 승격.
+    // (녹음 URL만 저장하는 업로드 콜은 제외. 이미 진행중/종료면 유지.)
+    const savedNote = detail !== undefined || summary !== undefined || actions !== undefined || comment !== undefined || published !== undefined;
+    if (savedNote) {
+      try {
+        const masterId = updated.properties?.["선수"]?.relation?.[0]?.id;
+        if (masterId) {
+          const mp = await notion.pages.retrieve({ page_id: masterId });
+          const st = mp.properties?.["상태"]?.select?.name || "";
+          if (!["진행중", "종료"].includes(st)) {
+            await notion.pages.update({ page_id: masterId, properties: { "상태": { select: { name: "진행중" } } } });
+          }
+        }
+      } catch (e) { console.error("status advance to 진행중 failed:", e?.message); }
+    }
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("session-note save failed:", e?.message);
