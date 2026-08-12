@@ -2,19 +2,24 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getAthleteByEmail } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
+import { isCoachEmail } from "../../lib/coach";
 import { kstToday } from "../../lib/log";
 import ScheduleView from "../../components/app/ScheduleView";
 
 export const metadata = { title: "일정 | NOCT" };
 export const dynamic = "force-dynamic";
 
-export default async function SchedulePage() {
+export default async function SchedulePage({ searchParams }) {
   const user = await currentUser();
-  const email = user?.emailAddresses?.[0]?.emailAddress || "";
-  const athlete = email ? await getAthleteByEmail(email) : null;
+  const myEmail = user?.emailAddresses?.[0]?.emailAddress || "";
+  // 코치가 ?as=<이메일>로 선수 캘린더 미리보기 (포털과 동일)
+  const previewEmail = isCoachEmail(myEmail) && searchParams?.as ? String(searchParams.as) : null;
+  const lookupEmail = previewEmail || myEmail;
+  const athlete = lookupEmail ? await getAthleteByEmail(lookupEmail) : null;
   if (!athlete?.pageId) {
-    return <div className="min-h-[100dvh] bg-background flex items-center justify-center p-10 text-center text-sm text-muted-foreground">일정을 준비 중이에요.</div>;
+    return <div className="min-h-[100dvh] bg-background flex items-center justify-center p-10 text-center text-sm text-muted-foreground">일정을 준비 중이에요.{isCoachEmail(myEmail) ? " (코치는 ?as=선수이메일 로 미리보기)" : ""}</div>;
   }
-  const events = await getAthleteEvents(athlete.pageId, { forAthlete: true });
+  // 코치 미리보기는 코치 눈으로(비공개 포함) — 편집은 본인 것만 API에서 막힘
+  const events = await getAthleteEvents(athlete.pageId, { forAthlete: !previewEmail });
   return <ScheduleView events={events} myPageId={athlete.pageId} today={kstToday()} />;
 }
