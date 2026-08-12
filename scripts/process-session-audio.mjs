@@ -34,23 +34,27 @@ const rtText = (arr) => (arr || []).map((t) => t.plain_text).join("");
 const rtLong = (s) => { const out = []; const str = String(s || ""); for (let i = 0; i < str.length; i += 1900) out.push({ type: "text", text: { content: str.slice(i, i + 1900) } }); return out; };
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
-// ── 상태 자동 승격: 첫 세션 날짜(다음 세션)가 도래한 선수를 진행중으로 ──
+// ── 상태 자동 승격: 실제 세션 날짜(회차 일시)가 도래하면 그 선수를 진행중으로 ──
+// "다음 세션"이 아니라 실제 세션 기록의 날짜 기준 (첫 세션이 지났으면 이미 진행중).
+const EARLY = ["", "초대됨", "로그인", "intake제출", "온보딩완료"];
 async function advanceStatuses() {
   const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  // 세션 날짜(일시)가 오늘 이하인 세션 → 그 선수는 코칭이 시작된 것
   const res = await notion.databases.query({
-    database_id: MASTER_DB,
-    filter: {
-      and: [
-        { property: "다음 세션", date: { on_or_before: today } },
-        { or: ["초대됨", "로그인", "intake제출", "온보딩완료"].map((s) => ({ property: "상태", select: { equals: s } })) },
-      ],
-    },
-    page_size: 50,
+    database_id: SESSIONS_DB,
+    filter: { property: "일시", date: { on_or_before: today } },
+    page_size: 100,
   });
-  for (const p of res.results) {
-    await notion.pages.update({ page_id: p.id, properties: { "상태": { select: { name: "진행중" } } } });
-    const name = (p.properties["이름"]?.title || []).map((t) => t.plain_text).join("");
-    log(`상태 승격: ${name || p.id.slice(0, 8)} → 진행중 (첫 세션 날짜 도래)`);
+  const masterIds = [...new Set(res.results.map((p) => p.properties["선수"]?.relation?.[0]?.id).filter(Boolean))];
+  for (const mid of masterIds) {
+    try {
+      const mp = await notion.pages.retrieve({ page_id: mid });
+      const st = mp.properties["상태"]?.select?.name || "";
+      if (!EARLY.includes(st)) continue; // 이미 진행중/종료면 유지
+      await notion.pages.update({ page_id: mid, properties: { "상태": { select: { name: "진행중" } } } });
+      const name = (mp.properties["이름"]?.title || []).map((t) => t.plain_text).join("");
+      log(`상태 승격: ${name || mid.slice(0, 8)} → 진행중 (첫 세션 날짜 도래)`);
+    } catch (e) { log(`  상태 승격 오류(${mid.slice(0, 8)}): ${e.message}`); }
   }
 }
 
