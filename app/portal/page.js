@@ -5,7 +5,12 @@ import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { Calendar, Upload } from "lucide-react";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
+import Link from "next/link";
 import { getAthleteByEmail, getSessionsByAthlete } from "../../lib/master";
+import { getAthleteEvents } from "../../lib/calendar";
+import { kstToday } from "../../lib/log";
+
+const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0ab", 경기: "#F4978E", 이동: "#7EC8E3", 훈련: "#A0B0FF", 기타: "#6b7280" };
 import AppShell, { AppBody } from "../../components/app/AppShell";
 import Hero from "../../components/app/Hero";
 import { Surface, SectionHeader, Row, StatusBadge, Metric, MetricRow, ReportRow, CheckRow } from "../../components/app/primitives";
@@ -109,6 +114,9 @@ export default async function PortalPage({ searchParams }) {
 
   // 정식(ongoing)이면 지난 세션 목록 (마스터 pageId로 코칭 세션 DB 조회)
   const sessions = ongoing && athlete?.pageId ? await getSessionsByAthlete(athlete.pageId) : [];
+  // 다가오는 일정 (캘린더 이벤트, 세션 제외, 오늘 이후 · 최대 4건). 언락=진행중 선수만.
+  const calEvents = ongoing && athlete?.pageId ? await getAthleteEvents(athlete.pageId, { forAthlete: true }) : [];
+  const upcoming = calEvents.filter((e) => e.kind === "event" && (e.end || e.start).slice(0, 10) >= kstToday()).slice(0, 4);
 
   const statusLabel = ongoing ? "코칭 진행중" : intakeDone ? "첫 세션 준비 중" : "시작 준비";
   const showMetrics = intakeDone || ongoing;
@@ -164,6 +172,27 @@ export default async function PortalPage({ searchParams }) {
               </div>
               <Row icon={Upload} action sub title="코칭 준비 자료 올리기" href="/prep" />
             </Surface>
+
+            {ongoing ? (
+              <>
+                <SectionHeader title="다가오는 일정" right={<Link href="/schedule" className="text-[13px] font-semibold text-primary">전체</Link>} />
+                <Surface>
+                  {upcoming.length ? upcoming.map((e) => {
+                    const dd = ddayOf(e.start);
+                    return (
+                      <Link key={e.id} href="/schedule" className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border active:bg-muted/40 transition-colors">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: TYPE_COLOR[e.type] || "#6b7280" }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[15px] font-semibold text-foreground">{e.title}</div>
+                          <div className="text-[13px] text-muted-foreground mt-0.5">{e.type}{e.source === "선수" ? " · 내가 추가" : ""}</div>
+                        </div>
+                        <div className="text-[12px] font-semibold text-[#9aa0ab] shrink-0">{dd > 0 ? `D-${dd}` : dd === 0 ? "D-day" : ""}</div>
+                      </Link>
+                    );
+                  }) : <Link href="/schedule" className="block p-4 text-[13px] text-muted-foreground active:bg-muted/40">예정된 일정이 없어요. 내 경기·이동 일정을 추가해보세요.</Link>}
+                </Surface>
+              </>
+            ) : null}
 
             {sessions.length > 0 ? (
               <>
