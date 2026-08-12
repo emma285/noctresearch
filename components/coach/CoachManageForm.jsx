@@ -42,9 +42,25 @@ export default function CoachManageForm({ athlete }) {
   const chip = (active) => `px-3.5 py-2.5 rounded-xl text-[13.5px] font-semibold border transition-colors ${active ? "bg-primary/10 border-primary text-primary" : "bg-card border-border text-foreground"}`;
 
   return (
-    <div className="bg-card border border-border rounded-2xl divide-y divide-border mt-2">
-      {/* 다음 세션 */}
-      <div className="p-4">
+    <div className="mt-2 flex flex-col gap-3">
+      {/* 프로그램 + 상태 (선수 성격) */}
+      <div className="bg-card border border-border rounded-2xl divide-y divide-border">
+        <div className="p-4">
+          <div className={lbl}>프로그램</div>
+          <div className="flex flex-wrap gap-2">
+            {PROGRAMS.map((p) => (
+              <button key={p} type="button" onClick={() => setProgram(program === p ? "" : p)} className={chip(program === p)}>{p}</button>
+            ))}
+          </div>
+        </div>
+        <div className="p-4">
+          <div className={lbl}>코칭 상태</div>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={sel + " w-full"}>{STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}</select>
+        </div>
+      </div>
+
+      {/* 다음 세션 (일정) — 별도 카드 */}
+      <div className="bg-card border border-border rounded-2xl p-4">
         <div className={lbl}>다음 세션</div>
         <div className="flex flex-wrap gap-2">
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={sel + " flex-1 min-w-[130px]"} />
@@ -54,29 +70,10 @@ export default function CoachManageForm({ athlete }) {
         {date ? <button type="button" onClick={() => setDate("")} className="text-[12px] text-muted-foreground mt-2">일정 지우기</button> : null}
       </div>
 
-      {/* 프로그램 */}
-      <div className="p-4">
-        <div className={lbl}>프로그램</div>
-        <div className="flex flex-wrap gap-2">
-          {PROGRAMS.map((p) => (
-            <button key={p} type="button" onClick={() => setProgram(program === p ? "" : p)} className={chip(program === p)}>{p}</button>
-          ))}
-        </div>
-      </div>
-
-      {/* 상태 */}
-      <div className="p-4">
-        <div className={lbl}>코칭 상태</div>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className={sel + " w-full"}>{STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}</select>
-      </div>
-
-      {/* 저장 */}
-      <div className="p-4">
-        <button type="button" onClick={save} disabled={saving}
-          className="w-full bg-primary text-white text-[15px] font-semibold py-3 rounded-xl active:opacity-90 disabled:opacity-60">
-          {saving ? "저장 중…" : saved ? "저장됨 ✓" : "저장"}
-        </button>
-      </div>
+      <button type="button" onClick={save} disabled={saving}
+        className="w-full bg-primary text-white text-[15px] font-semibold py-3.5 rounded-xl active:opacity-90 disabled:opacity-60">
+        {saving ? "저장 중…" : saved ? "저장됨 ✓" : "저장"}
+      </button>
     </div>
   );
 }
