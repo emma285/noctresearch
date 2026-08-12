@@ -4,6 +4,7 @@ import { Client } from "@notionhq/client";
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { notifyCoaching } from "../../../lib/notify";
+import { getAthleteByEmail, updateMasterFields } from "../../../lib/master";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const DB_ID = process.env.NOTION_DATABASE_ID;
@@ -603,6 +604,13 @@ export async function POST(request) {
         try {
           const u = await cc.users.getUser(userId);
           const email = u?.emailAddresses?.[0]?.emailAddress || "";
+          // 마스터 상태 자동 승격: 아직 초기(초대됨/로그인/빈값)면 intake제출로. 이미 진행중/종료면 건드리지 않음.
+          try {
+            const a = email ? await getAthleteByEmail(email) : null;
+            if (a?.pageId && ["", "초대됨", "로그인"].includes(a.status || "")) {
+              await updateMasterFields(a.pageId, { status: "intake제출" });
+            }
+          } catch (e) { console.error("master status advance failed:", e?.message); }
           await notifyCoachSlack(data, userId, email, new URL(request.url).origin);
         } catch (e) {
           console.error("coach notify failed:", e?.message);

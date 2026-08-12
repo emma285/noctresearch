@@ -5,7 +5,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const PROGRAMS = ["3주 수면 리셋", "8주 수면 셋업", "수면 케어"];
-const STATUSES = ["초대됨", "로그인", "intake제출", "리포트게시", "온보딩완료", "진행중", "종료"];
+// 코치가 수동으로 정하는 상태만. 나머지(로그인·intake제출·리포트게시)는 이벤트로 자동 전이.
+const STATUS_MANUAL = ["진행중", "종료"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINS = ["00", "15", "30", "45"];
 const pad = (n) => String(n).padStart(2, "0");
@@ -55,7 +56,10 @@ export default function CoachManageForm({ athlete }) {
         </div>
         <div className="p-4">
           <div className={lbl}>코칭 상태</div>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className={sel + " w-full"}>{STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}</select>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={sel + " w-full"}>
+            {[...new Set([status, ...STATUS_MANUAL])].filter(Boolean).map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <p className="text-[11.5px] text-muted-foreground mt-2">가입·설문 제출·리포트 공개는 자동으로 넘어가요. 여기선 진행/종료만.</p>
         </div>
       </div>
 
