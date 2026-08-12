@@ -5,6 +5,7 @@ import { getSessionById } from "../../../../lib/master";
 import SessionNoteForm from "../../../../components/coach/SessionNoteForm";
 
 export const metadata = { title: "세션노트 작성 | NOCT" };
+export const dynamic = "force-dynamic";
 
 export default async function CoachSessionNotePage({ params }) {
   const user = await currentUser();
