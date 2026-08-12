@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByEmail, getSessionsByAthlete } from "../../../../lib/master";
 import { Surface, SectionHeader } from "../../../../components/app/primitives";
+import CoachManageForm from "../../../../components/coach/CoachManageForm";
 
 export const metadata = { title: "선수 상세 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -34,7 +35,10 @@ export default async function CoachClientDetail({ params }) {
       </div>
 
       <div className="px-5 py-4">
-        <SectionHeader title="선수 기록" caption="선수가 남긴 수면·루틴 로그를 확인해요." className="mt-2" />
+        <SectionHeader title="배정 · 상태" caption="여기서 정한 건 선수 화면에 바로 반영돼요." className="mt-2" />
+        <CoachManageForm athlete={{ pageId: athlete.pageId, nextSession: athlete.nextSession, status: athlete.status, week: athlete.week }} />
+
+        <SectionHeader title="선수 기록" caption="선수가 남긴 수면·루틴 로그를 확인해요." />
         <Surface>
           <Link href={`/coach/clients/${encodeURIComponent(email)}/logs`} className="flex items-center gap-3 p-4 active:bg-muted/40 transition-colors">
             <span className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><ClipboardList className="w-[18px] h-[18px]" /></span>
@@ -74,7 +78,7 @@ export default async function CoachClientDetail({ params }) {
             <div className="p-4 text-[13px] text-muted-foreground">공개된 리포트가 없어요.</div>
           )}
         </Surface>
-        <p className="text-[12px] text-muted-foreground/70 mt-4">배정(다음 세션·리포트 발행)은 기존 코치 배정 화면과 연동 예정.</p>
+        <p className="text-[12px] text-muted-foreground/70 mt-4">리포트 공개 토글은 다음 단계에서 여기 연동돼요.</p>
       </div>
     </div>
   );
