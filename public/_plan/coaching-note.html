@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>코칭 노트 (2겹) — 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<style>
+  :root{--bg:#F2F3F6;--fg:#0b0e14;--card:#fff;--border:#e6e7eb;--primary:#4355B0;--sky:#7EC8E3;--navy:#0D1B2A;--muted:#6b7280}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#eceef2;color:var(--fg);font-family:"Pretendard Variable","Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;letter-spacing:-.02em;-webkit-font-smoothing:antialiased;line-height:1.5;padding:32px 24px 80px}
+  svg{display:block}
+  .head{max-width:1200px;margin:0 auto 20px}
+  .head h1{font-size:22px;font-weight:800;letter-spacing:-.03em}
+  .head p{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.7;max-width:840px}
+  .flow{max-width:1200px;margin:0 auto;display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:8px}
+  .arrow{align-self:center;flex-shrink:0;width:42px;display:flex;align-items:center;justify-content:center;color:#b6bcc6}
+  .node{width:328px;flex-shrink:0;display:flex;flex-direction:column;gap:11px}
+  .nhd{min-height:70px}
+  .stepno{font-size:12px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .stepno em{width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px}
+  .nt{font-size:14px;font-weight:800;color:var(--navy)}
+  .nd{font-size:12px;color:#5c6270;line-height:1.6;margin-top:3px}.nd b{color:var(--navy);font-weight:700}
+  .phone{width:328px;background:var(--bg);border-radius:30px;box-shadow:0 8px 26px rgba(13,27,42,.13);overflow:hidden;border:1px solid #d6d9e0}
+  .scr{height:690px;overflow-y:auto;display:flex;flex-direction:column}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:20px 14px 11px;display:flex;align-items:center;gap:9px;flex-shrink:0}
+  .topbar h1{font-size:17px;font-weight:800}.topbar h1 span{display:block;font-size:11.5px;font-weight:500;color:var(--muted)}
+  .body{padding:15px 15px 20px;flex:1 0 auto}
+  .up{display:flex;align-items:center;gap:11px;border:1px solid var(--border);border-radius:13px;padding:12px;background:#fff}
+  .up .ic{width:36px;height:36px;border-radius:10px;background:rgba(67,85,176,.1);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .up .info{flex:1;min-width:0}.up .t{font-size:14px;font-weight:700}.up .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .up .redo{font-size:11.5px;font-weight:700;color:var(--primary)}
+  .gen{display:flex;align-items:center;gap:7px;background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);border-radius:10px;padding:9px 12px;margin-top:9px;font-size:12px;font-weight:700;color:#2b7c9e}
+  .seg{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:3px;margin:15px 0 4px}
+  .seg button{flex:1;border:none;background:none;font-size:13px;font-weight:800;color:var(--muted);padding:9px;border-radius:9px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(13,27,42,.08)}
+  .seghint{font-size:11px;color:#9aa0ab;margin:4px 2px 0}
+  .lbl{font-size:12px;font-weight:800;color:var(--navy);margin:16px 0 7px;display:flex;align-items:center;gap:6px}
+  .lbl .n{width:18px;height:18px;border-radius:50%;background:rgba(67,85,176,.1);color:var(--primary);font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .lbl .lock{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;color:#8a8f99;background:#eef0f4;border-radius:6px;padding:3px 7px;margin-left:auto}
+  /* 폰트 상속 + 가독성 */
+  .ta{width:100%;border:1px solid var(--border);border-radius:12px;padding:12px 13px;font-family:inherit;font-size:13.5px;background:#fff;color:#2f333c;line-height:1.75;resize:none;letter-spacing:-.01em}
+  .ta.mut{color:#5c6270}
+  .savebar{flex-shrink:0;padding:11px 15px 16px;background:#fff;border-top:1px solid var(--border)}
+  .savebtn{width:100%;background:var(--primary);color:#fff;font-size:14.5px;font-weight:800;border:none;border-radius:12px;padding:14px;cursor:pointer;font-family:inherit}
+  .toggle{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-top:16px;box-shadow:0 1px 2px rgba(13,27,42,.04)}
+  .toggle .tt{font-size:13.5px;font-weight:700}.toggle .ts{font-size:11px;color:var(--muted);margin-top:2px}
+  .sw{width:44px;height:26px;border-radius:999px;position:relative;flex-shrink:0}.sw.on{background:var(--sky)}.sw.off{background:#d3d7df}
+  .sw::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px}.sw.on::after{right:3px}.sw.off::after{left:3px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="i-chevL"><polyline points="15 18 9 12 15 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-arrowR"><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="14 6 20 12 14 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-mic"><rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>
+  <g id="i-spark"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.4 2.4M15.3 15.3l2.4 2.4M17.7 6.3l-2.4 2.4M8.7 15.3l-2.4 2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>
+  <g id="i-lock"><rect x="4" y="10" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></g>
+</defs></svg>
+
+<div class="head">
+  <h1>코칭 노트 (2겹) — 녹음 업로드 → 자동 초안 → 수정</h1>
+  <p>녹음 올리면 <b>전사 → 상세 노트(내부)·공개 노트(간략) 둘 다 초안 자동 생성</b>. 둘 다 섹션별로 수정. 저장은 항상 "저장", <b>공개 여부는 토글로</b> 결정.</p>
+</div>
+
+<div class="flow">
+
+  <!-- 1 업로드 -->
+  <div class="node">
+    <div class="nhd"><div class="stepno"><em>1</em>세션 녹음 업로드</div><div class="nt">/coach/session/[id]</div><div class="nd">m4a 업로드 → 전사 → <b>두 노트 초안 자동 생성</b>. "다시 생성"으로 재작성.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="topbar"><svg width="19" height="19" viewBox="0 0 24 24" style="color:var(--navy)"><use href="#i-chevL"/></svg><h1>1회차 코칭 노트<span>윤이나 · 8월 9일</span></h1></div>
+      <div class="body">
+        <div class="up">
+          <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#i-mic"/></svg></div>
+          <div class="info"><div class="t">윤이나S1.m4a</div><div class="s">57분 · 전사 완료</div></div>
+          <span class="redo">다시 생성</span>
+        </div>
+        <div class="gen"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-spark"/></svg>AI가 상세·공개 노트 초안을 만들었어요</div>
+        <div class="seg"><button class="on">상세 노트</button><button>공개 노트</button></div>
+        <div class="seghint">탭을 눌러 두 노트를 각각 수정해요.</div>
+        <div class="lbl">주요 호소</div>
+        <textarea class="ta" rows="2">"한 번 깨면 다시 잠들기 어려워요. 오늘 뭐 할지 생각이 많아져서."</textarea>
+        <div class="lbl">현재 상태</div>
+        <textarea class="ta" rows="3">훈련일은 이상적(입면 30분·효율 85~90%), 휴식일은 무너짐(입면 90분·효율 69~74%). 재입면 10~20분은 정상.</textarea>
+      </div>
+      <div class="savebar"><button class="savebtn">저장</button></div>
+    </div></div>
+  </div>
+
+  <div class="arrow"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#i-arrowR"/></svg></div>
+
+  <!-- 2 상세 노트 (섹션별) -->
+  <div class="node">
+    <div class="nhd"><div class="stepno"><em>2</em>상세 노트 (내부)</div><div class="nt">코치 코칭용</div><div class="nd">섹션별로 나눠 <b>가독성 좋게</b>. 각 칸 초안 → 수정. 선수에게 안 보임.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="topbar"><svg width="19" height="19" viewBox="0 0 24 24" style="color:var(--navy)"><use href="#i-chevL"/></svg><h1>1회차 코칭 노트<span>윤이나 · 8월 9일</span></h1></div>
+      <div class="body">
+        <div class="seg"><button class="on">상세 노트</button><button>공개 노트</button></div>
+        <div class="lbl">주요 호소 <span class="lock"><svg width="11" height="11" viewBox="0 0 24 24"><use href="#i-lock"/></svg>내부 전용</span></div>
+        <textarea class="ta" rows="2">"한 번 깨면 다시 잠들기 어려워요. 오늘 뭐 할지 생각이 많아져서."</textarea>
+        <div class="lbl">현재 상태</div>
+        <textarea class="ta" rows="3">훈련일 이상적(입면 30분·효율 85~90%) / 휴식일 무너짐(입면 90분·효율 69~74%). 재입면 10~20분 정상.</textarea>
+        <div class="lbl">가설 (원인 구조)</div>
+        <textarea class="ta" rows="2">조건화된 불면 + 리듬 신호 부재 + 이른 각성 + 대회 과각성.</textarea>
+        <div class="lbl">이번 주 처방</div>
+        <textarea class="ta" rows="3">1) 식사 패턴 찾기 (아침 7 / 점심 11:30 / 저녁 18~19)
+2) 기록 시작 (수면·루틴)
+3) 인지가 1차 목표</textarea>
+        <div class="lbl">다음 세션</div>
+        <textarea class="ta" rows="2">8/14 · 취침 조정 시작 직전 배치 (보스턴 사전조정 설계)</textarea>
+        <div class="lbl">코치 메모</div>
+        <textarea class="ta mut" rows="2">협조도 높음 · 계획 스트레스 기질 → 처방 과하게 X</textarea>
+      </div>
+      <div class="savebar"><button class="savebtn">저장</button></div>
+    </div></div>
+  </div>
+
+  <div class="arrow"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#i-arrowR"/></svg></div>
+
+  <!-- 3 공개 노트 3칸 -->
+  <div class="node">
+    <div class="nhd"><div class="stepno"><em>3</em>공개 노트 (간략 · 3칸)</div><div class="nt">선수 공유용</div><div class="nd">세션 요약 · 함께 해볼 것 · 코치 한마디. 저장은 "저장", <b>공개는 토글</b>.</div></div>
+    <div class="phone"><div class="scr">
+      <div class="topbar"><svg width="19" height="19" viewBox="0 0 24 24" style="color:var(--navy)"><use href="#i-chevL"/></svg><h1>1회차 코칭 노트<span>윤이나 · 8월 9일</span></h1></div>
+      <div class="body">
+        <div class="seg"><button>상세 노트</button><button class="on">공개 노트</button></div>
+        <div class="lbl"><span class="n">1</span>세션 요약</div>
+        <textarea class="ta" rows="3">훈련일은 잘 주무시지만 휴식일 입면이 길어요. 이번 주는 기상 시각을 먼저 고정해봐요.</textarea>
+        <div class="lbl"><span class="n">2</span>이번 주 함께 해볼 것</div>
+        <textarea class="ta" rows="4">매일 같은 시각에 일어나기
+자기 전 90분 카페인·격한 훈련 마무리
+자기 전 20분은 화면 대신 스트레칭·호흡</textarea>
+        <div class="lbl"><span class="n">3</span>코치 한마디</div>
+        <textarea class="ta" rows="3">잘 자려고 애쓰기보다, 일어나는 시각만 먼저 잡아봐요. 첫 주는 그거 하나면 충분해요.</textarea>
+        <div class="toggle"><div><div class="tt">선수에게 공개</div><div class="ts">켜면 선수 앱 지난 세션에 노출</div></div><div class="sw on"></div></div>
+      </div>
+      <div class="savebar"><button class="savebtn">저장</button></div>
+    </div></div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 "use client";
 // 코치 세션노트 (2겹). 상세 노트(내부) + 공개 노트(간략 3칸). 세션 녹음 업로드.
 // 저장은 "저장" 하나, 공개 여부는 "선수에게 공개" 토글로만 결정. (디자인 시스템 v2)
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
 import { ChevronLeft, Eye, Mic, Lock } from "lucide-react";
@@ -12,6 +12,7 @@ const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 // 상세 노트(내부) 섹션 — 포맷은 계속 다듬을 수 있게 라벨만 고정.
 const SECTIONS = [
   { k: "chief", label: "주요 호소", ph: "선수가 직접 한 말 위주로…" },
+  { k: "review", label: "지난 주 리뷰 (한 것·못 한 것)", ph: "지난 세션 실천 중 한 것/못 한 것·반응 (1회차면 비움)" },
   { k: "status", label: "현재 상태", ph: "훈련일/휴식일 수면 패턴…" },
   { k: "hypothesis", label: "가설 (원인 구조)", ph: "조건화·리듬·각성 등…" },
   { k: "plan", label: "이번 주 처방", ph: "합의한 실천·근거…" },
@@ -19,11 +20,35 @@ const SECTIONS = [
   { k: "memo", label: "코치 메모", ph: "기질·주의·아이디어…" },
 ];
 
-// 모듈 레벨 — 안에 두면 매 렌더 remount되어 textarea 포커스가 풀림.
-function TA({ value, onChange, rows = 3, ph }) {
+// 모듈 레벨 — 안에 두면 매 렌더 remount되어 포커스가 풀림.
+// 공개 노트용 일반 textarea (자동 높이).
+function TA({ value, onChange, ph }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; }
+  }, [value]);
   return (
-    <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={ph}
-      className="w-full rounded-xl border border-border bg-card p-3 text-[14.5px] leading-relaxed resize-none focus:outline-none focus:border-primary font-sans" />
+    <textarea ref={ref} value={value} onChange={(e) => onChange(e.target.value)} rows={1} placeholder={ph}
+      className="w-full rounded-xl border border-border bg-card p-3 text-[14.5px] leading-relaxed resize-none overflow-hidden focus:outline-none focus:border-primary font-sans" />
+  );
+}
+
+// 상세 노트용 리치 에디터: 선택 후 Cmd/Ctrl+B로 볼드. 줄바꿈·넘버링 그대로 표시.
+// uncontrolled(마운트 때만 innerHTML 세팅) → 편집 중 커서 유지. 내용에 맞춰 높이 자동.
+function RichTA({ value, onChange, ph }) {
+  const ref = useRef(null);
+  const inited = useRef(false);
+  useLayoutEffect(() => {
+    if (ref.current && !inited.current) { ref.current.innerHTML = value || ""; inited.current = true; }
+  }, [value]);
+  const emit = () => onChange(ref.current?.innerHTML || "");
+  const onKeyDown = (e) => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === "b" || e.key === "B")) { e.preventDefault(); document.execCommand("bold"); emit(); }
+  };
+  return (
+    <div ref={ref} contentEditable suppressContentEditableWarning onInput={emit} onKeyDown={onKeyDown} data-ph={ph || ""}
+      className="w-full rounded-xl border border-border bg-card p-3 text-[14.5px] leading-relaxed whitespace-pre-wrap focus:outline-none focus:border-primary font-sans min-h-[46px] empty:before:content-[attr(data-ph)] empty:before:text-muted-foreground" />
   );
 }
 function Lbl({ children }) {
@@ -138,11 +163,11 @@ export default function SessionNoteForm({ session }) {
 
         {tab === "detail" ? (
           <div>
-            <p className="text-[12px] text-muted-foreground mt-3 flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" />내부 전용 · 선수에게 안 보여요</p>
+            <p className="text-[12px] text-muted-foreground mt-3 flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" />내부 전용 · 선수에게 안 보여요 · 선택 후 <b className="text-foreground">⌘B</b>로 볼드</p>
             {SECTIONS.map((s) => (
               <div key={s.k}>
                 <Lbl>{s.label}</Lbl>
-                <TA value={detail[s.k]} onChange={(v) => setD(s.k, v)} rows={s.k === "plan" ? 4 : 2} ph={s.ph} />
+                <RichTA value={detail[s.k]} onChange={(v) => setD(s.k, v)} ph={s.ph} />
               </div>
             ))}
           </div>

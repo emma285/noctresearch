@@ -74,6 +74,7 @@ const SYS = `너는 Emma(소정)의 수면코칭 노트 작성 도우미다. 코
 
 [상세 노트 · 코치 내부용] — 간결한 실무체
 - chief(주요 호소): 선수가 직접 한 말을 인용 위주로
+- review(지난 주 리뷰): 지난 세션에 하기로 한 것 중 무엇을 했고 무엇을 못 했는지·그 반응. 세션에서 언급됐을 때만. 1회차거나 전사에 없으면 빈 문자열
 - status(현재 상태): 훈련일/휴식일 수면 패턴 등 사실
 - hypothesis(가설·원인 구조): 조건화·리듬·각성 등
 - plan(이번 주 처방): 합의한 실천 + 근거
@@ -85,8 +86,10 @@ const SYS = `너는 Emma(소정)의 수면코칭 노트 작성 도우미다. 코
 - actions(이번 주 함께 해볼 것): 문자열 배열 2~4개, 간결한 행동
 - comment(코치 한마디): 1~2문장 응원/당부
 
-규칙: em dash(—) 금지 · 번역투 금지 · 전사에 없는 사실 지어내지 말 것 · 애매하면 비워둠.
-반드시 JSON만 출력: {"detail":{"chief":"","status":"","hypothesis":"","plan":"","next":"","memo":""},"public":{"summary":"","actions":[],"comment":""}}`;
+규칙:
+- 각 상세 항목에서 갈래가 여러 개면 각 줄 앞에 "1. " "2. " "3. " 넘버링을 붙이고 줄바꿈(\\n)으로 분리해 한눈에 읽히게. 갈래가 하나면 넘버 없이 그냥.
+- em dash(—) 금지 · 번역투 금지 · 전사에 없는 사실 지어내지 말 것 · 애매하면 비워둠.
+반드시 JSON만 출력: {"detail":{"chief":"","review":"","status":"","hypothesis":"","plan":"","next":"","memo":""},"public":{"summary":"","actions":[],"comment":""}}`;
 
 async function generate(transcript, n) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -102,6 +105,8 @@ async function generate(transcript, n) {
   if (!r.ok) throw new Error(`Claude ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const j = await r.json();
   let txt = (j.content?.[0]?.text || "").trim().replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
+  const a = txt.indexOf("{"), b = txt.lastIndexOf("}"); // JSON 앞뒤 잡텍스트 방어
+  if (a >= 0 && b > a) txt = txt.slice(a, b + 1);
   return JSON.parse(txt);
 }
 

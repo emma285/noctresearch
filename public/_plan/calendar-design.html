@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>선수 캘린더 — 와이어플로우 v7</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<style>
+  :root{--bg:#F2F3F6;--fg:#0b0e14;--card:#fff;--border:#e6e7eb;--primary:#4355B0;--sky:#7EC8E3;--lav:#A0B0FF;--coral:#F4978E;--navy:#0D1B2A;--muted:#6b7280}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#eceef2;color:var(--fg);font-family:"Pretendard Variable","Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;letter-spacing:-.02em;-webkit-font-smoothing:antialiased;line-height:1.5;padding:30px 24px 80px}
+  svg{display:block}
+  .head{max-width:1400px;margin:0 auto 22px}
+  .head h1{font-size:22px;font-weight:800;letter-spacing:-.03em}
+  .head p{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.7;max-width:920px}
+  .legend{display:flex;flex-wrap:wrap;gap:11px 16px;margin-top:12px;align-items:center}
+  .lg{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#3a3f4a}
+  .lg i{width:15px;height:10px;border-radius:3px;flex-shrink:0}
+  .track{max-width:1400px;margin:0 auto 34px;background:#fff;border:1px solid #e0e3e9;border-radius:20px;padding:22px 22px 26px}
+  .track > h2{font-size:16px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:9px}
+  .track > h2 b{font-size:10.5px;font-weight:800;color:#fff;background:var(--primary);border-radius:999px;padding:3px 10px}
+  .track > .tsub{font-size:12.5px;color:var(--muted);margin:5px 0 18px}
+  .flow{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:8px}
+  .arrow{align-self:center;flex-shrink:0;width:40px;display:flex;align-items:center;justify-content:center;color:#b6bcc6}
+  .node{width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:11px}
+  .nhd{min-height:82px}
+  .stepno{font-size:12px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .stepno em{width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px}
+  .nhd .nt{font-size:14px;font-weight:800;color:var(--navy)}
+  .nhd .nd{font-size:12px;color:#5c6270;line-height:1.6;margin-top:4px}
+  .nhd .nd b{color:var(--navy);font-weight:700}
+  .phone{width:320px;background:var(--bg);border-radius:30px;box-shadow:0 8px 26px rgba(13,27,42,.13);overflow:hidden;border:1px solid #d6d9e0}
+  .scr{height:648px;overflow-y:auto;display:flex;flex-direction:column}
+  .scr::-webkit-scrollbar{width:0}
+  .fill{flex:1 0 auto;display:flex;flex-direction:column}
+  .hero{background:linear-gradient(155deg,#0C1826 0%,#1d3252 100%);color:#fff;padding:40px 20px 18px}
+  .hero .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);color:#c4e7f5;border-radius:999px;padding:4px 11px}
+  .hero .badge i{width:6px;height:6px;border-radius:50%;background:var(--sky)}
+  .hero h1{font-size:24px;font-weight:800;letter-spacing:-.03em;margin-top:12px}
+  .hero h1 small{font-size:13px;font-weight:400;color:rgba(255,255,255,.6);margin-left:5px}
+  .body{padding:16px 16px 22px}
+  .shead{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 11px}
+  .shead:first-child{margin-top:4px}
+  .shead h2{font-size:16px;font-weight:800;letter-spacing:-.02em}
+  .shead .link{font-size:12.5px;font-weight:600;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:2px}
+  .surface{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .empty{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 16px;text-align:center;color:#9aa0ab;font-size:13px;font-weight:600}
+  .lrow{display:flex;align-items:center;gap:12px;padding:13px 15px;border-top:1px solid var(--border)}
+  .lrow:first-child{border-top:none}
+  .lrow .dt{width:42px;flex-shrink:0;text-align:center}
+  .lrow .dt .d{font-size:17px;font-weight:800;line-height:1;color:var(--navy)}
+  .lrow .dt .m{font-size:10px;color:var(--muted);font-weight:600;margin-top:3px}
+  .lrow .info{flex:1;min-width:0}
+  .lrow .info .t{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .lrow .info .t i{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .lrow .info .s{font-size:12px;color:var(--muted);margin-top:3px}
+  .lrow .dd{font-size:12px;font-weight:700;color:#9aa0ab;flex-shrink:0}
+  .lrow .go{color:#c2c7d0;flex-shrink:0}
+  .cal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 10px}
+  .calhead{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 11px}
+  .calhead .mo{font-size:16px;font-weight:800}
+  .calhead .rt{display:flex;gap:6px;align-items:center}
+  .calhead .rt .arw{width:28px;height:28px;border-radius:9px;border:1px solid var(--border);background:#fff;color:var(--navy);display:flex;align-items:center;justify-content:center}
+  .calhead .rt .add{height:28px;border-radius:999px;border:none;background:var(--primary);color:#fff;font-size:11.5px;font-weight:700;padding:0 11px 0 8px;display:flex;align-items:center;gap:3px}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:5px}
+  .dow span{text-align:center;font-size:10.5px;font-weight:700;color:var(--muted);padding:2px 0}
+  .dow span:first-child{color:var(--coral)}
+  .wk{margin-bottom:5px}
+  .nums{display:grid;grid-template-columns:repeat(7,1fr)}
+  .nums .n{text-align:center;font-size:11.5px;font-weight:600;color:var(--navy);padding:3px 0}
+  .nums .n.mut{color:#c7ccd5}
+  .nums .n.today{color:var(--primary);font-weight:800}
+  .nums .n.sel em{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-style:normal;font-weight:800}
+  .lane{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;min-height:15px}
+  .bar{height:15px;border-radius:5px;font-size:9px;line-height:15px;font-weight:800;padding:0 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#fff}
+  .bar.cl{border-top-left-radius:0;border-bottom-left-radius:0}
+  .bar.cr{border-top-right-radius:0;border-bottom-right-radius:0}
+  .b-ses{background:var(--primary)}.b-done{background:#e5e7f1;color:#7a82ac}.b-pro{background:#8E9BE8}
+  .b-task{background:#eceef4;color:#7a8090}.b-comp{background:rgba(244,151,142,.26);color:#b34d40}.b-trip{background:rgba(126,200,227,.32);color:#2b7c9e}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:20px 14px 11px;display:flex;align-items:center;gap:9px;flex-shrink:0}
+  .topbar h1{font-size:17px;font-weight:800}.topbar h1 span{display:block;font-size:11.5px;font-weight:500;color:var(--muted)}
+  .topbar .cancel{font-size:14px;font-weight:600;color:var(--muted)}
+  .topbar .add{margin-left:auto;background:var(--primary);color:#fff;font-size:12px;font-weight:700;border:none;border-radius:9px;padding:7px 11px 7px 9px;display:flex;align-items:center;gap:3px}
+  .mgrow{display:flex;align-items:center;gap:12px;padding:13px 15px;border-top:1px solid var(--border)}
+  .mgrow:first-child{border-top:none}
+  .mgrow .info{flex:1;min-width:0}
+  .mgrow .info .t{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .mgrow .info .t i{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .mgrow .info .s{font-size:12px;color:var(--muted);margin-top:3px}
+  .mgrow .vis{color:#9aa0ab;flex-shrink:0;display:flex;align-items:center}
+  .mgrow .ed{color:#c2c7d0}
+  .decard{position:relative;padding:14px;border:1px solid var(--border);border-radius:14px;margin-bottom:11px;background:#fff}
+  .decard .t{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;padding-right:56px}
+  .decard .t i{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .decard .meta{font-size:11.5px;font-weight:600;color:var(--muted);margin-top:4px}
+  .decard .d{font-size:12.5px;color:#5c6270;margin-top:7px;line-height:1.6}
+  .decard .acts{position:absolute;top:13px;right:13px;display:flex;gap:13px;color:#aeb4bf}
+  .decard .go{position:absolute;top:15px;right:13px;color:#c2c7d0}
+  .lbl{font-size:12px;font-weight:800;color:var(--navy);margin:16px 0 8px}
+  .inp{width:100%;border:1px solid var(--border);border-radius:12px;padding:12px;font-size:14px;background:#fff;color:var(--fg)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:11px;border:1px solid var(--border);background:#fff;color:#3a3f4a;display:flex;align-items:center;gap:6px}
+  .chip.sel{border-color:var(--primary);background:rgba(67,85,176,.07);color:var(--primary)}
+  .chip i{width:9px;height:9px;border-radius:50%}
+  .minical{margin-top:2px;border:1px solid var(--border);border-radius:14px;padding:12px 10px;background:#fff}
+  .minical .mh{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;color:var(--navy);margin-bottom:9px;padding:0 2px}
+  .minical .mh .arw{color:#c2c7d0}
+  .mdays{display:grid;grid-template-columns:repeat(7,1fr);column-gap:0;row-gap:4px}
+  .mday{height:36px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;color:var(--navy);border-radius:10px}
+  .mday.mut{color:#c7ccd5}
+  .mday.sel{background:var(--primary);color:#fff;font-weight:800}
+  .mday.rng{background:rgba(67,85,176,.13);color:var(--primary);border-radius:0}
+  .mday.rs{background:var(--primary);color:#fff;border-radius:10px 0 0 10px;font-weight:800}
+  .mday.re{background:var(--primary);color:#fff;border-radius:0 10px 10px 0;font-weight:800}
+  .hint{font-size:11px;color:#9aa0ab;margin-top:9px;text-align:center}
+  .picked{background:#fff;border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-top:9px;font-size:14px;font-weight:800;color:var(--navy)}
+  .toggle{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-top:11px;box-shadow:0 1px 2px rgba(13,27,42,.04)}
+  .toggle .tt{font-size:13.5px;font-weight:700}.toggle .ts{font-size:11px;color:var(--muted);margin-top:2px}
+  .sw{width:42px;height:25px;border-radius:999px;position:relative;flex-shrink:0}
+  .sw.on{background:var(--sky)}.sw.off{background:#d3d7df}
+  .sw::after{content:"";position:absolute;width:19px;height:19px;border-radius:50%;background:#fff;top:3px}
+  .sw.on::after{right:3px}.sw.off::after{left:3px}
+  .tfield{display:flex;gap:9px;margin-top:2px}
+  .tsel{border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:space-between;background:#fff;color:var(--navy)}
+  .tsel.h{flex:1}.tsel.m{width:104px}
+  .tsel.act{border-color:var(--primary);background:rgba(67,85,176,.06);color:var(--primary)}
+  .tsel svg{color:#aeb4bf;flex-shrink:0;margin-left:6px}
+  .savebar{flex-shrink:0;padding:11px 15px calc(11px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center}
+  .savebar .del{width:46px;height:47px;border-radius:12px;border:1px solid #f1cbc3;background:#fff;color:#c0554a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .savebtn{flex:1;background:var(--primary);color:#fff;font-size:14.5px;font-weight:800;border:none;border-radius:12px;padding:14px;cursor:pointer}
+  .addbar{flex-shrink:0;padding:11px 15px 16px;background:#fff;border-top:1px solid var(--border)}
+  .addbar button{width:100%;background:rgba(67,85,176,.08);color:var(--primary);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px}
+  /* record row (기록 페이지와 동일) */
+  .recrow{display:flex;align-items:center;gap:12px;padding:15px 15px;border-top:1px solid var(--border)}
+  .recrow:first-child{border-top:none}
+  .recrow .ri{color:var(--primary);flex-shrink:0}
+  .recrow .info{flex:1;min-width:0}
+  .recrow .info .t{font-size:15px;font-weight:700}
+  .recrow .info .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .recrow .pill{font-size:12.5px;font-weight:700;color:#fff;background:var(--primary);padding:7px 13px;border-radius:10px;flex-shrink:0}
+  .recrow .done{font-size:12.5px;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .recrow .done em{width:20px;height:20px;border-radius:50%;background:var(--sky);color:var(--navy);display:inline-flex;align-items:center;justify-content:center}
+  /* day popup (캘린더 위 오버레이) */
+  .popovl{position:absolute;inset:0;background:rgba(13,27,42,.42);display:flex;align-items:center;justify-content:center;padding:22px}
+  .popup{background:#fff;border-radius:20px;width:100%;box-shadow:0 20px 50px rgba(13,27,42,.3);padding:15px 15px 13px;max-height:86%;overflow-y:auto}
+  .popup .ph{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px}
+  .popup .ph h3{font-size:17px;font-weight:800}
+  .popup .ph .dd{font-size:12px;font-weight:700;color:var(--muted)}
+  .popadd{width:100%;margin-top:6px;background:rgba(67,85,176,.08);color:var(--primary);border:none;border-radius:11px;padding:11px;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px}
+  .nav{flex-shrink:0;display:flex;background:#fff;border-top:1px solid var(--border);padding:8px 0 14px}
+  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);text-decoration:none;font-size:10px;font-weight:500}
+  .nav a.on{color:var(--primary);font-weight:700}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="i-chevL"><polyline points="15 18 9 12 15 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-chevR"><polyline points="9 18 15 12 9 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-chevD"><polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-plus"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></g>
+  <g id="i-pen"><path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g>
+  <g id="i-trash"><polyline points="3 6 5 6 21 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-eye"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></g>
+  <g id="i-eyeoff"><path d="M9.9 5A9 9 0 0 1 12 5c6.5 0 10 7 10 7a13 13 0 0 1-2 2.7M6 6C3.5 7.7 2 12 2 12s3.5 7 10 7a9 9 0 0 0 4-.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>
+  <g id="i-arrowR"><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="14 6 20 12 14 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-home"><path d="M3 10.5 12 3l9 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10v10h14V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-edit2"><path d="M11 4H4v16h16v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g>
+  <g id="i-file"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v6h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g>
+  <g id="i-user"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>
+  <g id="i-list"><path d="M11 6h10M11 12h10M11 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g>
+  <g id="i-check"><polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>
+</defs></svg>
+
+<div class="head">
+  <h1>선수 캘린더 — 와이어플로우 v7</h1>
+  <p>탭 밀착 · 홈=다음세션+다가오는일정(향후 30일·최대 5건)+지난세션 · 오늘의 기록=기록페이지와 동일 디자인 · <b>하루 상세=팝업(바깥 탭하면 캘린더 복귀)</b> · 추가/수정만 전체화면 · 시간=시/분 드롭다운 · 공개=아이콘.</p>
+  <div class="legend">
+    <span class="lg"><i style="background:#4355B0"></i>세션(예정)</span>
+    <span class="lg"><i style="background:#e5e7f1"></i>세션(완료)</span>
+    <span class="lg"><i style="background:#8E9BE8"></i>프로토콜</span>
+    <span class="lg"><i style="background:#eceef4;border:1px solid #dfe2ea"></i>과제</span>
+    <span class="lg"><i style="background:rgba(244,151,142,.26)"></i>경기(선수)</span>
+    <span class="lg"><i style="background:rgba(126,200,227,.32)"></i>이동(선수)</span>
+  </div>
+</div>
+
+<!-- ===== TRACK 1: 선수 ===== -->
+<div class="track">
+  <h2><b>선수</b> 일정 확인 · 내 일정 추가</h2>
+  <div class="tsub">홈에서 일정 확인 → 캘린더에서 날짜별 확인 → 날짜 탭해 상세 → 내 경기·이동 직접 추가.</div>
+  <div class="flow">
+
+    <!-- 1a 홈 캘린더 O -->
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>1</em>홈 · 캘린더 사용 고객</div><div class="nt">다가오는 일정 노출 · 탭 밀착</div><div class="nd">언락 고객. 콘텐츠 짧아도 <b>4탭이 화면 하단에 밀착</b>(빈 여백 없음).</div></div>
+      <div class="phone"><div class="scr">
+        <div class="fill">
+          <div class="hero"><span class="badge"><i></i>코칭 진행중</span><h1>윤이나<small>선수</small></h1></div>
+          <div class="body">
+            <div class="shead"><h2>다음 세션</h2></div>
+            <div class="surface"><div class="lrow"><div class="dt"><div class="d">14</div><div class="m">금</div></div><div class="info"><div class="t">8월 14일 오전 10시</div><div class="s">2회차 코칭 세션</div></div><div class="dd">D-2</div></div></div>
+            <div class="shead"><h2>다가오는 일정</h2><a class="link">전체<svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-chevR"/></svg></a></div>
+            <div class="surface">
+              <div class="lrow"><div class="dt"><div class="d">15</div><div class="m">토</div></div><div class="info"><div class="t"><i style="background:#8E9BE8"></i>시차적응 프로토콜</div><div class="s">프로토콜 · 8/15~19</div></div><div class="dd">D-3</div></div>
+              <div class="lrow"><div class="dt"><div class="d">19</div><div class="m">수</div></div><div class="info"><div class="t"><i style="background:#F4978E"></i>보스턴 출국</div><div class="s">이동 · 내가 추가</div></div><div class="dd">D-7</div></div>
+              <div class="lrow"><div class="dt"><div class="d">27</div><div class="m">목</div></div><div class="info"><div class="t"><i style="background:#F4978E"></i>FM Championship</div><div class="s">경기 · 8/27~30 · 내가 추가</div></div><div class="dd">D-15</div></div>
+            </div>
+            <div class="shead"><h2>지난 세션</h2></div>
+            <div class="surface"><div class="lrow"><div class="dt"><div class="d">09</div><div class="m">토</div></div><div class="info"><div class="t">1회차 코칭 세션</div><div class="s">코칭 노트 보기</div></div><span class="go"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-chevR"/></svg></span></div></div>
+          </div>
+        </div>
+        <div class="nav"><a class="on"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-home"/></svg>홈</a><a><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-edit2"/></svg>기록</a><a><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-file"/></svg>리포트</a><a><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-user"/></svg>내정보</a></div>
+      </div></div>
+    </div>
+
+    <div class="arrow"><span style="font-size:12px;color:#a2a8b3;font-weight:700">또는</span></div>
+
+    <!-- 1b 홈 캘린더 X -->
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>1</em>홈 · 캘린더 <u>미사용</u> 고객</div><div class="nt">다가오는 일정 없음(분기)</div><div class="nd">일반·미언락. 일정 섹션 빠지고 다음 세션·오늘의 기록만. 여기도 <b>탭 밀착</b>.</div></div>
+      <div class="phone"><div class="scr">
+        <div class="fill">
+          <div class="hero"><span class="badge"><i></i>코칭 진행중</span><h1>이수민<small>고객</small></h1></div>
+          <div class="body">
+            <div class="shead"><h2>다음 세션</h2></div>
+            <div class="surface"><div class="lrow"><div class="dt"><div class="d">16</div><div class="m">토</div></div><div class="info"><div class="t">8월 16일 오후 8시</div><div class="s">3회차 코칭 세션</div></div><div class="dd">D-4</div></div></div>
+            <div class="shead"><h2>오늘도 기록해요</h2></div>
+            <div class="surface">
+              <div class="recrow"><svg class="ri" width="22" height="22" viewBox="0 0 24 24"><use href="#i-list"/></svg><div class="info"><div class="t">루틴 기록</div><div class="s">아직 기록 전이에요</div></div><span class="pill">기록하기</span></div>
+              <div class="recrow"><svg class="ri" width="22" height="22" viewBox="0 0 24 24"><use href="#i-moon"/></svg><div class="info"><div class="t">수면 기록</div><div class="s">오늘 기록 완료</div></div><span class="done"><em><svg width="12" height="12" viewBox="0 0 24 24"><use href="#i-check"/></svg></em>완료</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav"><a class="on"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-home"/></svg>홈</a><a><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-edit2"/></svg>기록</a><a><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-file"/></svg>리포트</a><a><svg width="20" height="20" viewBox="0 0 24 24"><use href="#i-user"/></svg>내정보</a></div>
+      </div></div>
+    </div>
+
+    <div class="arrow"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#i-arrowR"/></svg></div>
+
+    <!-- 2 캘린더 + 선택날짜 일정 -->
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>2</em>월 캘린더 + 선택 날짜 일정</div><div class="nt">iPhone 캘린더식 · 밑이 안 비어요</div><div class="nd">달력 아래 <b>선택한 날짜의 일정</b>. 오늘처럼 없으면 <b>이벤트 없음</b>. 날짜 탭 → 3단계.</div></div>
+      <div class="phone"><div class="scr">
+        <div class="topbar"><svg width="20" height="20" viewBox="0 0 24 24" style="color:var(--navy)"><use href="#i-chevL"/></svg><h1>일정<span>윤이나 · 2026</span></h1></div>
+        <div class="body">
+          <div class="cal">
+            <div class="calhead"><div class="mo">8월</div><div class="rt"><span class="arw"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-chevL"/></svg></span><span class="arw"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-chevR"/></svg></span><button class="add"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#i-plus"/></svg>일정</button></div></div>
+            <div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+            <div class="wk"><div class="nums"><span class="n mut">26</span><span class="n mut">27</span><span class="n mut">28</span><span class="n mut">29</span><span class="n mut">30</span><span class="n mut">31</span><span class="n">1</span></div><div class="lane"></div></div>
+            <div class="wk"><div class="nums"><span class="n">2</span><span class="n">3</span><span class="n">4</span><span class="n">5</span><span class="n">6</span><span class="n">7</span><span class="n">8</span></div><div class="lane"></div></div>
+            <div class="wk"><div class="nums"><span class="n">9</span><span class="n">10</span><span class="n">11</span><span class="n sel"><em>12</em></span><span class="n">13</span><span class="n">14</span><span class="n">15</span></div>
+              <div class="lane"><div class="bar b-done" style="grid-column:1/2">1회차</div><div class="bar b-task" style="grid-column:5/6">과제</div><div class="bar b-ses" style="grid-column:6/7">2회차</div><div class="bar b-pro cr" style="grid-column:7/8">시차적응</div></div></div>
+            <div class="wk"><div class="nums"><span class="n">16</span><span class="n">17</span><span class="n">18</span><span class="n">19</span><span class="n">20</span><span class="n">21</span><span class="n">22</span></div>
+              <div class="lane"><div class="bar b-pro cl" style="grid-column:1/5">시차적응 프로토콜</div></div><div class="lane"><div class="bar b-trip" style="grid-column:4/5">출국</div></div></div>
+            <div class="wk"><div class="nums"><span class="n">23</span><span class="n">24</span><span class="n">25</span><span class="n">26</span><span class="n">27</span><span class="n">28</span><span class="n">29</span></div>
+              <div class="lane"><div class="bar b-comp cr" style="grid-column:5/8">FM Championship</div></div></div>
+            <div class="wk"><div class="nums"><span class="n">30</span><span class="n">31</span><span class="n mut">1</span><span class="n mut">2</span><span class="n mut">3</span><span class="n mut">4</span><span class="n mut">5</span></div>
+              <div class="lane"><div class="bar b-comp cl" style="grid-column:1/2">FM</div><div class="bar b-trip" style="grid-column:2/3">귀국</div></div></div>
+          </div>
+          <div class="shead"><h2>8월 12일 (오늘)</h2></div>
+          <div class="empty">이벤트 없음</div>
+          <div class="shead"><h2>다가오는 일정</h2></div>
+          <div class="surface">
+            <div class="lrow"><div class="dt"><div class="d">14</div><div class="m">금</div></div><div class="info"><div class="t"><i style="background:#4355B0"></i>2회차 코칭 세션</div><div class="s">세션 · 오전 10시</div></div><div class="dd">D-2</div></div>
+            <div class="lrow"><div class="dt"><div class="d">27</div><div class="m">목</div></div><div class="info"><div class="t"><i style="background:#F4978E"></i>FM Championship</div><div class="s">경기 · 8/27~30 · 내가 추가</div></div><div class="dd">D-15</div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="arrow"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#i-arrowR"/></svg></div>
+
+    <!-- 3 하루 상세 (팝업 오버레이) -->
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>3</em>날짜 탭 → 하루 상세 <u>팝업</u></div><div class="nt">뎁스 이동 아님 · 캘린더 위 오버레이</div><div class="nd">페이지로 안 넘어가요. 캘린더 위 팝업. <b>바깥 누르면 캘린더로 복귀</b>. 내 일정은 아이콘만.</div></div>
+      <div class="phone"><div class="scr" style="position:relative">
+        <div class="topbar"><svg width="20" height="20" viewBox="0 0 24 24" style="color:var(--navy)"><use href="#i-chevL"/></svg><h1>일정<span>윤이나 · 2026</span></h1></div>
+        <div class="body">
+          <div class="cal">
+            <div class="calhead"><div class="mo">8월</div><div class="rt"><span class="arw"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-chevL"/></svg></span><span class="arw"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-chevR"/></svg></span></div></div>
+            <div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+            <div class="wk"><div class="nums"><span class="n mut">26</span><span class="n mut">27</span><span class="n mut">28</span><span class="n mut">29</span><span class="n mut">30</span><span class="n mut">31</span><span class="n">1</span></div><div class="lane"></div></div>
+            <div class="wk"><div class="nums"><span class="n">2</span><span class="n">3</span><span class="n">4</span><span class="n">5</span><span class="n">6</span><span class="n">7</span><span class="n">8</span></div><div class="lane"></div></div>
+            <div class="wk"><div class="nums"><span class="n">9</span><span class="n">10</span><span class="n">11</span><span class="n">12</span><span class="n">13</span><span class="n">14</span><span class="n">15</span></div>
+              <div class="lane"><div class="bar b-done" style="grid-column:1/2">1회차</div><div class="bar b-task" style="grid-column:5/6">과제</div><div class="bar b-ses" style="grid-column:6/7">2회차</div><div class="bar b-pro cr" style="grid-column:7/8">시차적응</div></div></div>
+            <div class="wk"><div class="nums"><span class="n">16</span><span class="n">17</span><span class="n">18</span><span class="n sel"><em>19</em></span><span class="n">20</span><span class="n">21</span><span class="n">22</span></div>
+              <div class="lane"><div class="bar b-pro cl" style="grid-column:1/5">시차적응 프로토콜</div></div><div class="lane"><div class="bar b-trip" style="grid-column:4/5">출국</div></div></div>
+            <div class="wk"><div class="nums"><span class="n">23</span><span class="n">24</span><span class="n">25</span><span class="n">26</span><span class="n">27</span><span class="n">28</span><span class="n">29</span></div>
+              <div class="lane"><div class="bar b-comp cr" style="grid-column:5/8">FM Championship</div></div></div>
+          </div>
+        </div>
+        <div class="popovl">
+          <div class="popup">
+            <div class="ph"><h3>8월 19일 (수)</h3><span class="dd">D-7</span></div>
+            <div class="decard" style="margin-top:10px;margin-bottom:9px;padding:12px">
+              <div class="t"><i style="background:#8E9BE8"></i>시차적응 프로토콜</div>
+              <div class="meta">프로토콜 · 5일 중 4일차 · 코치</div>
+            </div>
+            <div class="decard" style="margin-bottom:9px;padding:12px">
+              <div class="acts" style="top:11px"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-pen"/></svg><svg width="16" height="16" viewBox="0 0 24 24" style="color:#d09a92"><use href="#i-trash"/></svg></div>
+              <div class="t"><i style="background:#F4978E"></i>보스턴 출국</div>
+              <div class="meta">이동 · 오후 비행 · 내가 추가</div>
+            </div>
+            <div class="decard" style="margin-bottom:0;padding:12px">
+              <div class="go" style="top:13px"><svg width="17" height="17" viewBox="0 0 24 24"><use href="#i-chevR"/></svg></div>
+              <div class="t"><i style="background:#4355B0"></i>2회차 코칭 세션</div>
+              <div class="meta">세션 · 오전 10시 · 노트 보기</div>
+            </div>
+            <button class="popadd"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-plus"/></svg>일정 추가</button>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="arrow"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#i-arrowR"/></svg></div>
+
+    <!-- 4 추가 (전체화면, 날짜) -->
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>4</em>내 일정 추가 · <u>전체화면</u></div><div class="nt">종류 4개(경기·이동·훈련·기타)</div><div class="nd">미니 달력에서 시작·종료 탭. 저장은 하단 밀착(엄지 도달 쉬움).</div></div>
+      <div class="phone"><div class="scr">
+        <div class="topbar"><span class="cancel">취소</span><h1 style="margin-left:2px">일정 추가</h1></div>
+        <div class="fill body">
+          <div class="lbl" style="margin-top:2px">종류</div>
+          <div class="chips"><span class="chip sel"><i style="background:#F4978E"></i>경기</span><span class="chip"><i style="background:#7EC8E3"></i>이동</span><span class="chip"><i style="background:#A0B0FF"></i>훈련</span><span class="chip"><i style="background:#6b7280"></i>기타</span></div>
+          <div class="lbl">제목</div><input class="inp" value="FM Championship">
+          <div class="lbl">날짜</div>
+          <div class="minical">
+            <div class="mh"><span class="arw"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-chevL"/></svg></span>2026년 8월<span class="arw"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#i-chevR"/></svg></span></div>
+            <div class="mdays">
+              <div class="mday mut">26</div><div class="mday mut">27</div><div class="mday mut">28</div><div class="mday mut">29</div><div class="mday mut">30</div><div class="mday mut">31</div><div class="mday">1</div>
+              <div class="mday">2</div><div class="mday">3</div><div class="mday">4</div><div class="mday">5</div><div class="mday">6</div><div class="mday">7</div><div class="mday">8</div>
+              <div class="mday">9</div><div class="mday">10</div><div class="mday">11</div><div class="mday">12</div><div class="mday">13</div><div class="mday">14</div><div class="mday">15</div>
+              <div class="mday">16</div><div class="mday">17</div><div class="mday">18</div><div class="mday">19</div><div class="mday">20</div><div class="mday">21</div><div class="mday">22</div>
+              <div class="mday">23</div><div class="mday">24</div><div class="mday">25</div><div class="mday">26</div><div class="mday rs">27</div><div class="mday rng">28</div><div class="mday re">29</div>
+              <div class="mday sel">30</div><div class="mday">31</div><div class="mday mut">1</div><div class="mday mut">2</div><div class="mday mut">3</div><div class="mday mut">4</div><div class="mday mut">5</div>
+            </div>
+            <div class="hint">하루면 한 번, 여러 날이면 시작일·종료일을 탭</div>
+          </div>
+          <div class="picked">8월 27일 → 30일 · 4일</div>
+          <div class="toggle"><div><div class="tt">시간 정하기</div><div class="ts">끄면 하루 종일</div></div><div class="sw off"></div></div>
+        </div>
+        <div class="savebar"><button class="savebtn">저장</button></div>
+      </div></div>
+    </div>
+
+    <div class="arrow"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#i-arrowR"/></svg></div>
+
+    <!-- 5 수정 (전체화면, 시간+삭제) -->
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>5</em>수정 · 시간 <u>전체화면</u></div><div class="nt">시/분 드롭다운(인테이크와 동일)</div><div class="nd">시간 정하기 ON → 시·분 드롭다운. 하단에 삭제 버튼 + 저장(엄지 근처).</div></div>
+      <div class="phone"><div class="scr">
+        <div class="topbar"><span class="cancel">취소</span><h1 style="margin-left:2px">일정 수정</h1></div>
+        <div class="fill body">
+          <div class="lbl" style="margin-top:2px">제목</div><input class="inp" value="필드 훈련">
+          <div class="lbl">날짜</div><div class="picked" style="margin-top:0">8월 13일 (목)</div>
+          <div class="toggle"><div><div class="tt">시간 정하기</div><div class="ts">끄면 하루 종일</div></div><div class="sw on"></div></div>
+          <div class="lbl">시간</div>
+          <div class="tfield">
+            <div class="tsel h act"><span>7시 (오전)</span><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-chevD"/></svg></div>
+            <div class="tsel m act"><span>00분</span><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-chevD"/></svg></div>
+          </div>
+        </div>
+        <div class="savebar"><button class="del"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#i-trash"/></svg></button><button class="savebtn">저장</button></div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== TRACK 2: 코치 ===== -->
+<div class="track">
+  <h2><b>코치</b> 일정 관리</h2>
+  <div class="tsub">선수가 넣은 경기·이동 확인 → 세션·프로토콜·과제 등록 → 각 이벤트 공개/비공개.</div>
+  <div class="flow">
+
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>1</em>코치 · 캘린더 관리</div><div class="nt">공개는 눈 아이콘만(글자 X)</div><div class="nd">선수 입력은 meta에 옅게. 공개=눈 / 비공개=눈가림 아이콘. 우상단 <b>+ 추가</b>.</div></div>
+      <div class="phone"><div class="scr">
+        <div class="topbar"><svg width="20" height="20" viewBox="0 0 24 24" style="color:var(--navy)"><use href="#i-chevL"/></svg><h1>일정 관리<span>윤이나</span></h1><button class="add"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#i-plus"/></svg>추가</button></div>
+        <div class="fill body">
+          <div class="shead" style="margin-top:2px"><h2>이벤트</h2></div>
+          <div class="surface">
+            <div class="mgrow"><div class="info"><div class="t"><i style="background:#4355B0"></i>2회차 코칭 세션</div><div class="s">세션 · 8/14</div></div><span class="vis"><svg width="17" height="17" viewBox="0 0 24 24"><use href="#i-eye"/></svg></span><span class="ed"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-pen"/></svg></span></div>
+            <div class="mgrow"><div class="info"><div class="t"><i style="background:#8E9BE8"></i>시차적응 프로토콜</div><div class="s">프로토콜 · 8/15~19</div></div><span class="vis"><svg width="17" height="17" viewBox="0 0 24 24"><use href="#i-eye"/></svg></span><span class="ed"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-pen"/></svg></span></div>
+            <div class="mgrow"><div class="info"><div class="t"><i style="background:#F4978E"></i>FM Championship</div><div class="s">경기 · 8/27~30 · 선수 입력</div></div><span class="vis"><svg width="17" height="17" viewBox="0 0 24 24"><use href="#i-eye"/></svg></span><span class="ed"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-pen"/></svg></span></div>
+            <div class="mgrow"><div class="info"><div class="t"><i style="background:#7EC8E3"></i>보스턴 출국</div><div class="s">이동 · 8/19 · 선수 입력</div></div><span class="vis"><svg width="17" height="17" viewBox="0 0 24 24"><use href="#i-eye"/></svg></span><span class="ed"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-pen"/></svg></span></div>
+            <div class="mgrow"><div class="info"><div class="t"><i style="background:#c2c7d0"></i>식사패턴 마감</div><div class="s">과제 · 8/13</div></div><span class="vis"><svg width="17" height="17" viewBox="0 0 24 24"><use href="#i-eyeoff"/></svg></span><span class="ed"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-pen"/></svg></span></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="arrow"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#i-arrowR"/></svg></div>
+
+    <div class="node">
+      <div class="nhd"><div class="stepno"><em>2</em>+ 이벤트 추가 (코치)</div><div class="nt">세션·프로토콜·과제까지</div><div class="nd">종류가 선수보다 많음. 기간·시간(시/분)·<b>공개 토글</b>. 전체화면.</div></div>
+      <div class="phone"><div class="scr">
+        <div class="topbar"><span class="cancel">취소</span><h1 style="margin-left:2px">일정 추가</h1></div>
+        <div class="fill body">
+          <div class="lbl" style="margin-top:2px">종류</div>
+          <div class="chips"><span class="chip"><i style="background:#4355B0"></i>세션</span><span class="chip sel"><i style="background:#8E9BE8"></i>프로토콜</span><span class="chip"><i style="background:#F4978E"></i>경기</span><span class="chip"><i style="background:#7EC8E3"></i>이동</span><span class="chip"><i style="background:#6b7280"></i>과제</span></div>
+          <div class="lbl">제목</div><input class="inp" value="시차적응 프로토콜">
+          <div class="lbl">기간</div><div class="picked" style="margin-top:0">8월 15일 → 19일 · 5일</div>
+          <div class="toggle"><div><div class="tt">선수에게 공개</div><div class="ts">끄면 코치 내부 일정</div></div><div class="sw on"></div></div>
+        </div>
+        <div class="savebar"><button class="savebtn">저장</button></div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
