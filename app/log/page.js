@@ -1,6 +1,7 @@
 // app/log/page.js — 기록 탭 홈 (첫 세션 후 앱 랜딩). Daily Log 2액션 + 주간 streak.
 // 데이터=수면/루틴 로그(계정=이메일). 인증형(미들웨어 /log 보호). 정적 yuna.html과는 별개 경로.
 import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { ListChecks, Moon, Check } from "lucide-react";
 import AppShell, { AppBody } from "../../components/app/AppShell";
 import { Surface, SectionHeader, Streak, Row } from "../../components/app/primitives";
@@ -14,7 +15,7 @@ const DOW_FULL = ["일요일", "월요일", "화요일", "수요일", "목요일
 // showDone=완료 배지(수면=1회 개념). routine은 항상 '기록하기'(여러 개 가능).
 function RecordRow({ icon: Icon, title, sub, showDone, href }) {
   return (
-    <a href={href} className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border active:bg-muted/40 transition-colors">
+    <Link href={href} className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border active:bg-muted/40 transition-colors">
       <Icon className="w-[22px] h-[22px] text-primary shrink-0" strokeWidth={2} />
       <div className="flex-1 min-w-0">
         <div className="text-base font-semibold text-foreground tracking-[-0.01em]">{title}</div>
@@ -30,7 +31,7 @@ function RecordRow({ icon: Icon, title, sub, showDone, href }) {
       ) : (
         <span className="text-[13px] font-semibold text-white bg-primary px-[13px] py-[7px] rounded-[10px] shrink-0">기록하기</span>
       )}
-    </a>
+    </Link>
   );
 }
 

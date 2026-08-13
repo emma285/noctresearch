@@ -4,6 +4,8 @@ import { Moon, ChevronDown, Check, ArrowRight, ArrowLeft, Loader2 } from "lucide
 import { QUESTIONS as DEFAULT_QUESTIONS, YEARS, HRS, MINS, hrLabel } from "../data/questions";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import TimeWheel from "./app/TimeWheel";
+import BottomNav from "./app/BottomNav";
 
 // ─── Brand ───
 const Brand = ({ athlete }) => (
@@ -118,28 +120,26 @@ const Dropdown = ({ value, onChange, options, placeholder }) => {
   );
 };
 
-// ─── Time Dropdown Pair ───
-const TimePair = ({ label, hVal, mVal, onH, onM }) => (
-  <div className="space-y-2">
-    <label className="text-sm font-medium text-gray-600">{label}</label>
-    <div className="flex gap-3">
-      <div className="flex-1">
-        <select value={hVal ?? ""} onChange={e => onH(e.target.value === "" ? null : Number(e.target.value))}
-          className={`w-full px-4 py-3 rounded-xl border-2 text-sm appearance-none bg-white transition-all outline-none ${hVal !== null && hVal !== undefined ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}>
-          <option value="">시</option>
-          {HRS.map(h => <option key={h} value={h}>{hrLabel(h)}</option>)}
-        </select>
-      </div>
-      <div className="w-24">
-        <select value={mVal ?? ""} onChange={e => onM(e.target.value === "" ? null : e.target.value)}
-          className={`w-full px-4 py-3 rounded-xl border-2 text-sm appearance-none bg-white transition-all outline-none ${mVal !== null && mVal !== undefined ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}>
-          <option value="">분</option>
-          {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
-        </select>
+// ─── Time Pair (휠 스피너) ───
+const pad2 = (n) => String(n).padStart(2, "0");
+// 라벨별 기본 시각 (마운트 시 강제 초기화 — 휠은 항상 값이 있어야 함)
+const defaultTimeFor = (label = "") =>
+  /기상|일어/.test(label) ? 7 * 60 : /잠드/.test(label) ? 23 * 60 + 30 : 23 * 60;
+const TimePair = ({ label, hVal, mVal, onH, onM }) => {
+  const has = hVal !== null && hVal !== undefined && mVal !== null && mVal !== undefined;
+  useEffect(() => {
+    if (!has) { const d = defaultTimeFor(label); onH(Math.floor(d / 60)); onM(pad2(d % 60)); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const value = has ? hVal * 60 + Number(mVal) : defaultTimeFor(label);
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-gray-600">{label}</label>
+      <div className="rounded-2xl border-2 border-gray-200 bg-white py-2">
+        <TimeWheel value={value} onChange={(v) => { onH(Math.floor(v / 60)); onM(pad2(v % 60)); }} />
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Navigation Buttons ───
 const NavBtns = ({ idx, total, onPrev, onNext, loading }) => (
@@ -604,7 +604,7 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
     <div className={`min-h-screen ${formType === "athlete" ? "noct-athlete bg-[#F2F3F6]" : "bg-gray-50"}`}>
       <Brand athlete={formType === "athlete"} />
       <Progress current={idx} total={Q.length} />
-      <div ref={containerRef} className="max-w-lg mx-auto px-6 pt-24 pb-12">
+      <div ref={containerRef} className="max-w-lg mx-auto px-6 pt-24 pb-[calc(92px+env(safe-area-inset-bottom))]">
         {renderQ()}
         {err && q.type !== "welcome" && q.type !== "complete" && (
           <div className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-red-500 font-medium">
@@ -637,6 +637,7 @@ export default function IntakeForm({ questions = DEFAULT_QUESTIONS, storageKey, 
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   );
 }

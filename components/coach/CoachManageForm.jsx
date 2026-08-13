@@ -3,6 +3,7 @@
 // 코치 액션의 단일 소스를 마스터로 통일.
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import TimeWheel from "../app/TimeWheel";
 
 const PROGRAMS = ["3주 수면 리셋", "8주 수면 셋업", "수면 케어"];
 // 코치가 수동으로 정하는 상태만. 나머지(로그인·intake제출·리포트게시)는 이벤트로 자동 전이.
@@ -66,12 +67,16 @@ export default function CoachManageForm({ athlete }) {
       {/* 다음 세션 (일정) — 별도 카드 */}
       <div className="bg-card border border-border rounded-2xl p-4">
         <div className={lbl}>다음 세션</div>
-        <div className="flex flex-wrap gap-2">
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={sel + " flex-1 min-w-[130px]"} />
-          <select value={hour} onChange={(e) => setHour(e.target.value)} className={sel}>{HOURS.map((h) => <option key={h} value={h}>{hourLabel(h)}</option>)}</select>
-          <select value={min} onChange={(e) => setMin(e.target.value)} className={sel}>{MINS.map((mm) => <option key={mm} value={mm}>{mm}분</option>)}</select>
-        </div>
-        {date ? <button type="button" onClick={() => setDate("")} className="text-[12px] text-muted-foreground mt-2">일정 지우기</button> : null}
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={sel + " w-full"} />
+        {date ? (
+          <>
+            <div className="mt-3">
+              <TimeWheel value={Number(hour) * 60 + Number(min)}
+                onChange={(v) => { setHour(String(Math.floor(v / 60))); setMin(pad(v % 60)); }} />
+            </div>
+            <button type="button" onClick={() => setDate("")} className="text-[12px] text-muted-foreground mt-2">일정 지우기</button>
+          </>
+        ) : null}
       </div>
 
       <button type="button" onClick={save} disabled={saving}

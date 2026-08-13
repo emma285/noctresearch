@@ -1,43 +1,41 @@
 // app/api/log/route.js
-// 선수 전용 기록 페이지(로그인 없음)의 수면·루틴 기록 저장(POST) + 월별 조회(GET).
-// 인증 없음 — body/쿼리의 user(이메일 식별자)로 어느 선수 기록인지 구분.
-import { Client } from "@notionhq/client";
+// 선수 기록(수면·루틴) 저장·조회 — Neon(logs 테이블). 이메일(user_email)로 식별.
+// 응답 형태는 기존 Notion 버전과 100% 동일하게 유지(프론트 무변경).
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
+import { and, eq, gte, lt } from "drizzle-orm";
+import { db, schema } from "../../../lib/db";
 import { notifyCoaching } from "../../../lib/notify";
 import { getAthleteByEmail } from "../../../lib/master";
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-const LOG_DB = process.env.NOTION_LOG_DATABASE_ID || "3b7565bc-0343-8190-a7ac-f326e916d318";
+const { logs } = schema;
 
-function rt(s) {
-  return [{ type: "text", text: { content: String(s ?? "").slice(0, 1900) } }];
-}
-
-// ── 저장 ──
+// ── 저장 ──  POST { user, kind:'sleep'|'routine', date, summary, data, overwrite? }
 export async function POST(request) {
   try {
     const body = await request.json();
     const user = body.user || "unknown";
-    const kind = body.kind === "sleep" ? "수면" : "루틴";
+    const kind = body.kind === "sleep" ? "sleep" : "routine";
     const date = body.date || new Date().toISOString().slice(0, 10);
     const summary = body.summary || "";
     const data = body.data || {};
-    const title = `${user} · ${date} · ${kind}`;
 
-    const page = await notion.pages.create({
-      parent: { database_id: LOG_DB },
-      properties: {
-        "제목": { title: rt(title) },
-        "계정": { rich_text: rt(user) },
-        "날짜": { date: { start: date } },
-        "종류": { select: { name: kind } },
-        "요약": { rich_text: rt(summary) },
-        "데이터": { rich_text: rt(JSON.stringify(data)) },
-      },
-    });
+    // 수면은 하루 1건 — 같은 날짜 기존 있으면 확인. overwrite 아니면 막고 exists 반환.
+    if (kind === "sleep") {
+      const dup = await db.select({ id: logs.id }).from(logs)
+        .where(and(eq(logs.userEmail, user), eq(logs.date, date), eq(logs.kind, "sleep")));
+      if (dup.length > 0) {
+        if (!body.overwrite) return NextResponse.json({ success: false, exists: true });
+        await db.delete(logs).where(and(eq(logs.userEmail, user), eq(logs.date, date), eq(logs.kind, "sleep")));
+      }
+    }
 
-    // 슬립로그(수면)만 즉시 슬랙 알림 — 루틴은 밤 11:59 일괄(cron)이라 여기선 제외.
-    if (kind === "수면") {
+    const [row] = await db.insert(logs)
+      .values({ userEmail: user, date, kind, summary, data })
+      .returning({ id: logs.id });
+
+    // 슬립로그(수면)만 즉시 슬랙 알림 — 루틴은 밤 11:59 일괄(cron).
+    if (kind === "sleep") {
       try {
         const athlete = await getAthleteByEmail(user);
         const who = athlete?.name || user;
@@ -45,95 +43,76 @@ export async function POST(request) {
       } catch { /* 알림 실패가 저장을 막지 않도록 무시 */ }
     }
 
-    return NextResponse.json({ success: true, id: page.id });
+    revalidateTag("athlete-data");
+    return NextResponse.json({ success: true, id: row.id });
   } catch (e) {
-    return NextResponse.json(
-      { success: false, error: e?.body?.message || e?.message || "save failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: e?.message || "save failed" }, { status: 500 });
   }
 }
 
-// ── 수정 (블록 1개) ──  PATCH { id, summary, data }
+// ── 수정(블록 1개) ──  PATCH { id, summary, data }
 export async function PATCH(request) {
   try {
     const { id, summary, data } = await request.json();
     if (!id) return NextResponse.json({ success: false, message: "id 없음" }, { status: 400 });
-    const props = {};
-    if (summary !== undefined) props["요약"] = { rich_text: rt(summary) };
-    if (data !== undefined) props["데이터"] = { rich_text: rt(JSON.stringify(data)) };
-    await notion.pages.update({ page_id: id, properties: props });
+    const patch = {};
+    if (summary !== undefined) patch.summary = summary;
+    if (data !== undefined) patch.data = data;
+    await db.update(logs).set(patch).where(eq(logs.id, id));
+    revalidateTag("athlete-data");
     return NextResponse.json({ success: true });
   } catch (e) {
-    return NextResponse.json({ success: false, error: e?.body?.message || e?.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: e?.message }, { status: 500 });
   }
 }
 
-// ── 삭제(아카이브) ──  DELETE { id }
+// ── 삭제 ──  DELETE { id }
 export async function DELETE(request) {
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ success: false, message: "id 없음" }, { status: 400 });
-    await notion.pages.update({ page_id: id, archived: true });
+    await db.delete(logs).where(eq(logs.id, id));
+    revalidateTag("athlete-data");
     return NextResponse.json({ success: true });
   } catch (e) {
-    return NextResponse.json({ success: false, error: e?.body?.message || e?.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: e?.message }, { status: 500 });
   }
 }
 
-// ── 조회 (월별) ──
-// GET /api/log?user=<email>&month=YYYY-MM  → { days: { "YYYY-MM-DD": {sleep, routine, sleepSummary, items[]} } }
-// user 없으면 헬스체크.
+// ── 조회(월별) ──  GET ?user=<email>&month=YYYY-MM
+// → { days: { "YYYY-MM-DD": {sleep, routine, sleepSummary, items[], blocks[]} } }
 export async function GET(request) {
   try {
     const url = new URL(request.url);
     const user = url.searchParams.get("user");
-    const month = url.searchParams.get("month"); // "2026-08"
-    if (!user) return NextResponse.json({ ok: true, route: "log", db: LOG_DB });
+    const month = url.searchParams.get("month");
+    if (!user) return NextResponse.json({ ok: true, route: "log", db: "neon" });
 
-    const filter = { and: [{ property: "계정", rich_text: { equals: user } }] };
+    const where = [eq(logs.userEmail, user)];
     if (month && /^\d{4}-\d{2}$/.test(month)) {
       const [y, m] = month.split("-").map(Number);
       const nm = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
-      filter.and.push({ property: "날짜", date: { on_or_after: `${month}-01` } });
-      filter.and.push({ property: "날짜", date: { before: `${nm}-01` } });
+      where.push(gte(logs.date, `${month}-01`), lt(logs.date, `${nm}-01`));
     }
 
+    const rows = await db.select().from(logs).where(and(...where));
     const days = {};
-    let cursor = undefined;
-    do {
-      const res = await notion.databases.query({
-        database_id: LOG_DB,
-        filter,
-        page_size: 100,
-        start_cursor: cursor,
-      });
-      for (const p of res.results) {
-        const pr = p.properties || {};
-        const date = pr["날짜"]?.date?.start;
-        if (!date) continue;
-        const kind = pr["종류"]?.select?.name;
-        const summary = (pr["요약"]?.rich_text || []).map((x) => x.plain_text).join("");
-        if (!days[date]) days[date] = { sleep: false, routine: 0, sleepSummary: "", items: [], blocks: [] };
-        if (kind === "수면") {
-          days[date].sleep = true;
-          if (summary) days[date].sleepSummary = summary;
-        } else {
-          days[date].routine += 1;
-          if (summary) days[date].items.push(summary);
-          // 루틴 블록 원본 데이터(시각·종류·상세) → 타임라인 복원용
-          try {
-            const raw = (pr["데이터"]?.rich_text || []).map((x) => x.plain_text).join("");
-            const d = raw ? JSON.parse(raw) : null;
-            if (d && (d.time || d.type)) days[date].blocks.push({ nid: p.id, ...d });
-          } catch {}
-        }
+    for (const p of rows) {
+      const date = p.date;
+      if (!date) continue;
+      if (!days[date]) days[date] = { sleep: false, routine: 0, sleepSummary: "", items: [], blocks: [] };
+      if (p.kind === "sleep") {
+        days[date].sleep = true;
+        if (p.summary) days[date].sleepSummary = p.summary;
+      } else {
+        days[date].routine += 1;
+        if (p.summary) days[date].items.push(p.summary);
+        const d = p.data || null;
+        if (d && (d.time || d.type)) days[date].blocks.push({ nid: p.id, ...d });
       }
-      cursor = res.has_more ? res.next_cursor : undefined;
-    } while (cursor);
-
+    }
     return NextResponse.json({ days });
   } catch (e) {
-    return NextResponse.json({ days: {}, error: e?.body?.message || e?.message }, { status: 200 });
+    return NextResponse.json({ days: {}, error: e?.message }, { status: 200 });
   }
 }

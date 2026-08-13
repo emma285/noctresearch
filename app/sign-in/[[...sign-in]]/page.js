@@ -29,12 +29,13 @@ function AuthLayout({ title, sub, children, eyebrow }) {
 const INPUT = "w-full rounded-xl bg-white/[0.07] border border-white/[0.14] px-4 py-3.5 text-[15px] text-white placeholder:text-white/35 focus:outline-none focus:border-white/40 focus:bg-white/[0.10] transition-colors";
 const BTN = "w-full mt-2 py-4 rounded-xl bg-white text-[#0B1622] text-base font-bold active:opacity-90 disabled:opacity-55 transition-opacity";
 
-// 로그인 후 돌아갈 곳: 보호 링크(예: /coach/assign)로 왔으면 그곳으로, 아니면 포털.
+// 로그인 후 돌아갈 곳: 보호 링크(예: /coach/assign)로 왔으면 그곳으로,
+// 아니면 루트(/)로 → 루트 스마트 라우팅이 진행중 선수는 /log(기록), 코치·온보딩전은 /portal로 분기.
 function getRedirect() {
-  if (typeof window === "undefined") return "/portal";
+  if (typeof window === "undefined") return "/";
   const p = new URLSearchParams(window.location.search).get("redirect_url");
   // 외부 URL 방지 — 내부 경로만 허용
-  return p && p.startsWith("/") ? p : "/portal";
+  return p && p.startsWith("/") ? p : "/";
 }
 
 export default function SignInPage() {

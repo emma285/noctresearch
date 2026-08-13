@@ -1,6 +1,7 @@
 // app/api/coach/master/route.js — 코치가 선수 마스터 행에 쓰기(다음 세션·상태·주차 등). 코치 전용.
 // 코치 액션의 단일 소스를 마스터로 통일 (기존 Clerk 메타 방식 대체).
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { updateMasterFields } from "../../../../lib/master";
@@ -26,6 +27,7 @@ export async function POST(request) {
 
     const ok = await updateMasterFields(pageId, { nextSession, status, week, program, sport, tier });
     if (!ok) return NextResponse.json({ success: false, message: "저장할 내용이 없거나 실패했어요." }, { status: 400 });
+    revalidateTag("athlete-data"); // 마스터 변경 → 캐시 무효화
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("coach master write failed:", e?.message);

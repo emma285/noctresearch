@@ -134,10 +134,10 @@ button, input, textarea {
   transition: all 0.2s ease;
 }
 
-/* 모바일 터치에서 hover 고스트 방지 — hover는 마우스 환경에서만 */
+/* 모바일 터치에서 hover 고스트 방지 — hover는 마우스 환경에서만 발동하도록.
+   (예전엔 @media (hover:none) button:hover { background:inherit } 로 껐는데,
+    iOS는 탭 후 :hover가 들러붙어 배경이 투명(inherit)으로 날아가는 버그가 있었음.
+    그래서 hover 효과 자체를 마우스 환경으로 제한만 하고, 터치에선 아무 것도 덮어쓰지 않음.) */
 @media (hover: none) {
-  button:hover {
-    background-color: inherit;
-    border-color: inherit;
-  }
+  /* 터치에서는 hover 오버라이드 없음 — 버튼은 자기 배경색을 그대로 유지 */
 }

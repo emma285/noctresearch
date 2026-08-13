@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시각 입력 휠 스피너 — 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<style>
+  :root{--bg:#F2F3F6;--fg:#0b0e14;--card:#fff;--border:#e6e7eb;--primary:#4355B0;--navy:#0D1B2A;--muted:#8a90a0}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#eceef2;color:var(--fg);font-family:"Pretendard Variable","Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;letter-spacing:-.02em;-webkit-font-smoothing:antialiased;padding:32px 24px 80px}
+  .head{max-width:820px;margin:0 auto 22px}
+  .head h1{font-size:22px;font-weight:800}.head p{font-size:13.5px;color:#6b7280;margin-top:7px;line-height:1.7;max-width:720px}
+  .row{max-width:820px;margin:0 auto;display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .cap{font-size:13px;font-weight:700;color:var(--navy)}.cap span{display:block;font-size:11.5px;color:#6b7280;font-weight:500;margin-top:3px}
+  .phone{width:346px;background:var(--bg);border-radius:34px;box-shadow:0 12px 34px rgba(13,27,42,.15);overflow:hidden;border:1px solid #d6d9e0}
+  .scr{height:660px;display:flex;flex-direction:column}
+  .top{padding:46px 22px 0;flex:1}
+  .prog{height:6px;border-radius:999px;background:var(--border);overflow:hidden;margin-bottom:28px}.prog>i{display:block;height:100%;width:45%;background:var(--primary);border-radius:999px}
+  h2{font-size:25px;font-weight:800;line-height:1.32;letter-spacing:-.03em;color:var(--navy)}
+  .sub{font-size:13.5px;color:#6b7280;margin-top:11px}
+
+  /* 휠 스피너 (IMG_5022/5023 스타일) — 3줄, 여백 넉넉 */
+  .picker{position:relative;margin-top:52px;height:186px;display:flex;align-items:center;justify-content:center;
+    -webkit-mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);
+            mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent)}
+  .stage{position:relative;display:flex;align-items:center}   /* band를 콘텐츠에 묶음 */
+  .band{position:absolute;top:50%;left:-24px;right:-24px;height:64px;transform:translateY(-50%);
+    background:rgba(67,85,176,.08);border-radius:18px;pointer-events:none;z-index:0}
+  .wcol{flex:0 0 auto;width:64px;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+  .wcol.ap{width:80px}
+  .wcol.hh{margin-left:24px}   /* 오전→시 간격 */
+  .wcol.mm{margin-left:52px}   /* 시→분 간격 (더 넓게) */
+  .wcol .it{height:62px;line-height:62px;font-variant-numeric:tabular-nums;color:#b7bcc8;font-weight:600;font-size:26px;transition:.15s}
+  .wcol .it.sel{color:var(--navy);font-size:34px;font-weight:800}
+  .wcol.ap .it{font-size:23px}.wcol.ap .it.sel{font-size:28px}
+
+  .btnbar{padding:16px 22px calc(env(safe-area-inset-bottom) + 20px);flex-shrink:0}
+  .btn{width:100%;background:var(--primary);color:#fff;font-size:15.5px;font-weight:800;border:none;border-radius:14px;padding:16px}
+
+  .note{max-width:820px;margin:26px auto 0;font-size:12.5px;color:#6b7280;line-height:1.8;background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+  .note b{color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="head">
+  <h1>시각 입력 — 휠 스피너 (IMG_5022 스타일)</h1>
+  <p>3컬럼(오전·오후 / 시 / 분)을 위아래로 훑어서 선택. 가운데 라운드 강조행이 선택값. <b>분은 우리 앱 그대로 15분 단위(00·15·30·45)</b> 유지. 라이트 톤으로 맞춤.</p>
+</div>
+
+<div class="row">
+
+  <!-- 기상 -->
+  <div class="col">
+    <div class="cap">수면 기록 · 기상 <span>선택값: 오전 6:00</span></div>
+    <div class="phone"><div class="scr">
+      <div class="top">
+        <div class="prog"><i></i></div>
+        <h2>몇 시에<br>일어났나요?</h2>
+        <div class="sub">아침에 눈 뜬 시각을 기준으로요.</div>
+        <div class="picker">
+          <div class="stage">
+            <div class="band"></div>
+            <div class="wcol ap">
+              <div class="it">　</div><div class="it sel">오전</div><div class="it">오후</div>
+            </div>
+            <div class="wcol hh">
+              <div class="it">5</div><div class="it sel">6</div><div class="it">7</div>
+            </div>
+            <div class="wcol mm">
+              <div class="it">45</div><div class="it sel">00</div><div class="it">15</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btnbar"><button class="btn">다음</button></div>
+    </div></div>
+  </div>
+
+  <!-- 취침 -->
+  <div class="col">
+    <div class="cap">수면 기록 · 취침 <span>선택값: 오후 11:45</span></div>
+    <div class="phone"><div class="scr">
+      <div class="top">
+        <div class="prog"><i></i></div>
+        <h2>몇 시에<br>잠들었나요?</h2>
+        <div class="sub">침대에 누운 시각을 기재해주세요.</div>
+        <div class="picker">
+          <div class="stage">
+            <div class="band"></div>
+            <div class="wcol ap">
+              <div class="it">오전</div><div class="it sel">오후</div><div class="it">　</div>
+            </div>
+            <div class="wcol hh">
+              <div class="it">10</div><div class="it sel">11</div><div class="it">12</div>
+            </div>
+            <div class="wcol mm">
+              <div class="it">30</div><div class="it sel">45</div><div class="it">00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btnbar"><button class="btn">다음</button></div>
+    </div></div>
+  </div>
+
+</div>
+
+<div class="note">
+  적용 위치: <b>수면 기록(취침·기상) · 루틴 기록(각 항목) · 사전 설문(취침/입면/기상) · 코치 다음 세션</b> — 전부 이 휠 컴포넌트 하나로 통일.<br>
+  동작: 손가락으로 위아래 스크롤 → 가장 가까운 칸에 스냅(snap). 분은 00·15·30·45만 돌아요. 값은 내부적으로 24시간(분 단위)로 저장 — 기존 데이터 모델 그대로.
+</div>
+</body>
+</html>

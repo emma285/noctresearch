@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
+  // hover: 유틸을 마우스 환경(@media (hover:hover))에서만 발동 → iOS 탭 후 sticky hover 고스트 방지
+  future: { hoverOnlyWhenSupported: true },
   content: [
     "./app/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",

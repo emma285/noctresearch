@@ -97,10 +97,8 @@ export default async function PortalPage({ searchParams }) {
   // 자료 업로드 완료 — 마스터 준비자료 relation 또는 Clerk 메타.
   const prepDone = !!((athlete?.relations?.prep?.length) || meta.prepDone === true);
 
-  const sessionCount = athlete?.relations?.sessions?.length || 0;
-  const ongoing = (!!athlete && sessionCount >= 1) || searchParams?.stage === "ongoing";
-  const effectiveCount = sessionCount || (searchParams?.stage === "ongoing" ? 1 : 0);
-  const nextOrdinal = effectiveCount + 1;
+  // ongoing = 상태(진행중/종료) 기반 (Neon 이전으로 세션 relation 없음). 세션 수는 아래 실제 목록에서.
+  const ongoing = ["진행중", "종료"].includes(athlete?.status) || searchParams?.stage === "ongoing";
 
   const nextSessionAt = athlete?.nextSession || (ongoing ? null : meta.firstSessionAt) || (searchParams?.stage === "done" ? "2026-08-09" : null);
   const programWeeks = meta.programWeeks || ((searchParams?.stage === "done" || searchParams?.stage === "ongoing") ? 8 : null);
@@ -112,10 +110,15 @@ export default async function PortalPage({ searchParams }) {
   const dday = ddayOf(nextSessionAt);
   const ddayText = dday === null ? "미정" : dday > 0 ? `D-${dday}` : dday === 0 ? "D-day" : "진행중";
 
-  // 정식(ongoing)이면 지난 세션 목록 (마스터 pageId로 코칭 세션 DB 조회)
-  const sessions = ongoing && athlete?.pageId ? await getSessionsByAthlete(athlete.pageId) : [];
-  // 다가오는 일정 (캘린더 이벤트, 세션 제외, 오늘 이후 · 최대 4건). 언락=진행중 선수만.
-  const calEvents = ongoing && athlete?.pageId ? await getAthleteEvents(athlete.pageId, { forAthlete: true }) : [];
+  // 지난 세션 + 다가오는 일정 — 둘 다 pageId만 필요하고 서로 독립이라 병렬 조회 (waterfall 제거)
+  const [sessions, calEvents] = ongoing && athlete?.pageId
+    ? await Promise.all([
+        getSessionsByAthlete(athlete.pageId),
+        getAthleteEvents(athlete.pageId, { forAthlete: true }),
+      ])
+    : [[], []];
+  const effectiveCount = sessions.length || (searchParams?.stage === "ongoing" ? 1 : 0);
+  const nextOrdinal = effectiveCount + 1;
   const upcoming = calEvents.filter((e) => e.kind === "event" && (e.end || e.start).slice(0, 10) >= kstToday()).slice(0, 4);
 
   const statusLabel = ongoing ? "코칭 진행중" : intakeDone ? "첫 세션 준비 중" : "시작 준비";

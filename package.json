@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^5.7.6",
+    "@neondatabase/serverless": "^1.1.0",
     "@notionhq/client": "^2.2.14",
     "@vercel/blob": "^2.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.2",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.263.1",
     "next": "^14.2.0",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.0",
+    "drizzle-kit": "^0.31.10",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
     "vitest": "^4.1.0"

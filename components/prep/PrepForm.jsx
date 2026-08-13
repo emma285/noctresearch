@@ -1,11 +1,11 @@
 "use client";
-// 코칭 준비 자료 (v2 디자인). 로직(업로드·아이템·제출) 보존. 하단 4탭 유지.
+// 코칭 준비 자료 (v2 디자인). 로직(업로드·아이템·제출) 보존. 하단 4탭 유지. 
 import { useState, useRef } from "react";
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Camera, ImagePlus, X, Check, Paperclip } from "lucide-react";
 import { cn } from "../../lib/utils";
-import BottomNav from "../app/BottomNav";
+import AppShell from "../app/AppShell";
 
 const TYPES = [
   { key: "경기·대회", ph: "예: 8/15(금) 오전 9시 티오프, ○○ 오픈 1라운드" },
@@ -75,19 +75,19 @@ export default function PrepForm({ name }) {
 
   if (done) {
     return (
-      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-8 text-center mx-auto w-full max-w-[430px]">
+      <AppShell fill bodyClassName="flex flex-col items-center justify-center px-8 text-center">
         <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mb-5"><Check className="w-8 h-8 text-navy" strokeWidth={3} /></div>
         <h1 className="text-[22px] font-bold text-foreground mb-2">코치에게 전달됐어요</h1>
         <p className="text-[15px] text-muted-foreground leading-relaxed mb-8">보내주신 정보로 맞춤 코칭을<br />준비할게요.</p>
         <button onClick={() => router.push("/portal")} className="w-full max-w-xs py-4 rounded-xl bg-primary text-white font-semibold text-base active:opacity-90">홈으로</button>
-      </div>
+      </AppShell>
     );
   }
 
   const canSubmit = (items.length || files.length) && !loading;
 
   return (
-    <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[430px] pb-[calc(72px+env(safe-area-inset-bottom))]">
+    <AppShell>
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-2 flex items-center gap-3">
         <button onClick={() => router.push("/portal")} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></button>
         <h1 className="text-[20px] font-bold tracking-[-0.3px]">코칭 준비 자료</h1>
@@ -160,7 +160,6 @@ export default function PrepForm({ name }) {
         </button>
       </div>
 
-      <BottomNav />
-    </div>
+    </AppShell>
   );
 }

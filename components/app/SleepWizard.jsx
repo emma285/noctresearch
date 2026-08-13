@@ -1,11 +1,12 @@
 "use client";
 // 수면 기록 위저드 (기록 탭 /log/sleep). 한 질문씩. 하단 4탭 유지.
 // data={bed,sol,wake,outbed,woke,waso,feel[],memo} · kind="sleep". 수면효율/총수면은 코치 전용(선수 숨김).
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "../../lib/utils";
-import BottomNav from "./BottomNav";
+import AppShell from "./AppShell";
+import TimeWheel from "./TimeWheel";
 
 const SOL = ["바로 잠들어요", "15분 이내", "30분쯤", "1시간쯤", "1시간 이상"];
 const OUTBED = ["바로 나왔어요", "10분 이내", "30분쯤", "1시간쯤", "1시간 이상"];
@@ -21,6 +22,22 @@ const hint = (m) => {
   return `${period} ${hh}시 ${String(mm).padStart(2, "0")}분`;
 };
 const kstToday = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+const kstYesterday = () => new Date(Date.now() + 9 * 3600 * 1000 - 86400000).toISOString().slice(0, 10);
+const DOWk = ["일", "월", "화", "수", "목", "금", "토"];
+const dlabel = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? `${+m[2]}/${+m[3]}(${DOWk[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()]})` : ""; };
+// 기록 날짜 선택 (오늘/어제/직접) — 지난 날짜 기록용
+function DateSelect({ date, setDate }) {
+  const chip = (on) => `text-[12px] font-bold px-2.5 py-1.5 rounded-lg ${on ? "bg-primary text-white" : "bg-card border border-border text-foreground"}`;
+  return (
+    <div className="px-5 pb-2 flex items-center gap-2 flex-wrap">
+      <span className="text-[12px] text-muted-foreground">기록 날짜</span>
+      <button type="button" onClick={() => setDate(kstToday())} className={chip(date === kstToday())}>오늘</button>
+      <button type="button" onClick={() => setDate(kstYesterday())} className={chip(date === kstYesterday())}>어제</button>
+      <input type="date" value={date} max={kstToday()} onChange={(e) => e.target.value && setDate(e.target.value)}
+        className="text-[12px] font-semibold border border-border rounded-lg px-2 py-1 bg-card text-foreground" />
+    </div>
+  );
+}
 
 function Chip({ on, children, onClick }) {
   return (
@@ -29,22 +46,6 @@ function Chip({ on, children, onClick }) {
         on ? "bg-primary/10 border-primary text-primary" : "bg-card border-border text-foreground")}>
       {children}
     </button>
-  );
-}
-
-function TimePicker({ value, onChange }) {
-  const step = (d) => onChange((value + d + 1440) % 1440);
-  return (
-    <div className="flex flex-col items-center">
-      <div className="flex items-center gap-3">
-        <button type="button" onClick={() => step(-60)} className="w-11 h-11 rounded-xl border border-border text-lg text-muted-foreground active:bg-muted">−1h</button>
-        <button type="button" onClick={() => step(-15)} className="w-11 h-11 rounded-xl border border-border text-2xl text-muted-foreground active:bg-muted">−</button>
-        <div className="text-[40px] font-bold tracking-[-1px] tabular-nums w-[130px] text-center">{fmt(value)}</div>
-        <button type="button" onClick={() => step(15)} className="w-11 h-11 rounded-xl border border-border text-2xl text-muted-foreground active:bg-muted">+</button>
-        <button type="button" onClick={() => step(60)} className="w-11 h-11 rounded-xl border border-border text-lg text-muted-foreground active:bg-muted">+1h</button>
-      </div>
-      <div className="text-sm text-muted-foreground mt-4">{hint(value)}</div>
-    </div>
   );
 }
 
@@ -59,12 +60,27 @@ function Q({ title, sub, children }) {
   );
 }
 
-export default function SleepWizard({ email }) {
+export default function SleepWizard({ email, date: initDate }) {
   const router = useRouter();
   const [am, setAm] = useState({ bed: 23 * 60 + 45, sol: null, wake: 7 * 60, outbed: null, woke: null, waso: null, feel: [], memo: "" });
   const [step, setStep] = useState(0);
+  const [date, setDate] = useState(initDate || kstToday());
   const [saving, setSaving] = useState(false);
+  const [dateHasSleep, setDateHasSleep] = useState(false); // 이 날짜에 이미 수면기록 있나
   const set = (k, v) => setAm((s) => ({ ...s, [k]: v }));
+
+  // 날짜 바뀔 때 기존 수면기록 여부 조회 → 처음(step0)에 미리 알려주기
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/log?user=${encodeURIComponent(email)}&month=${date.slice(0, 7)}`);
+        const j = await r.json();
+        if (!cancel) setDateHasSleep(!!j.days?.[date]?.sleep);
+      } catch { if (!cancel) setDateHasSleep(false); }
+    })();
+    return () => { cancel = true; };
+  }, [email, date]);
 
   const flow = ["bed", "sol", "wake", "outbed", "woke", ...(am.woke > 0 ? ["waso"] : []), "feel", "memo"];
   const id = flow[step];
@@ -75,11 +91,15 @@ export default function SleepWizard({ email }) {
   async function submit() {
     setSaving(true);
     const summary = `취침 ${fmt(am.bed)} · 입면 ${am.sol || "-"} · 기상 ${fmt(am.wake)} · 침대밖까지 ${am.outbed || "-"} · 밤중깸 ${am.woke ?? 0}회 · WASO ${am.waso || "-"} · 느낌 ${am.feel.join(",")}`;
+    const payload = { user: email, kind: "sleep", date, data: { bed: am.bed, sol: am.sol, wake: am.wake, outbed: am.outbed, woke: am.woke ?? 0, waso: am.waso, feel: am.feel, memo: am.memo }, summary };
+    const post = (extra) => fetch("/api/log", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, ...extra }),
+    }).then((r) => r.json()).catch(() => ({}));
     try {
-      await fetch("/api/log", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: email, kind: "sleep", date: kstToday(), data: { bed: am.bed, sol: am.sol, wake: am.wake, outbed: am.outbed, woke: am.woke ?? 0, waso: am.waso, feel: am.feel, memo: am.memo }, summary }),
-      });
+      // 기존 기록 있는 날짜는 step0에서 이미 "덮어써요" 경고를 봤으니 바로 덮어씀. 끝에 팝업 X.
+      let j = await post(dateHasSleep ? { overwrite: true } : {});
+      if (j && j.exists) await post({ overwrite: true }); // 조회 놓친 레이스 대비
     } catch (e) { /* 저장 실패해도 이동 */ }
     router.push("/log");
     router.refresh();
@@ -88,7 +108,7 @@ export default function SleepWizard({ email }) {
   const back = () => (step === 0 ? router.push("/log") : setStep((s) => s - 1));
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background mx-auto w-full max-w-[430px] pb-[calc(72px+env(safe-area-inset-bottom))]">
+    <AppShell fill>
       {/* 헤더: 뒤로 + 진행 */}
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-3">
         <div className="flex items-center gap-3">
@@ -102,12 +122,21 @@ export default function SleepWizard({ email }) {
         </div>
       </div>
 
+      {step === 0 ? (
+        <>
+          <DateSelect date={date} setDate={setDate} />
+          {dateHasSleep ? (
+            <div className="px-5 pb-1 text-[12px] font-semibold text-warning">이미 저장된 수면 기록이 있어요. 저장하면 새로운 기록으로 변경돼요.</div>
+          ) : null}
+        </>
+      ) : null}
+
       {/* 질문 */}
       <div className="flex-1 overflow-y-auto px-5 pt-6">
-        {id === "bed" && <Q title={"몇 시에\n잠들었나요?"} sub="침대에 누운 시각을 기재해주세요."><TimePicker value={am.bed} onChange={(v) => set("bed", v)} /></Q>}
+        {id === "bed" && <Q title={"몇 시에\n잠들었나요?"} sub="침대에 누운 시각을 기재해주세요."><TimeWheel value={am.bed} onChange={(v) => set("bed", v)} /></Q>}
         {id === "sol" && <Q title={"잠드는데 얼마나\n걸렸나요?"} sub="체감 시간을 기록해주세요.">
           <div className="flex flex-col gap-2.5">{SOL.map((o) => <Chip key={o} on={am.sol === o} onClick={() => set("sol", o)}>{o}</Chip>)}</div></Q>}
-        {id === "wake" && <Q title="몇 시에 일어났나요?" sub="아침에 눈 뜬 시각을 기준으로 작성해주세요."><TimePicker value={am.wake} onChange={(v) => set("wake", v)} /></Q>}
+        {id === "wake" && <Q title="몇 시에 일어났나요?" sub="아침에 눈 뜬 시각을 기준으로 작성해주세요."><TimeWheel value={am.wake} onChange={(v) => set("wake", v)} /></Q>}
         {id === "outbed" && <Q title={"침대 밖으로 나오는데\n얼마나 걸렸나요?"} sub="아침에 눈 뜨고 침대에 누워있던 시간을 체크해주세요.">
           <div className="flex flex-col gap-2.5">{OUTBED.map((o) => <Chip key={o} on={am.outbed === o} onClick={() => set("outbed", o)}>{o}</Chip>)}</div></Q>}
         {id === "woke" && <Q title={"자다가 중간에\n깬 적 있나요?"}>
@@ -128,7 +157,6 @@ export default function SleepWizard({ email }) {
           {saving ? "저장 중…" : last ? "기록 완료" : "다음"}
         </button>
       </div>
-      <BottomNav />
-    </div>
+    </AppShell>
   );
 }

@@ -2,9 +2,10 @@
 // Notion API 연동 + 자동 분석 (수면효율, Epworth, 레드플래그)
 import { Client } from "@notionhq/client";
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { notifyCoaching } from "../../../lib/notify";
-import { getAthleteByEmail, updateMasterFields } from "../../../lib/master";
+import { getAthleteByEmail, updateMasterFields, createSession, saveIntakeResponse } from "../../../lib/master";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const DB_ID = process.env.NOTION_DATABASE_ID;
@@ -607,8 +608,12 @@ export async function POST(request) {
           // 마스터 상태 자동 승격: 아직 초기(초대됨/로그인/빈값)면 intake제출로. 이미 진행중/종료면 건드리지 않음.
           try {
             const a = email ? await getAthleteByEmail(email) : null;
-            if (a?.pageId && ["", "초대됨", "로그인"].includes(a.status || "")) {
-              await updateMasterFields(a.pageId, { status: "intake제출" });
+            if (a?.pageId) {
+              if (["", "초대됨", "로그인"].includes(a.status || "")) {
+                await updateMasterFields(a.pageId, { status: "intake제출" });
+              }
+              await createSession(a.pageId, { n: 1 }); // intake 제출 → 1차 세션 열림 (idempotent)
+              await saveIntakeResponse(a.pageId, data.formType, data); // 답변 Neon 저장(dual-write)
             }
           } catch (e) { console.error("master status advance failed:", e?.message); }
           await notifyCoachSlack(data, userId, email, new URL(request.url).origin);
@@ -645,6 +650,7 @@ export async function POST(request) {
       });
     }
 
+    revalidateTag("athlete-data"); // 설문 제출 → 마스터 상태/relation 변경 → 캐시 무효화
     return NextResponse.json({ success: true, message: "Notion 저장 완료" });
   } catch (error) {
     console.error("Notion API Error:", error);

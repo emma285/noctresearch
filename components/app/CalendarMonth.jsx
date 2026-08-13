@@ -67,7 +67,7 @@ export default function CalendarMonth({ year, month, events = [], today, selecte
           {onAdd ? <button onClick={onAdd} className="h-7 rounded-full bg-primary text-white text-[11.5px] font-bold pl-2 pr-3 flex items-center gap-0.5 active:opacity-90"><Plus className="w-3.5 h-3.5" />일정</button> : null}
         </div>
       </div>
-      <div className="grid grid-cols-7 mb-1">
+      <div className="grid grid-cols-7 gap-[2px] mb-1">
         {DOW.map((d, i) => <span key={d} className={`text-center text-[10.5px] font-bold ${i === 0 ? "text-coral" : "text-muted-foreground"}`}>{d}</span>)}
       </div>
       {weeks.map((week, wi) => {
@@ -81,7 +81,7 @@ export default function CalendarMonth({ year, month, events = [], today, selecte
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-[2px]" style={{ gridTemplateRows: `repeat(${Math.max(laneCount, 0)}, 15px)` }}>
+            <div className="grid grid-cols-7 gap-[2px]" style={{ gridTemplateRows: laneCount > 0 ? `repeat(${laneCount}, 15px)` : "none" }}>
               {segs.map((seg, si) => {
                 const st = barStyle(seg.e, today);
                 const r = { gridColumn: `${seg.startCol + 1} / ${seg.endCol + 2}`, gridRow: seg.lane + 1, ...st,

@@ -16,17 +16,20 @@ export default async function Home() {
   const user = await currentUser();
   const email = user?.emailAddresses?.[0]?.emailAddress;
 
-  // 미인증이면 포털로 → 미들웨어 보호로 /sign-in 유도.
-  if (!email) redirect("/portal");
+  // 미인증이면 로그인으로 (redirect_url 없이 → 로그인 후 fallback=/ 로 돌아와 이 스마트 라우팅을 다시 탐).
+  if (!email) redirect("/sign-in");
 
   // 코치는 항상 포털(대시보드).
   if (isCoachEmail(email)) redirect("/portal");
 
-  // 인테이크 제출 여부 — 마스터 상태·인테이크 relation·Clerk 메타 중 하나라도 양성이면 완료.
-  const athlete = await getAthleteByEmail(email).catch(() => null);
+  // 빠른 경로: Clerk 세션 메타에 intakeDone 있으면 DB 조회 없이 바로 /log (흰 화면 단축).
   const meta = user?.publicMetadata || {};
+  if (meta.intakeDone === true) redirect("/log");
+
+  // 메타 없으면 마스터 상태로 판단 (Neon 1회 조회).
+  const athlete = await getAthleteByEmail(email).catch(() => null);
   const masterDone = athlete?.status ? MASTER_DONE_STATES.includes(athlete.status) : false;
-  const intakeDone = !!(masterDone || athlete?.relations?.intake?.length || meta.intakeDone === true);
+  const intakeDone = !!(masterDone || athlete?.relations?.intake?.length);
 
   redirect(intakeDone ? "/log" : "/portal");
 }
