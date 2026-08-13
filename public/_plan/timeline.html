@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>수면·루틴 타임라인</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Pretendard Variable",-apple-system,sans-serif;background:#fff;color:#0b0e14;letter-spacing:-.02em;padding:20px}
+  h2{font-size:16px;font-weight:800;margin-bottom:2px}.sub{font-size:12px;color:#8a90a0;margin-bottom:14px}
+  .wrap{display:flex;border:1px solid #e6e7eb;border-radius:12px;overflow-x:auto;overflow-y:hidden}
+  .axis{width:50px;flex-shrink:0;border-right:1px solid #eef0f2;position:sticky;left:0;background:#fff;z-index:2}
+  .axis .ah{position:absolute;right:6px;font-size:10px;color:#aeb4c0;font-weight:600;transform:translateY(-50%);font-variant-numeric:tabular-nums}
+  .col{width:150px;flex:none;border-right:1px solid #eef0f2;position:relative}.col:last-child{border-right:none}
+  .colhead{height:32px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border-bottom:1px solid #e6e7eb;background:#f7f8fa}
+  .memo{padding:6px 7px;border-bottom:1px solid #e6e7eb;font-size:10px;line-height:1.45;color:#3f4453;height:64px;overflow:hidden;position:relative;cursor:pointer}
+  .memo .clip{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .memo .mm{color:#8a90a0}
+  .memo.hasmore::after{content:'⋯';position:absolute;right:5px;bottom:2px;color:#aeb4c0;font-weight:800;background:#fff;padding-left:3px}
+  #tip{position:fixed;display:none;max-width:240px;background:#0D1B2A;color:#fff;font-size:11px;line-height:1.5;padding:9px 11px;border-radius:9px;box-shadow:0 8px 24px rgba(13,27,42,.28);z-index:50}
+  .body{position:relative}
+  .grid-h{position:absolute;left:0;right:0;border-top:1px solid #f3f4f6}
+  .blk{position:absolute;left:3px;right:3px;border-radius:6px;overflow:hidden;padding:3px 6px}
+  .blk .tm{font-weight:800;font-size:10.5px;font-variant-numeric:tabular-nums;display:block;line-height:1.15}
+  .blk .cat{font-weight:600;font-size:9.5px;display:block;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .blk .stat{font-size:9.5px;line-height:1.5;font-weight:600}
+  .blk .stat b{font-weight:800;font-size:10.5px}
+</style></head>
+<body>
+<h2>수면·루틴 타임라인</h2>
+<div class="sub">세션 가이드 준비용 · 분 단위 · 입면/침대밖·밤중깸 반영 · 최근 4일</div>
+<div class="wrap" id="tl"></div>
+<div id="leg" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:#4b5563;font-weight:600"></div>
+<script>
+// 루틴 로그 칩 스타일: 연한 파스텔 배경(bg) + 컬러 텍스트(c) 그대로
+const T={
+ training:{l:'훈련',c:'#4355B0',bg:'#eef0fb'},
+ caffeine:{l:'카페인',c:'#B9770E',bg:'#fbf3e6'},
+ nap:{l:'낮잠',c:'#3aa7cf',bg:'#e8f5fb'},
+ meal:{l:'식사',c:'#1F8A4C',bg:'#e7f4ec'},
+ alcohol:{l:'술',c:'#F4978E',bg:'#fdeeeb'},
+ etc:{l:'기타',c:'#6b7280',bg:'#f1f2f4'},
+};
+const ASLEEP='#2a4a78', AWAKE='#c2cbd8'; // 수면=네이비블루(검정X), 누워있음/깬채=옅은 틴트
+const LEGEND=[['수면','#2a4a78'],['누워있음/깬 채','#c2cbd8'],['훈련','#4355B0'],['카페인','#B9770E'],['낮잠','#3aa7cf'],['식사','#1F8A4C'],['술','#F4978E'],['기타','#6b7280']];
+const SOL={'바로 잠들어요':4,'15분 이내':12,'30분쯤':30,'1시간쯤':60,'1시간 이상':90,null:0};
+const OUT={'바로 나왔어요':0,'10분 이내':8,'30분쯤':30,'1시간쯤':60,'1시간 이상':90};
+const DOW=['일','월','화','수','목','금','토'];
+const COLS=['2026-08-10','2026-08-11','2026-08-12','2026-08-13'];
+const idx=s=>COLS.indexOf(s);
+const dobj=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d))};
+const label=s=>{const d=dobj(s);return `${d.getUTCMonth()+1}/${d.getUTCDate()}(${DOW[d.getUTCDay()]})`};
+const fmt=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+
+const SLEEPS=[
+ {date:'2026-08-11',bed:30,sol:'바로 잠들어요',wake:405,out:'10분 이내',feel:'몸이 무거워요, 꿈을 많이 꿨어요',memo:'촬영이 늦어져 수면시간을 못 지켰어요',woke:1,waso:'10분 이내'},
+ {date:'2026-08-12',bed:1335,sol:null,wake:390,out:'10분 이내',feel:'아직 피곤해요, 꿈을 많이 꿨어요, 너무 졸려요, 머리가 아파요',memo:'손목이 아프고 생각이 많아 잠들기 어려웠어요',woke:1,waso:'1시간 이상'},
+ {date:'2026-08-13',bed:1395,sol:'30분쯤',wake:390,out:'30분쯤',feel:'꿈을 많이 꿨어요, 너무 졸려요, 아직 피곤해요, 몸이 무거워요',memo:'',woke:0,waso:null},
+];
+const ROUT=[
+ {date:'2026-08-11',t:450,type:'training',d:'가벼움·1시간',dur:60},{date:'2026-08-11',t:555,type:'meal',d:'아침',dur:30},{date:'2026-08-11',t:735,type:'meal',d:'점심',dur:30},{date:'2026-08-11',t:810,type:'caffeine',d:'½잔',dur:20},
+ {date:'2026-08-12',t:435,type:'meal',d:'아침',dur:30},{date:'2026-08-12',t:540,type:'etc',d:'도수치료·2시간',dur:120},{date:'2026-08-12',t:600,type:'nap',d:'~20분',dur:20},{date:'2026-08-12',t:795,type:'meal',d:'점심',dur:30},{date:'2026-08-12',t:870,type:'nap',d:'1시간',dur:60},{date:'2026-08-12',t:1065,type:'training',d:'중간·1시간',dur:60},{date:'2026-08-12',t:1185,type:'meal',d:'저녁',dur:30},
+ {date:'2026-08-13',t:480,type:'training',d:'중간·1시간',dur:60},{date:'2026-08-13',t:570,type:'meal',d:'아침',dur:30},{date:'2026-08-13',t:720,type:'training',d:'중간·2시간',dur:120},{date:'2026-08-13',t:840,type:'meal',d:'점심',dur:30},{date:'2026-08-13',t:990,type:'nap',d:'~20분',dur:20},{date:'2026-08-13',t:1245,type:'meal',d:'저녁',dur:30},
+];
+
+const PXH=40, H=24*PXH;
+const abs=(d,c)=>d*1440+c;
+const colStart=c=>c*1440+360;
+function segs(a,b){const o=[];for(let c=0;c<COLS.length;c++){const s=colStart(c),e=s+1440,os=Math.max(a,s),oe=Math.min(b,e);if(oe>os)o.push({col:c,top:(os-s)/60*PXH,h:(oe-os)/60*PXH})}return o}
+const BLOCKS=[];
+function place(a,b,st){segs(a,b).forEach((sg,i)=>BLOCKS.push({...sg,...st,isStart:i===0}))}
+for(const rt of ROUT){const di=idx(rt.date);if(di<0)continue;const a=abs(di,rt.t);place(a,a+(rt.dur||30),{kind:'rout',bg:T[rt.type].bg,fg:T[rt.type].c,time:fmt(rt.t),cat:T[rt.type].l+(rt.d?' '+rt.d:'')})}
+for(const s of SLEEPS){const D=idx(s.date);const bedDay=s.bed>s.wake?D-1:D;const bA=abs(bedDay,s.bed),wA=abs(D,s.wake);const sol=SOL[s.sol]||0,out=OUT[s.out]||0;
+ if(sol>0)place(bA,bA+sol,{kind:'awake',bg:AWAKE,tip:'누워있음 '+sol+'분'});
+ const stat='<b>취침 '+fmt(s.bed)+'</b><br>기상 '+fmt(s.wake)+'<br>입면 '+sol+'분 · 침대밖 '+out+'분'+(s.woke?'<br>밤중깸 '+s.woke+'회'+(s.waso?' ('+s.waso+')':''):'<br>밤중깸 없음');
+ place(bA+sol,wA,{kind:'sleep',bg:ASLEEP,fg:'#fff',stat,wake:fmt(s.wake)});
+ if(out>0)place(wA,wA+out,{kind:'awake',bg:AWAKE,tip:'침대밖 '+out+'분'});
+}
+
+let html='';
+html+='<div class="axis"><div class="colhead"></div><div class="memo"></div><div class="body" style="height:'+H+'px">';
+for(let r=0;r<=24;r++){const h=(r+6)%24;html+='<div class="ah" style="top:'+(r*PXH)+'px">'+String(h).padStart(2,'0')+':00</div>'}
+html+='</div></div>';
+COLS.forEach((cd,ci)=>{
+  html+='<div class="col"><div class="colhead">'+label(cd)+'</div>';
+  const sl=SLEEPS.find(s=>s.date===cd);
+  const full=sl?((sl.feel+(sl.memo?' — '+sl.memo:'')).replace(/"/g,'&quot;')):'';
+  const inner=sl?(sl.feel+(sl.memo?'<span class="mm"> '+sl.memo+'</span>':'')):'';
+  html+='<div class="memo'+(full.length>42?' hasmore':'')+'" data-full="'+full+'" title="'+full+'">'+(sl?'<div class="clip">'+inner+'</div>':'')+'</div>';
+  html+='<div class="body" style="height:'+H+'px">';
+  for(let r=0;r<=24;r++)html+='<div class="grid-h" style="top:'+(r*PXH)+'px"></div>';
+  BLOCKS.filter(b=>b.col===ci).forEach(b=>{
+    const hh=Math.max(b.h,6); let content='', pad='3px 6px';
+    if(b.kind==='awake'){ pad='1px 6px'; content=(b.h>=15?'<span class="cat" style="color:#33405c;font-weight:700;font-size:9px">'+b.tip+'</span>':''); }
+    else if(b.kind==='sleep'){ content=(b.isStart&&b.h>=44)?'<div class="stat">'+b.stat+'</div>':(!b.isStart?'<span class="cat" style="color:#fff;font-weight:700;font-size:9px">기상 '+b.wake+'</span>':''); }
+    else { // 루틴
+      if(b.h>=30) content='<span class="tm">'+b.time+'</span><span class="cat">'+b.cat+'</span>';
+      else if(b.h>=16){ pad='2px 6px'; content='<span class="cat" style="font-weight:700">'+b.cat+'</span>'; }
+      else { pad='0 6px'; content='<span class="cat" style="font-size:8.5px;font-weight:700">'+T_short(b.cat)+'</span>'; }
+    }
+    html+='<div class="blk" style="top:'+b.top+'px;height:'+hh+'px;background:'+b.bg+';color:'+b.fg+';padding:'+pad+'">'+content+'</div>';
+  });
+  html+='</div></div>';
+});
+function T_short(cat){return cat.split(' ')[0]} // 아주 작은 블록은 종류명만
+document.getElementById('tl').innerHTML=html;
+document.getElementById('leg').innerHTML=LEGEND.map(([l,c])=>'<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:'+c+';display:inline-block"></span>'+l+'</span>').join('');
+// 메모 넘치면 클릭(모바일)/호버(PC=title 네이티브)으로 전체 보기
+const tip=document.createElement('div');tip.id='tip';document.body.appendChild(tip);
+document.querySelectorAll('.memo').forEach(el=>{ if(!el.dataset.full)return;
+  el.addEventListener('click',e=>{e.stopPropagation();tip.innerHTML=el.dataset.full;tip.style.display='block';const r=el.getBoundingClientRect();tip.style.left=Math.min(r.left,window.innerWidth-252)+'px';tip.style.top=(r.bottom+4)+'px';});
+});
+document.addEventListener('click',()=>{tip.style.display='none';});
+</script>
+</body></html>

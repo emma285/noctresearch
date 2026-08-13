@@ -115,17 +115,8 @@ export default function SessionNoteForm({ session }) {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[520px] pb-[calc(84px+env(safe-area-inset-bottom))]">
-      <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-2 flex items-center gap-3 border-b border-border">
-        <Link href="/portal" className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-[18px] font-bold tracking-[-0.3px] leading-tight">{title} · 코칭 노트</h1>
-          {dateLabel ? <div className="text-[13px] text-muted-foreground">{dateLabel}</div> : null}
-        </div>
-        <Link href={`/session/${session.id}`} target="_blank" className="flex items-center gap-1.5 text-[13px] font-semibold text-primary px-2.5 py-1.5 rounded-lg bg-primary/10"><Eye className="w-4 h-4" />선수 화면</Link>
-      </div>
-
-      <div className="px-5 py-5">
+    <>
+      <div className="px-5 pt-4 pb-5">
         {/* 세션 녹음 업로드 (드래그드롭 + 클릭) */}
         {audioUrl && upPct === null ? (
           <div className="flex items-center gap-3 border border-border rounded-xl p-3 bg-card">
@@ -196,6 +187,6 @@ export default function SessionNoteForm({ session }) {
           {saving ? "저장 중…" : saved ? "저장됨 ✓" : "저장"}
         </button>
       </div>
-    </div>
+    </>
   );
 }
