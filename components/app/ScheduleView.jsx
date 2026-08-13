@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
 import CalendarMonth from "./CalendarMonth";
+import BottomNav from "./BottomNav";
 
 const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0ab", 경기: "#F4978E", 이동: "#7EC8E3", 훈련: "#A0B0FF", 기타: "#6b7280" };
 const ATHLETE_TYPES = ["경기", "이동", "훈련", "기타"];
@@ -48,7 +49,7 @@ export default function ScheduleView({ events = [], myPageId, today }) {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[430px] flex flex-col">
+    <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[430px] flex flex-col pb-[calc(72px+env(safe-area-inset-bottom))]">
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-2 flex items-center gap-3 flex-shrink-0">
         <button onClick={() => router.push("/portal")} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></button>
         <h1 className="text-[20px] font-bold tracking-[-0.3px]">일정</h1>
@@ -79,6 +80,9 @@ export default function ScheduleView({ events = [], myPageId, today }) {
           </div>
         )}
       </div>
+
+      {/* 하단 공용 4탭 네비 (다른 페이지와 동일) */}
+      <BottomNav />
 
       {/* 추가/수정 폼 (전체화면) */}
       {form ? (
