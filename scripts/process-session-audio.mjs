@@ -66,15 +66,44 @@ async function fetchAndCompress(url, id) {
   return mp3;
 }
 
+// Whisper 단일 파일 전사. 재시도 2회(네트워크 흔들림 대비).
+async function transcribeOne(file) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const fd = new FormData();
+      fd.append("file", new Blob([readFileSync(file)], { type: "audio/mpeg" }), "audio.mp3");
+      fd.append("model", "whisper-1");
+      fd.append("language", "ko");
+      fd.append("response_format", "text");
+      const r = await fetch("https://api.openai.com/v1/audio/transcriptions", { method: "POST", headers: { authorization: `Bearer ${OPENAI}` }, body: fd });
+      if (!r.ok) throw new Error(`Whisper ${r.status}: ${(await r.text()).slice(0, 200)}`);
+      return (await r.text()).trim();
+    } catch (e) {
+      if (attempt >= 3) throw e;
+      log(`    전사 재시도 ${attempt} (${e.message})`);
+      await new Promise((res) => setTimeout(res, 3000));
+    }
+  }
+}
+
+// 긴 세션 오디오는 10분 단위로 분할 전사 (undici 5분 headersTimeout·25MB 한계 회피 후 합침).
 async function transcribe(mp3) {
-  const fd = new FormData();
-  fd.append("file", new Blob([readFileSync(mp3)], { type: "audio/mpeg" }), "audio.mp3");
-  fd.append("model", "whisper-1");
-  fd.append("language", "ko");
-  fd.append("response_format", "text");
-  const r = await fetch("https://api.openai.com/v1/audio/transcriptions", { method: "POST", headers: { authorization: `Bearer ${OPENAI}` }, body: fd });
-  if (!r.ok) throw new Error(`Whisper ${r.status}: ${(await r.text()).slice(0, 200)}`);
-  return (await r.text()).trim();
+  const dir = tmpdir();
+  const base = `chunk_${Date.now()}`;
+  const pattern = join(dir, `${base}_%03d.mp3`);
+  execFileSync("ffmpeg", ["-y", "-i", mp3, "-f", "segment", "-segment_time", "600", "-c", "copy", pattern], { stdio: "ignore" });
+  const parts = [];
+  for (let i = 0; ; i++) { const f = join(dir, `${base}_${String(i).padStart(3, "0")}.mp3`); if (!existsSync(f)) break; parts.push(f); }
+  if (parts.length === 0) parts.push(mp3); // 분할 안 되면 통째로
+  if (parts.length > 1) log(`  ${parts.length}개 조각으로 분할 전사`);
+  let full = "";
+  for (let i = 0; i < parts.length; i++) {
+    const t = await transcribeOne(parts[i]);
+    full += (full ? " " : "") + t;
+    if (parts[i] !== mp3) { try { unlinkSync(parts[i]); } catch {} }
+    if (parts.length > 1) log(`    조각 ${i + 1}/${parts.length} 전사 완료`);
+  }
+  return full.trim();
 }
 
 const SYS = `너는 Emma(소정)의 수면코칭 노트 작성 도우미다. 코칭 세션 전사(코치·선수 대화)를 읽고 두 종류의 노트를 한국어로 만든다.
@@ -101,23 +130,59 @@ const SYS = `너는 Emma(소정)의 수면코칭 노트 작성 도우미다. 코
 - em dash(—) 금지 · 번역투 금지 · 전사에 없는 사실 지어내지 말 것 · 애매하면 비워둠.
 반드시 JSON만 출력: {"detail":{"chief":"","review":"","status":"","hypothesis":"","plan":"","next":"","memo":""},"public":{"summary":"","actions":[],"comment":""},"nextSessionDate":""}`;
 
+// tool_use(structured output)로 항상 유효 JSON 강제 — 문단 내 줄바꿈/따옴표로 인한 JSON.parse 실패 방지.
+const NOTE_TOOL = {
+  name: "save_coaching_note",
+  description: "코칭 세션 상세/공개 노트를 저장한다.",
+  input_schema: {
+    type: "object",
+    properties: {
+      detail: {
+        type: "object",
+        properties: {
+          chief: { type: "string", description: "주요 호소(선수 인용 위주)" },
+          review: { type: "string", description: "지난 주 리뷰. 1회차거나 없으면 빈 문자열" },
+          status: { type: "string", description: "현재 상태(수면 패턴 등 사실)" },
+          hypothesis: { type: "string", description: "가설·원인 구조" },
+          plan: { type: "string", description: "이번 주 처방 + 근거" },
+          next: { type: "string", description: "다음 세션에 다룰 것·관찰 포인트" },
+          memo: { type: "string", description: "코치 메모" },
+        },
+        required: ["chief", "review", "status", "hypothesis", "plan", "next", "memo"],
+      },
+      public: {
+        type: "object",
+        properties: {
+          summary: { type: "string", description: "세션 요약 2~3문장, 친근체" },
+          actions: { type: "array", items: { type: "string" }, description: "이번 주 함께 해볼 것 2~4개" },
+          comment: { type: "string", description: "코치 한마디 1~2문장" },
+        },
+        required: ["summary", "actions", "comment"],
+      },
+      nextSessionDate: { type: "string", description: "다음 세션 ISO(YYYY-MM-DDTHH:MM:00+09:00). 불명확하면 빈 문자열" },
+    },
+    required: ["detail", "public", "nextSessionDate"],
+  },
+};
+
 async function generate(transcript, n) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": ANTHROPIC, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
-      max_tokens: 2500,
+      max_tokens: 5000,
       system: SYS.replace("{TODAY}", kstToday()),
-      messages: [{ role: "user", content: `${n ? n + "회차 " : ""}코칭 세션 전사예요. 상세 노트와 공개 노트를 만들어 주세요. JSON만 출력.\n\n${transcript.slice(0, 100000)}` }],
+      tools: [NOTE_TOOL],
+      tool_choice: { type: "tool", name: "save_coaching_note" },
+      messages: [{ role: "user", content: `${n ? n + "회차 " : ""}코칭 세션 전사예요. save_coaching_note 도구로 상세·공개 노트를 채워 주세요.\n\n${transcript.slice(0, 100000)}` }],
     }),
   });
   if (!r.ok) throw new Error(`Claude ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const j = await r.json();
-  let txt = (j.content?.[0]?.text || "").trim().replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
-  const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
-  if (a >= 0 && b > a) txt = txt.slice(a, b + 1);
-  return JSON.parse(txt);
+  const tu = (j.content || []).find((c) => c.type === "tool_use");
+  if (!tu?.input) throw new Error("Claude tool_use 응답 없음");
+  return tu.input;
 }
 
 // ── 세션에 저장 (공개=false 유지). detail에 nextSessionDate 병합(공개 시 다음세션 날짜로 사용) ──

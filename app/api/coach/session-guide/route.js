@@ -80,7 +80,7 @@ export async function POST(request) {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 2500, system: SYS, messages: [{ role: "user", content: userMsg }] }),
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, system: SYS, messages: [{ role: "user", content: userMsg }] }),
     });
     if (!r.ok) return NextResponse.json({ success: false, message: "AI 생성 실패: " + (await r.text()).slice(0, 150) }, { status: 500 });
     const j = await r.json();
