@@ -32,8 +32,17 @@ const SYS = `너는 Emma(소정)의 수면코칭 세션 준비 도우미다. 코
 입력: 선수의 최근 수면·루틴 로그 요약 + 코치가 이번에 논의하려는 포인트 + (있으면) 지난 세션 노트.
 로그의 실제 패턴(입면 지연·침대밖 시간·밤중깸·훈련/카페인/낮잠 타이밍 등)을 근거로, 코치가 세션에서 쓸 준비 문서를 만든다.
 
-한국어. 친근하지만 실무적으로. em dash(—) 금지. 로그에 없는 사실 지어내지 말 것. 각 항목 갈래가 여럿이면 "1. 2. 3." 넘버링 + 줄바꿈(\\n).
-반드시 JSON만 출력: {"goal":"이번 세션 목표 1~2문장","topics":"논의 주제(코치 논의포인트를 데이터 근거와 연결해 정리)","checks":"확인·점검할 것(로그에서 관찰된 패턴 기반)","questions":"세션에서 던질 질문 몇 개"}`;
+한국어. 친근하지만 실무적으로. em dash(—) 금지. 로그에 없는 사실 지어내지 말 것. 각 항목 갈래가 여럿이면 "1. 2. 3." 넘버링 + 줄바꿈.
+
+정확히 아래 형식으로만 출력해라. 다른 인삿말·설명 없이 4개 섹션만. 각 섹션 헤더는 반드시 대괄호 그대로:
+[[목표]]
+(이번 세션 목표 1~2문장)
+[[논의주제]]
+(코치 논의포인트를 데이터 근거와 연결해 정리)
+[[확인]]
+(로그에서 관찰된 패턴 기반으로 확인·점검할 것)
+[[질문]]
+(세션에서 던질 질문 몇 개)`;
 
 export async function POST(request) {
   try {
@@ -71,14 +80,18 @@ export async function POST(request) {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1800, system: SYS, messages: [{ role: "user", content: userMsg }] }),
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 2500, system: SYS, messages: [{ role: "user", content: userMsg }] }),
     });
     if (!r.ok) return NextResponse.json({ success: false, message: "AI 생성 실패: " + (await r.text()).slice(0, 150) }, { status: 500 });
     const j = await r.json();
-    let txt = (j.content?.[0]?.text || "").trim().replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
-    const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
-    if (a >= 0 && b > a) txt = txt.slice(a, b + 1);
-    let gen; try { gen = JSON.parse(txt); } catch { return NextResponse.json({ success: false, message: "AI 응답 파싱 실패" }, { status: 500 }); }
+    const txt = (j.content?.[0]?.text || "").trim();
+    // [[섹션]] 구분자 파싱 — 멀티라인 안전
+    const grab = (tag) => { const m = txt.match(new RegExp("\\[\\[\\s*" + tag + "\\s*\\]\\]([\\s\\S]*?)(?=\\[\\[|$)")); return m ? m[1].trim() : ""; };
+    const gen = { goal: grab("목표"), topics: grab("논의주제"), checks: grab("확인"), questions: grab("질문") };
+    if (!gen.goal && !gen.topics && !gen.checks && !gen.questions) {
+      console.error("session-guide parse empty, raw:", txt.slice(0, 200));
+      return NextResponse.json({ success: false, message: "AI 응답 파싱 실패: " + txt.slice(0, 80) }, { status: 500 });
+    }
 
     const merged = { discuss: discuss || "", goal: gen.goal || "", topics: gen.topics || "", checks: gen.checks || "", questions: gen.questions || "", memo: (s.guide?.memo) || "" };
     await db.update(sessions).set({ guide: merged }).where(eq(sessions.id, sessionId));

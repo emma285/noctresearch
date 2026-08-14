@@ -46,7 +46,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [] }) {
 
   return (
     <div onClick={() => setTip(null)}>
-      <div style={{ display: "flex", border: "1px solid #e6e7eb", borderRadius: 12, overflowX: "auto", overflowY: "hidden" }}>
+      <div style={{ display: "flex", border: "1px solid #e6e7eb", borderRadius: 12, overflowX: "auto", overflowY: "hidden", background: "#fff" }}>
         {/* 축 */}
         <div style={{ width: 50, flexShrink: 0, borderRight: "1px solid #eef0f2", position: "sticky", left: 0, background: "#fff", zIndex: 2 }}>
           <div style={{ height: 32, borderBottom: "1px solid #e6e7eb", background: "#fff" }} />
