@@ -81,7 +81,7 @@ const CSS = `
 export default function CoachDashboard({ coachName = "코치", athletes = [] }) {
   const total = athletes.length;
   const intakeDoneCount = athletes.filter((a) => a.intakeDone).length;
-  const assignedCount = athletes.filter((a) => a.firstSessionAt || a.sessionLabel).length;
+  const ongoingCount = athletes.filter((a) => a.ongoing).length;
 
   return (
     <div className="noct-coach">
@@ -97,8 +97,8 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
           <h1>{coachName} <span>코치</span></h1>
           <div className="kpis">
             <div className="kpi"><span className="kv">{total}</span><span className="kk">담당 선수</span></div>
+            <div className="kpi"><span className="kv">{ongoingCount}</span><span className="kk">진행중</span></div>
             <div className="kpi"><span className="kv">{intakeDoneCount}</span><span className="kk">설문 완료</span></div>
-            <div className="kpi"><span className="kv">{assignedCount}</span><span className="kk">세션 배정</span></div>
           </div>
         </div>
 
@@ -107,7 +107,7 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
             <div className="sec-label">Athletes</div>
             <div className="sec-title">담당 선수</div>
           </div>
-          <span className="count">가입 순</span>
+          <span className="count">진행중 먼저</span>
         </div>
 
         {total === 0 ? (
@@ -117,12 +117,13 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
             {athletes.map((a) => (
               <Link className="acard" key={a.uid} href={a.email ? `/coach/clients/${encodeURIComponent(a.email)}` : `/coach/athlete/${a.uid}`}>
                 <div>
-                  <div className="aname">{a.name}<span>선수</span></div>
+                  <div className="aname">{a.name}<span>{a.sport || "선수"}</span></div>
                   {a.email && <div className="aemail">{a.email}</div>}
                   <div className="ameta">
+                    {a.ongoing && <span className="chip g">{a.status || "진행중"}</span>}
                     <span className={`chip ${a.intakeDone ? "g" : "w"}`}>{a.intakeDone ? "설문 완료" : "설문 대기"}</span>
-                    <span className="chip">세션 <b>{a.sessionLabel || (a.firstSessionAt ? a.firstSessionAt.slice(0, 10) : "미배정")}</b></span>
-                    <span className="chip">프로그램 <b>{a.programWeeks ? `${a.programWeeks}주` : "미정"}</b></span>
+                    <span className="chip">다음 세션 <b>{a.sessionLabel || "미배정"}</b></span>
+                    <span className="chip">프로그램 <b>{a.programLabel || "미정"}</b></span>
                   </div>
                 </div>
                 <div className="ago">→</div>

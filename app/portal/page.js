@@ -6,7 +6,7 @@ import { Calendar, Upload } from "lucide-react";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import Link from "next/link";
-import { getAthleteByEmail, getSessionsByAthlete } from "../../lib/master";
+import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday } from "../../lib/log";
 
@@ -22,31 +22,36 @@ async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
 }
 
-// 코치 대시보드용 선수 목록 (코치 본인·다른 코치 제외). 실패 시 빈 배열.
+// 코치 대시보드용 선수 목록 — Neon clients(단일 소스). 코치 본인/다른 코치 제외. 실패 시 빈 배열.
+// 정렬: 진행중 → 온보딩/설문 → 대기 순, 같은 그룹은 다음 세션 가까운 순.
+const INTAKE_DONE_STATES = ["intake제출", "온보딩완료", "진행중", "종료"];
+const ONGOING_STATES = ["진행중", "종료"];
+function progShort(program) {
+  if (!program) return "미정";
+  return /(\d+주)/.exec(program)?.[1] || (program.includes("케어") ? "케어" : program);
+}
 async function getAthletes() {
   try {
-    const cc = await getClerk();
-    const res = await cc.users.getUserList({ limit: 200, orderBy: "-created_at" });
-    const list = Array.isArray(res) ? res : res?.data || [];
-    return list
-      .filter((u) => {
-        const em = u?.emailAddresses?.[0]?.emailAddress;
-        return em && !COACH_EMAILS.includes(String(em).toLowerCase());
-      })
-      .map((u) => ({
-        uid: u.id,
-        name: u?.unsafeMetadata?.name || u?.firstName || u?.username || u?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "이름 미상",
-        email: u?.emailAddresses?.[0]?.emailAddress || "",
-        intakeDone: u?.publicMetadata?.intakeDone === true,
-        prepDone: u?.publicMetadata?.prepDone === true,
-        firstSessionAt: u?.publicMetadata?.firstSessionAt || "",
-        sessionLabel: u?.publicMetadata?.sessionLabel || "",
-        programWeeks: u?.publicMetadata?.programWeeks || "",
-        reportUrl: u?.publicMetadata?.reportUrl || "",
-        guideUrl: u?.publicMetadata?.guideUrl || "",
-        dataUrl: u?.publicMetadata?.dataUrl || "",
+    const rows = await getAllAthletes();
+    const list = rows
+      .filter((a) => a.email && !COACH_EMAILS.includes(String(a.email).toLowerCase()))
+      .map((a) => ({
+        uid: a.pageId,
+        email: a.email,
+        name: a.name || a.email.split("@")[0],
+        status: a.status || "",
+        intakeDone: INTAKE_DONE_STATES.includes(a.status),
+        ongoing: ONGOING_STATES.includes(a.status),
+        nextSession: a.nextSession || "",
+        sessionLabel: a.nextSession ? mmdd(a.nextSession) : "",
+        programLabel: progShort(a.program),
+        sport: a.sport || "",
       }));
-  } catch {
+    const rank = (a) => (a.ongoing ? 0 : a.intakeDone ? 1 : 2);
+    list.sort((x, y) => rank(x) - rank(y) || (x.nextSession && y.nextSession ? x.nextSession.localeCompare(y.nextSession) : x.nextSession ? -1 : y.nextSession ? 1 : x.name.localeCompare(y.name)));
+    return list;
+  } catch (e) {
+    console.error("getAthletes(Neon) failed:", e?.message);
     return [];
   }
 }
