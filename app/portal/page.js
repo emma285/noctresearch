@@ -214,6 +214,7 @@ export default async function PortalPage({ searchParams }) {
                       title={s.n ? `${s.n}회차 코칭 세션` : (s.title || "코칭 세션")}
                       sub="코칭 노트 보기"
                       href={`/session/${s.id}`}
+                      isNew={s.isNew}
                     />
                   ))}
                 </Surface>

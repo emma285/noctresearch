@@ -5,15 +5,20 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import AppShell, { AppBody } from "../../../components/app/AppShell";
 import { Surface, SectionHeader } from "../../../components/app/primitives";
-import { getSessionById } from "../../../lib/master";
+import { getSessionById, markSessionSeen } from "../../../lib/master";
+import { isCoachEmail } from "../../../lib/coach";
 
 export const metadata = { title: "코칭 노트 | NOCT" };
 export const dynamic = "force-dynamic"; // 저장 직후 바로 반영 (캐시 방지)
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default async function SessionNotePage({ params }) {
-  await currentUser();
+  const user = await currentUser();
   const s = await getSessionById(params.id);
+  // 선수 본인이 공개된 노트를 열면 '봤음' 기록 → 홈 NEW 해제 (코치 프리뷰는 제외)
+  if (s?.published && !isCoachEmail(user?.emailAddresses?.[0]?.emailAddress)) {
+    await markSessionSeen(s.id);
+  }
 
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s?.date || "");
   const dateLabel = m ? `${+m[2]}월 ${+m[3]}일 (${DOW[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()]})` : "";

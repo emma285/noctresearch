@@ -29,6 +29,13 @@
       "when": 1786664532564,
       "tag": "0003_mean_marvex",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786676910082,
+      "tag": "0004_large_power_man",
+      "breakpoints": true
     }
   ]
 }

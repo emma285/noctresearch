@@ -86,8 +86,8 @@ export function MetricRow({ children, className }) {
   return <div className={cn("flex", className)}>{children}</div>;
 }
 
-/* ReportRow — 날짜/차수 + 제목 + 서브 + chevron. soon=예정(연하게) */
-export function ReportRow({ date, badge, title, sub, href, soon = false }) {
+/* ReportRow — 날짜/차수 + 제목 + 서브 + chevron. soon=예정(연하게). isNew=새 공개 노트(강조+NEW) */
+export function ReportRow({ date, badge, title, sub, href, soon = false, isNew = false }) {
   const inner = (
     <>
       <div className="w-[64px] shrink-0">
@@ -95,13 +95,18 @@ export function ReportRow({ date, badge, title, sub, href, soon = false }) {
         {badge ? <div className={cn("text-[11px] font-semibold mt-1", soon ? "text-[#AAB0BB]" : "text-primary")}>{badge}</div> : null}
       </div>
       <div className="flex-1 min-w-0">
-        <div className={cn("text-base font-semibold tracking-[-0.01em]", soon ? "text-[#AAB0BB]" : "text-foreground")}>{title}</div>
-        {sub ? <div className="text-[13px] text-muted-foreground mt-0.5">{sub}</div> : null}
+        <div className={cn("text-base font-semibold tracking-[-0.01em] flex items-center gap-1.5", soon ? "text-[#AAB0BB]" : "text-foreground")}>
+          {title}
+          {isNew ? <span className="text-[10.5px] font-extrabold text-white bg-[#EC4A54] px-[7px] py-[2px] rounded-full tracking-[0.3px] leading-none">NEW</span> : null}
+        </div>
+        {isNew
+          ? <div className="text-[13px] font-semibold text-primary mt-0.5">새 코칭노트가 추가됐어요</div>
+          : (sub ? <div className="text-[13px] text-muted-foreground mt-0.5">{sub}</div> : null)}
       </div>
-      {!soon && href ? <ChevronRight className="w-[18px] h-[18px] text-[#B7BDC7] shrink-0" /> : null}
+      {!soon && href ? <ChevronRight className={cn("w-[18px] h-[18px] shrink-0", isNew ? "text-primary" : "text-[#B7BDC7]")} /> : null}
     </>
   );
-  const base = "flex items-center gap-3.5 p-4 first:border-t-0 border-t border-border";
+  const base = cn("flex items-center gap-3.5 p-4 first:border-t-0 border-t border-border", isNew && "bg-[#f6f7fd]");
   if (href && !soon) return <Link href={href} className={cn(base, "active:bg-muted/40 transition-colors")}>{inner}</Link>;
   return <div className={base}>{inner}</div>;
 }

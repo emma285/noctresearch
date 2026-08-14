@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>새 코칭 노트 알림 — 목업</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#e9ebef;color:#111;letter-spacing:-.02em;padding:34px 20px 60px}
+  .lead{max-width:1380px;margin:0 auto 26px}
+  .lead h1{font-size:22px;font-weight:800;color:#0D1B2A;letter-spacing:-.5px}
+  .lead p{font-size:13.5px;color:#6b7280;margin-top:6px;line-height:1.6}
+  .row{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;max-width:1380px;margin:0 auto}
+  .col{width:420px;flex:0 0 420px}
+  .optlabel{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .optnum{width:24px;height:24px;border-radius:50%;background:#4355B0;color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .opttitle{font-size:15px;font-weight:800;color:#0D1B2A}
+  .optdesc{font-size:12.5px;color:#8a90a0;margin:0 0 12px 32px;line-height:1.5}
+
+  /* phone */
+  .phone{background:#fff;border-radius:30px;overflow:hidden;box-shadow:0 22px 60px rgba(13,27,42,.16);border:1px solid #e6e7eb}
+  .hero{position:relative;color:#fff;padding:46px 20px 26px;background:linear-gradient(155deg,#0C1826 0%,#1d3252 100%)}
+  .hero .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .hero .name{font-size:27px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+  .hero .name small{font-size:14px;font-weight:500;opacity:.55;margin-left:6px}
+  .hbadge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:#cfe0ff;white-space:nowrap}
+  .hbadge .dot{width:6px;height:6px;border-radius:50%;background:#7EC8E3}
+  .bell{position:relative;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:#dce6f7}
+  .bell svg{width:18px;height:18px}
+  .bell .cnt{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#EC4A54;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #142845}
+  .metrics{display:flex;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}
+  .metric{flex:1}
+  .metric .v{font-size:18px;font-weight:800;letter-spacing:-.3px;line-height:1}
+  .metric .v.acc{color:#7EC8E3}
+  .metric .k{font-size:11px;color:rgba(255,255,255,.6);margin-top:7px}
+
+  .body{padding:20px}
+  .sec{display:flex;align-items:center;justify-content:space-between;margin:22px 4px 11px}
+  .sec:first-child{margin-top:4px}
+  .sec h2{font-size:19px;font-weight:800;color:#111;letter-spacing:-.4px;display:flex;align-items:center;gap:8px}
+  .cntpill{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#EC4A54;color:#fff;font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+  .sec .more{font-size:13px;font-weight:700;color:#6b7280}
+
+  .card{background:#fff;border:1px solid #e6e7eb;border-radius:16px;overflow:hidden}
+  .listrow{display:flex;align-items:center;gap:12px;padding:15px 16px;border-top:1px solid #eef0f2}
+  .listrow:first-child{border-top:none}
+  .rdate{width:60px;flex:0 0 60px}
+  .rdate .d{font-size:13px;font-weight:700;color:#111}
+  .rdate .n{font-size:11px;font-weight:700;color:#4355B0;margin-top:3px}
+  .rmain{flex:1;min-width:0}
+  .rmain .t{font-size:15.5px;font-weight:700;color:#111;letter-spacing:-.2px;display:flex;align-items:center;gap:7px}
+  .rmain .s{font-size:12.5px;color:#6b7280;margin-top:3px}
+  .chev{color:#B7BDC7;font-size:18px;flex:0 0 auto}
+  .newpill{font-size:10.5px;font-weight:800;color:#fff;background:#EC4A54;padding:2px 7px;border-radius:999px;letter-spacing:.3px}
+  .reddot{width:8px;height:8px;border-radius:50%;background:#EC4A54;flex:0 0 auto}
+
+  /* next-session card */
+  .nextcard{padding:16px}
+  .nextcard .lab{display:inline-flex;align-items:center;gap:7px;color:#4355B0;font-size:12px;font-weight:800}
+  .nextcard .lab .cal{width:20px;height:20px}
+  .nextcard .big{font-size:18px;font-weight:800;color:#111;margin-top:10px;letter-spacing:-.3px}
+  .nextcard .sub{font-size:12.5px;color:#6b7280;margin-top:3px}
+
+  /* alert banner (opt1) */
+  .alert{display:flex;align-items:center;gap:12px;padding:15px 16px;background:linear-gradient(90deg,#fff,#fff);border:1px solid #f4c9cc;border-left:none;border-right:none}
+  .alertwrap{background:#fff;border:1px solid #e6e7eb;border-radius:16px;overflow:hidden}
+  .alert .ic{width:38px;height:38px;border-radius:11px;background:#fdecee;color:#EC4A54;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .alert .ic svg{width:19px;height:19px}
+  .alert .t{font-size:14.5px;font-weight:800;color:#111}
+  .alert .s{font-size:12.5px;color:#6b7280;margin-top:2px}
+
+  .rowhi{background:#f6f7fd}
+</style></head>
+<body>
+  <div class="lead">
+    <h1>선수 홈 — 새 코칭 노트 알림 "N" 표현 3안</h1>
+    <p>코치가 세션 노트 <b>공개 토글</b>을 켜면 → 선수 홈에 새 노트가 왔다고 표시. 아래 3가지 중 원하는 방향을 골라주세요.</p>
+  </div>
+  <div class="row">
+
+    <!-- ============ 옵션 1: 알림 배너 + 리스트 NEW ============ -->
+    <div class="col">
+      <div class="optlabel"><span class="optnum">1</span><span class="opttitle">알림 배너형</span></div>
+      <p class="optdesc">홈 맨 위에 눈에 띄는 알림 카드. 새 노트로 바로 이동. 가장 확실하게 알림.</p>
+      <div class="phone">
+        <div class="hero">
+          <div class="top">
+            <div><div class="name">윤이나<small>선수</small></div></div>
+            <span class="hbadge"><span class="dot"></span>코칭 진행중</span>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="v acc">D-4</div><div class="k">다음 세션</div></div>
+            <div class="metric"><div class="v">2<small style="font-size:11px;opacity:.7"> 회</small></div><div class="k">진행 세션</div></div>
+            <div class="metric"><div class="v">8주</div><div class="k">프로그램</div></div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="alertwrap" style="margin-top:4px">
+            <div class="alert">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg></span>
+              <div style="flex:1">
+                <div class="t">새 코칭 노트가 도착했어요</div>
+                <div class="s">2회차 코칭 세션 · 코치가 공개했어요</div>
+              </div>
+              <span class="reddot"></span>
+            </div>
+          </div>
+
+          <div class="sec"><h2>다음 세션</h2></div>
+          <div class="card"><div class="nextcard">
+            <span class="lab"><svg class="cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>3회차</span>
+            <div class="big">8월 18일(화) 오후 5시</div>
+            <div class="sub">D-4 · 3회차 코칭 세션</div>
+          </div></div>
+
+          <div class="sec"><h2>지난 세션</h2></div>
+          <div class="card">
+            <div class="listrow"><div class="rdate"><div class="d">08.14</div><div class="n">2회차</div></div><div class="rmain"><div class="t">2회차 코칭 세션 <span class="newpill">NEW</span></div><div class="s">코칭 노트 보기</div></div><span class="chev">›</span></div>
+            <div class="listrow"><div class="rdate"><div class="d">08.07</div><div class="n">1회차</div></div><div class="rmain"><div class="t">1회차 코칭 세션</div><div class="s">코칭 노트 보기</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 옵션 2: 종 아이콘 카운트 + 섹션 카운트 ============ -->
+    <div class="col">
+      <div class="optlabel"><span class="optnum">2</span><span class="opttitle">뱃지 미니멀형</span></div>
+      <p class="optdesc">히어로 우상단 종 아이콘에 빨간 숫자, 지난 세션 헤더에 개수. 깔끔하고 절제된 표현.</p>
+      <div class="phone">
+        <div class="hero">
+          <div class="top">
+            <div><div class="name">윤이나<small>선수</small></div></div>
+            <div style="display:flex;align-items:center;gap:9px">
+              <span class="bell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="cnt">1</span></span>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="v acc">D-4</div><div class="k">다음 세션</div></div>
+            <div class="metric"><div class="v">2<small style="font-size:11px;opacity:.7"> 회</small></div><div class="k">진행 세션</div></div>
+            <div class="metric"><div class="v">8주</div><div class="k">프로그램</div></div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="sec" style="margin-top:4px"><h2>다음 세션</h2></div>
+          <div class="card"><div class="nextcard">
+            <span class="lab"><svg class="cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>3회차</span>
+            <div class="big">8월 18일(화) 오후 5시</div>
+            <div class="sub">D-4 · 3회차 코칭 세션</div>
+          </div></div>
+
+          <div class="sec"><h2>지난 세션 <span class="cntpill">1</span></h2><span class="more">전체</span></div>
+          <div class="card">
+            <div class="listrow"><div class="rdate"><div class="d">08.14</div><div class="n">2회차</div></div><div class="rmain"><div class="t">2회차 코칭 세션 <span class="reddot"></span></div><div class="s">새 코칭 노트</div></div><span class="chev">›</span></div>
+            <div class="listrow"><div class="rdate"><div class="d">08.07</div><div class="n">1회차</div></div><div class="rmain"><div class="t">1회차 코칭 세션</div><div class="s">코칭 노트 보기</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 옵션 3: 행 강조형 ============ -->
+    <div class="col">
+      <div class="optlabel"><span class="optnum">3</span><span class="opttitle">행 강조형</span></div>
+      <p class="optdesc">지난 세션 목록에서 새 노트 행만 인디고 배경 + NEW. 알림이 리스트 안에서 자연스럽게 녹음.</p>
+      <div class="phone">
+        <div class="hero">
+          <div class="top">
+            <div><div class="name">윤이나<small>선수</small></div></div>
+            <span class="hbadge"><span class="dot"></span>코칭 진행중</span>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="v acc">D-4</div><div class="k">다음 세션</div></div>
+            <div class="metric"><div class="v">2<small style="font-size:11px;opacity:.7"> 회</small></div><div class="k">진행 세션</div></div>
+            <div class="metric"><div class="v">8주</div><div class="k">프로그램</div></div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="sec" style="margin-top:4px"><h2>다음 세션</h2></div>
+          <div class="card"><div class="nextcard">
+            <span class="lab"><svg class="cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>3회차</span>
+            <div class="big">8월 18일(화) 오후 5시</div>
+            <div class="sub">D-4 · 3회차 코칭 세션</div>
+          </div></div>
+
+          <div class="sec"><h2>지난 세션</h2></div>
+          <div class="card">
+            <div class="listrow rowhi"><div class="rdate"><div class="d">08.14</div><div class="n">2회차</div></div><div class="rmain"><div class="t">2회차 코칭 세션 <span class="newpill">NEW</span></div><div class="s" style="color:#4355B0;font-weight:600">새 코칭노트가 추가됐어요</div></div><span class="chev" style="color:#4355B0">›</span></div>
+            <div class="listrow"><div class="rdate"><div class="d">08.07</div><div class="n">1회차</div></div><div class="rmain"><div class="t">1회차 코칭 세션</div><div class="s">코칭 노트 보기</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body></html>
