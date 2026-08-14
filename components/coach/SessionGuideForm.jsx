@@ -66,6 +66,7 @@ export default function SessionGuideForm({ session, timeline }) {
           : <div className="bg-muted/40 border border-border rounded-xl py-8 text-center text-[13px] text-muted-foreground">최근 기록이 없어요.</div>}
       </section>
 
+      <div className="max-w-[760px] space-y-6">
       {/* 2) 코치 논의 입력 + AI 생성 */}
       <section className="space-y-2">
         <Field label="이번 세션에서 논의할 것 (코치 입력)" value={discuss} onChange={setDiscuss} rows={3} ph="예: 8/13 입면 30분 걸린 이유 · 카페인 타이밍 · 원정 앞두고 리듬 점검…" />
@@ -89,6 +90,7 @@ export default function SessionGuideForm({ session, timeline }) {
         className="w-full bg-navy text-white text-[15px] font-bold py-3.5 rounded-xl active:opacity-90 disabled:opacity-60">
         {saving ? "저장 중…" : saved ? "저장됨 ✓" : "가이드 저장"}
       </button>
+      </div>
     </div>
   );
 }
