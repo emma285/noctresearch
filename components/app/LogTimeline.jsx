@@ -49,7 +49,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [] }) {
       <div style={{ display: "flex", border: "1px solid #e6e7eb", borderRadius: 12, overflowX: "auto", overflowY: "hidden" }}>
         {/* 축 */}
         <div style={{ width: 50, flexShrink: 0, borderRight: "1px solid #eef0f2", position: "sticky", left: 0, background: "#fff", zIndex: 2 }}>
-          <div style={{ height: 32, borderBottom: "1px solid #e6e7eb", background: "#f7f8fa" }} />
+          <div style={{ height: 32, borderBottom: "1px solid #e6e7eb", background: "#fff" }} />
           <div style={{ height: 64, borderBottom: "1px solid #e6e7eb" }} />
           <div style={{ position: "relative", height: H }}>
             {hourLabels.map(({ r, h }) => (
@@ -62,8 +62,8 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [] }) {
           const sl = sleeps.find((s) => s.date === cd);
           const full = sl ? (sl.feel + (sl.memo ? " — " + sl.memo : "")) : "";
           return (
-            <div key={cd} style={{ flex: "1 0 150px", minWidth: 150, borderRight: ci === cols.length - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
-              <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, borderBottom: "1px solid #e6e7eb", background: "#f7f8fa" }}>{dlabel(cd)}</div>
+            <div key={cd} style={{ flex: "0 0 118px", borderRight: ci === cols.length - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
+              <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, borderBottom: "1px solid #e6e7eb", background: "#fff" }}>{dlabel(cd)}</div>
               <div onClick={(e) => full && openTip(e, full)} title={full}
                 style={{ height: 64, padding: "6px 7px", borderBottom: "1px solid #e6e7eb", fontSize: 10, lineHeight: 1.45, color: "#3f4453", overflow: "hidden", position: "relative", cursor: full ? "pointer" : "default" }}>
                 {sl && <div style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sl.feel}{sl.memo && <span style={{ color: "#8a90a0" }}> {sl.memo}</span>}</div>}
