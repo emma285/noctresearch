@@ -1,10 +1,11 @@
 "use client";
 // 코치 세션노트 (2겹). 상세 노트(내부) + 공개 노트(간략 3칸). 세션 녹음 업로드.
 // 저장은 "저장" 하나, 공개 여부는 "선수에게 공개" 토글로만 결정. (디자인 시스템 v2)
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
-import { ChevronLeft, Eye, Mic, Lock } from "lucide-react";
+import { ChevronLeft, Eye, Mic, Lock, Sparkles } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
@@ -70,6 +71,19 @@ export default function SessionNoteForm({ session }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const fileRef = useRef(null);
+  const router = useRouter();
+
+  // 생성 중 = 녹음 올렸는데 아직 노트 안 채워짐(로컬 프로세서가 5분 폴링으로 채움).
+  const generating = !!audioUrl && upPct === null && !detail.chief && !summary;
+  // 생성 중이면 15초마다 서버 데이터 새로고침 → 완료(chief 등장) 감지 시 폼 리로드해 내용 반영.
+  useEffect(() => {
+    if (!generating) return;
+    const iv = setInterval(() => router.refresh(), 15000);
+    return () => clearInterval(iv);
+  }, [generating, router]);
+  useEffect(() => {
+    if (audioUrl && !detail.chief && !summary && (session.detail?.chief || session.summary)) window.location.reload();
+  }, [session.detail?.chief, session.summary]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setD = (k, v) => setDetail((p) => ({ ...p, [k]: v }));
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(session.date || "");
@@ -145,6 +159,19 @@ export default function SessionNoteForm({ session }) {
           </button>
         )}
         <input ref={fileRef} type="file" accept="audio/*,.m4a" hidden onChange={onPickAudio} />
+
+        {/* AI 노트 생성 중 배너 — 녹음 올렸고 아직 노트 안 채워짐 */}
+        {generating ? (
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/[0.06] p-3.5">
+            <span className="w-9 h-9 rounded-lg bg-primary/12 text-primary flex items-center justify-center shrink-0">
+              <Sparkles className="w-[18px] h-[18px] animate-pulse" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] font-bold text-primary">AI가 코칭 노트를 작성하고 있어요</div>
+              <div className="text-[12.5px] text-muted-foreground mt-0.5">전사 + 초안까지 최대 5분 · 다 되면 자동으로 채워져요</div>
+            </div>
+          </div>
+        ) : null}
 
         {/* 탭 */}
         <div className="flex bg-background border border-border rounded-xl p-[3px] mt-4">
