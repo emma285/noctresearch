@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Search, ChevronRight, Sparkles, AlertCircle, CalendarDays } from "lucide-react";
 import CoachShell from "./CoachShell";
+import AthleteRow from "./AthleteRow";
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 function whenLabel(iso) {
@@ -74,29 +75,7 @@ export default function CoachDashboard({ coachName = "코치", athletes = [], ov
                     </tr>
                   </thead>
                   <tbody>
-                    {athletes.map((a) => (
-                      <tr key={a.uid} className="hover:bg-[#fafbfc]">
-                        <td className="px-4 py-3 border-b border-[#e7e9ed]">
-                          <Link href={`/coach/clients/${encodeURIComponent(a.email)}`} className="flex items-center gap-2.5">
-                            <span className="w-8 h-8 rounded-full bg-[#e4e7ec] flex-none flex items-center justify-center text-[12px] font-bold text-[#6b7280]">{(a.name || "선")[0]}</span>
-                            <span className="min-w-0"><span className="block text-[13px] font-bold text-[#1b2a3f] truncate">{a.name}</span><span className="block text-[11.5px] text-[#9298a2]">{a.sport || "선수"}</span></span>
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3 border-b border-[#e7e9ed]">
-                          <span className={`inline-block text-[11px] font-bold px-2.5 py-1 rounded-full ${a.ongoing ? "bg-[#e7f4ec] text-[#1f8a4c]" : "bg-[#eef0f3] text-[#6b7280]"}`}>{a.ongoing ? (a.status || "진행중") : (a.intakeDone ? "설문 완료" : "설문 대기")}</span>
-                        </td>
-                        <td className="px-4 py-3 border-b border-[#e7e9ed] text-[13px] text-[#3a3f48]">{a.sessionLabel || "미배정"}</td>
-                        <td className="px-4 py-3 border-b border-[#e7e9ed] text-[13px] text-[#3a3f48]">{a.programLabel || "미정"}</td>
-                        <td className="px-4 py-3 border-b border-[#e7e9ed]">
-                          <div className="flex gap-1.5 justify-end">
-                            {a.latestSessionId
-                              ? <Link href={`/coach/session/${a.latestSessionId}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">세션 가이드</Link>
-                              : null}
-                            <Link href={`/coach/clients/${encodeURIComponent(a.email)}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">상세</Link>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {athletes.map((a) => <AthleteRow key={a.uid} a={a} />)}
                   </tbody>
                 </table>
               </div>

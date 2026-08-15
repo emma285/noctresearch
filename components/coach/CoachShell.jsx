@@ -7,9 +7,9 @@ import LogoutButton from "../portal/LogoutButton";
 const NAV = [
   { key: "dashboard", label: "대시보드", href: "/portal", Icon: LayoutDashboard },
   { key: "athletes", label: "선수 관리", href: "/coach/clients", Icon: Users },
-  { key: "sessions", label: "세션", href: "/portal", Icon: ClipboardList, soon: true },
-  { key: "schedule", label: "일정", href: "/portal", Icon: CalendarDays, soon: true },
-  { key: "reports", label: "리포트", href: "/portal", Icon: FileText, soon: true },
+  { key: "sessions", label: "세션", href: "/coach/sessions", Icon: ClipboardList },
+  { key: "schedule", label: "일정", href: "/coach/schedule", Icon: CalendarDays },
+  { key: "reports", label: "리포트", href: "/coach/reports", Icon: FileText },
 ];
 
 export default function CoachShell({ active = "dashboard", coachName = "코치", children }) {
