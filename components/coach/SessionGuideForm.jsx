@@ -21,7 +21,9 @@ function Field({ label, value, onChange, rows, ph }) {
 
 export default function SessionGuideForm({ session, timeline }) {
   const g0 = session.guide || {};
+  const isFollowup = (session.n || 1) > 1;
   const [discuss, setDiscuss] = useState(g0.discuss || "");
+  const [review, setReview] = useState(g0.review || "");
   const [goal, setGoal] = useState(g0.goal || "");
   const [topics, setTopics] = useState(g0.topics || "");
   const [checks, setChecks] = useState(g0.checks || "");
@@ -38,7 +40,7 @@ export default function SessionGuideForm({ session, timeline }) {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: session.id, action: "generate", discuss }),
       }).then((r) => r.json());
-      if (r.success && r.guide) { setGoal(r.guide.goal || ""); setTopics(r.guide.topics || ""); setChecks(r.guide.checks || ""); setQuestions(r.guide.questions || ""); }
+      if (r.success && r.guide) { setReview(r.guide.review || ""); setGoal(r.guide.goal || ""); setTopics(r.guide.topics || ""); setChecks(r.guide.checks || ""); setQuestions(r.guide.questions || ""); }
       else alert(r.message || "생성 실패");
     } catch (e) { alert("생성 실패: " + e.message); }
     setGen(false);
@@ -48,7 +50,7 @@ export default function SessionGuideForm({ session, timeline }) {
     try {
       const r = await fetch("/api/coach/session-guide", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: session.id, action: "save", guide: { discuss, goal, topics, checks, questions, memo } }),
+        body: JSON.stringify({ sessionId: session.id, action: "save", guide: { discuss, review, goal, topics, checks, questions, memo } }),
       }).then((r) => r.json());
       if (r.success) { setSaved(true); setTimeout(() => setSaved(false), 2000); } else alert(r.message || "저장 실패");
     } catch (e) { alert("저장 실패: " + e.message); }
@@ -74,11 +76,12 @@ export default function SessionGuideForm({ session, timeline }) {
           className="inline-flex items-center gap-1.5 bg-primary text-white text-[14px] font-bold px-4 py-2.5 rounded-xl active:opacity-90 disabled:opacity-60">
           <Sparkles className="w-4 h-4" viewBox="0 0 24 24" />{gen ? "AI가 가이드 만드는 중…" : "AI 가이드 생성"}
         </button>
-        <p className="text-[12px] text-muted-foreground">위 타임라인 패턴 + 논의 포인트{session.n > 1 ? " + 지난 세션" : ""}을 읽고 아래 4개 섹션을 채워요. 생성 후 자유롭게 수정하세요.</p>
+        <p className="text-[12px] text-muted-foreground">위 타임라인 패턴 + 논의 포인트{isFollowup ? " + 지난 세션 전사·처방(이행 점검)" : ""}을 읽고 아래 섹션을 채워요. 생성 후 자유롭게 수정하세요.</p>
       </section>
 
       {/* 3) AI 생성 섹션 (편집 가능) */}
       <div className="space-y-4">
+        {isFollowup ? <Field label="지난 세션 이행 점검" value={review} onChange={setReview} rows={4} ph="지난 세션에 하기로 한 것 → 로그·전사 기반 '했음/부분/안 함' 판정" /> : null}
         <Field label="이번 세션 목표" value={goal} onChange={setGoal} rows={2} ph="AI 생성 or 직접 작성" />
         <Field label="논의 주제" value={topics} onChange={setTopics} rows={5} ph="AI 생성 or 직접 작성" />
         <Field label="확인·점검할 것" value={checks} onChange={setChecks} rows={4} ph="로그에서 관찰된 패턴 기반" />

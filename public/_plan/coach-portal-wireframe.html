@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>코치 포탈 데스크탑 와이어프레임</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#eceef1;--panel:#fff;--line:#d9dce1;--line2:#e7e9ed;--ink:#3a3f48;--mut:#9298a2;--ph:#f0f2f5;--accent:#4355B0;--accent-bg:#eef0fb;--ok:#1f8a4c;--okbg:#e7f4ec}
+  body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--ink);letter-spacing:-.02em;padding:30px 24px 70px;-webkit-font-smoothing:antialiased}
+  .doc{max-width:1440px;margin:0 auto}
+  .doclead h1{font-size:23px;font-weight:800;color:#1b2a3f}
+  .doclead p{font-size:13.5px;color:#6b7280;margin-top:7px;line-height:1.6}
+  .doclead .legend{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;font-size:12px;color:#8a90a0}
+  .doclead .legend b{color:var(--accent)}
+  .scrtag{display:inline-flex;align-items:center;gap:8px;margin:40px 0 12px}
+  .scrtag .n{width:26px;height:26px;border-radius:7px;background:#1b2a3f;color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .scrtag h2{font-size:17px;font-weight:800;color:#1b2a3f}
+  .scrtag span{font-size:12.5px;color:#8a90a0;font-weight:500}
+
+  /* browser frame */
+  .win{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 14px 40px rgba(20,35,60,.1)}
+  .winbar{height:38px;background:#f4f5f7;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px;padding:0 14px}
+  .winbar i{width:11px;height:11px;border-radius:50%;background:#d5d8de;display:inline-block}
+  .winbar .url{margin-left:14px;font-size:11.5px;color:#9298a2;background:#fff;border:1px solid var(--line2);border-radius:6px;padding:4px 12px;min-width:340px}
+
+  /* app shell */
+  .shell{display:flex;min-height:640px}
+  .side{width:210px;flex:0 0 210px;background:#111d2e;color:#c7cfda;padding:18px 14px;display:flex;flex-direction:column}
+  .side .logo{font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;padding:6px 8px 18px}
+  .side .logo small{color:#7EC8E3;font-weight:600}
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav a{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:#aab4c2;padding:9px 10px;border-radius:8px;text-decoration:none}
+  .nav a .ic{width:16px;height:16px;border-radius:4px;background:#3a465a}
+  .nav a.on{background:#22a;background:linear-gradient(90deg,#3345a0,#4355B0);color:#fff}
+  .nav a.on .ic{background:rgba(255,255,255,.5)}
+  .side .prof{margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px 8px;border-top:1px solid rgba(255,255,255,.08)}
+  .side .prof .av{width:30px;height:30px;border-radius:50%;background:#3a465a}
+  .side .prof .nm{font-size:12.5px;font-weight:700;color:#fff}
+  .side .prof .rl{font-size:11px;color:#8a94a2}
+
+  .main{flex:1;min-width:0;background:#f6f7f9;padding:22px 26px;display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+  .top h3{font-size:21px;font-weight:800;color:#1b2a3f}
+  .top .crumb{font-size:12.5px;color:#9298a2;margin-bottom:4px}
+  .top .tools{display:flex;align-items:center;gap:10px}
+  .search{width:220px;height:36px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12.5px;color:#b6bbc4;display:flex;align-items:center;padding:0 12px}
+  .avatar{width:34px;height:34px;border-radius:50%;background:#dfe3e9}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:default;white-space:nowrap}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.sm{padding:6px 11px;font-size:12px}
+
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .kpi .v{font-size:26px;font-weight:800;color:#1b2a3f;letter-spacing:-.5px}
+  .kpi .k{font-size:12px;color:#8a90a0;margin-top:6px}
+  .kpi .v.acc{color:var(--accent)}
+
+  /* generic panel */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line2)}
+  .ph h4{font-size:13.5px;font-weight:800;color:#2a3340}
+  .ph .lnk{font-size:12px;color:var(--accent);font-weight:700}
+
+  /* table */
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;font-weight:700;color:#9aa0ab;text-align:left;padding:10px 16px;border-bottom:1px solid var(--line2);text-transform:uppercase;letter-spacing:.5px}
+  td{font-size:13px;padding:13px 16px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .who{display:flex;align-items:center;gap:10px}
+  .who .av{width:32px;height:32px;border-radius:50%;background:#e4e7ec;flex:0 0 auto}
+  .who .nm{font-weight:700;color:#1b2a3f}
+  .who .sp{font-size:11.5px;color:#9298a2}
+  .chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#eef0f3;color:#6b7280}
+  .chip.g{background:var(--okbg);color:var(--ok)}
+  .chip.a{background:var(--accent-bg);color:var(--accent)}
+  .rowact{display:flex;gap:7px;justify-content:flex-end}
+
+  .grid2{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+  .grid-note{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start}
+  .stack{display:flex;flex-direction:column;gap:18px}
+
+  /* dashed placeholder */
+  .box{border:1.5px dashed #c3c8d0;border-radius:10px;background:repeating-linear-gradient(45deg,#fafbfc,#fafbfc 9px,#f2f3f5 9px,#f2f3f5 18px);display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-size:12.5px;font-weight:600;text-align:center;padding:14px}
+  .line{height:9px;border-radius:5px;background:var(--ph)}
+  .field{height:34px;border:1px solid var(--line);border-radius:8px;background:#fafbfc}
+  .toggle{width:42px;height:24px;border-radius:999px;background:var(--accent);position:relative;flex:0 0 auto}
+  .toggle::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+
+  .listrow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line2)}
+  .listrow:last-child{border-bottom:none}
+  .listrow .rn{width:34px;height:34px;border-radius:8px;background:var(--accent-bg);color:var(--accent);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .listrow .rt{font-size:13.5px;font-weight:700;color:#1b2a3f}
+  .listrow .rs{font-size:12px;color:#9298a2;margin-top:2px}
+
+  .tabs{display:inline-flex;background:#eceef2;border-radius:10px;padding:3px;gap:2px}
+  .tabs .t{font-size:13px;font-weight:700;color:#8a90a0;padding:7px 16px;border-radius:8px}
+  .tabs .t.on{background:#fff;color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+  .note{font-size:11.5px;color:#9298a2;padding:6px 0 0 2px}
+  .anno{background:#fff8e6;border:1px dashed #e6c85a;border-radius:8px;padding:9px 12px;font-size:12px;color:#8a6d1a;margin-top:10px;line-height:1.55}
+  .anno b{color:#7a5c10}
+  .subhead{font-size:11px;font-weight:800;color:#9aa0ab;letter-spacing:.6px;text-transform:uppercase;margin:2px 0 9px}
+  /* 로그 컴팩트 + 좌우스크롤 + 전체보기 */
+  .logwrap{position:relative}
+  .logscroll{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .logscroll .inner{height:132px;background:repeating-linear-gradient(90deg,#fafbfc,#fafbfc 118px,#eef0f3 118px,#eef0f3 119px);display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-size:12px;font-weight:600}
+  .expand{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--accent);background:#fff;border:1px solid #dbe0f4;border-radius:7px;padding:5px 9px}
+  .scrollhint{position:absolute;bottom:8px;right:10px;font-size:11px;color:#aab0ba;background:#fff;padding:2px 7px;border-radius:6px;border:1px solid var(--line2)}
+  /* 세션 가이드 작성 흐름 */
+  .stepnum{font-size:12.5px;font-weight:800;color:#2a3340;margin:2px 0 8px;display:flex;align-items:center;gap:7px}
+  .stepnum b{width:19px;height:19px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .flowhint{font-size:11.5px;color:var(--accent);font-weight:600;text-align:center;margin:-4px 0 14px;display:flex;align-items:center;gap:6px;justify-content:center}
+  .grid2x2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .genbox{border:1px solid #dbe0f4;border-radius:9px;background:#f8f9fe;padding:10px 12px}
+  .genbox .gt{font-size:11.5px;font-weight:800;color:var(--accent);margin-bottom:6px}
+  .genbox .gl{height:7px;border-radius:4px;background:#e2e6f5;margin-bottom:5px}
+  /* modal */
+  .modal{position:relative;background:rgba(20,30,48,.55);border-radius:12px;padding:34px;display:flex;align-items:center;justify-content:center}
+  .modalcard{width:100%;max-width:1120px;background:#fff;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.4);overflow:hidden}
+  .modalhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line2)}
+  .modalhead h4{font-size:15px;font-weight:800;color:#1b2a3f}
+  .modalhead .x{width:30px;height:30px;border-radius:8px;background:#f0f2f5;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700}
+</style></head>
+<body>
+<div class="doc">
+  <div class="doclead">
+    <h1>코치 포탈 — 데스크탑 콘솔 와이어프레임</h1>
+    <p>코치 포탈은 <b>PC 풀너비 콘솔</b>(좌측 고정 사이드바 + 넓은 본문)로 통일. 선수 포탈은 지금처럼 모바일 앱 그대로 둠. 아래는 구조/레이아웃만 잡은 와이어프레임이에요. 색·디테일은 다음 단계에서 NOCT 디자인으로 입힘.</p>
+    <div class="legend"><span>▫︎ 점선 박스 = 콘텐츠 영역(차트·텍스트)</span><span>▫︎ <b>인디고</b> = 주요 액션/활성</span><span>▫︎ 노란 메모 = 구조 결정 포인트</span></div>
+  </div>
+
+  <!-- ============ SCREEN 1: 대시보드 ============ -->
+  <div class="screen" id="s1">
+  <div class="scrtag"><span class="n">1</span><h2>대시보드</h2><span>/coach — 로그인 후 첫 화면. 담당 선수 한눈에 + 오늘 할 일</span></div>
+  <div class="win">
+    <div class="winbar"><i></i><i></i><i></i><span class="url">noctresearch.app/coach</span></div>
+    <div class="shell">
+      <aside class="side">
+        <div class="logo">NOCT <small>COACH</small></div>
+        <nav class="nav">
+          <a class="on"><span class="ic"></span>대시보드</a>
+          <a><span class="ic"></span>선수 관리</a>
+          <a><span class="ic"></span>세션</a>
+          <a><span class="ic"></span>일정</a>
+          <a><span class="ic"></span>리포트</a>
+        </nav>
+        <div class="prof"><span class="av"></span><div><div class="nm">소정</div><div class="rl">코치</div></div></div>
+      </aside>
+      <div class="main">
+        <div class="top"><div><h3>대시보드</h3></div><div class="tools"><span class="search">선수 검색…</span><span class="btn pri">+ 새 선수 초대</span><span class="avatar"></span></div></div>
+        <div class="kpis">
+          <div class="kpi"><div class="v">3</div><div class="k">담당 선수</div></div>
+          <div class="kpi"><div class="v acc">3</div><div class="k">진행중</div></div>
+          <div class="kpi"><div class="v">2</div><div class="k">이번 주 세션</div></div>
+          <div class="kpi"><div class="v">1</div><div class="k">AI 노트 검토 대기</div></div>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <div class="ph"><h4>담당 선수</h4><span class="lnk">진행중 먼저 · 전체</span></div>
+            <table>
+              <thead><tr><th>선수</th><th>상태</th><th>다음 세션</th><th>프로그램</th><th style="text-align:right">액션</th></tr></thead>
+              <tbody>
+                <tr><td><div class="who"><span class="av"></span><div><div class="nm">윤이나</div><div class="sp">골프</div></div></div></td><td><span class="chip g">진행중</span></td><td>8.18 (화) 17:00</td><td>8주</td><td><div class="rowact"><span class="btn sm pri">세션 가이드</span><span class="btn sm">상세</span></div></td></tr>
+                <tr><td><div class="who"><span class="av"></span><div><div class="nm">이지수</div><div class="sp">수영</div></div></div></td><td><span class="chip g">진행중</span></td><td>8.24 (일) 10:00</td><td>케어</td><td><div class="rowact"><span class="btn sm pri">세션 가이드</span><span class="btn sm">상세</span></div></td></tr>
+                <tr><td><div class="who"><span class="av"></span><div><div class="nm">김소정</div><div class="sp">골프</div></div></div></td><td><span class="chip">설문 대기</span></td><td>미배정</td><td>케어</td><td><div class="rowact"><span class="btn sm">배정</span><span class="btn sm">상세</span></div></td></tr>
+              </tbody>
+            </table>
+            <div class="anno"><b>결정①</b> 카드 → <b>테이블</b>로. 데스크탑에선 선수 많아져도 상태·다음세션·액션을 한 줄로 스캔. 행 우측에 [세션 가이드][상세] 바로가기.</div>
+          </div>
+          <div class="stack">
+            <div class="panel">
+              <div class="ph"><h4>이번 주 세션</h4></div>
+              <div class="listrow"><span class="rn">2회</span><div style="flex:1"><div class="rt">윤이나 · 2회차</div><div class="rs">8.18 (화) 17:00 · D-3</div></div></div>
+              <div class="listrow"><span class="rn">1회</span><div style="flex:1"><div class="rt">이지수 · 1회차</div><div class="rs">8.24 (일) 10:00 · D-9</div></div></div>
+            </div>
+            <div class="panel">
+              <div class="ph"><h4>AI 노트 검토 대기</h4></div>
+              <div class="listrow"><span class="rn" style="background:#fdecee;color:#EC4A54">!</span><div style="flex:1"><div class="rt">윤이나 · 2회차 노트</div><div class="rs">AI 초안 완료 · 검토 후 공개</div></div></div>
+            </div>
+            <div class="anno"><b>결정②</b> 우측 컬럼 = 코치의 "오늘 할 일". 다가오는 세션 + 검토 대기 노트를 대시보드에서 바로 잡음.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <!-- ============ SCREEN 2: 선수 상세 ============ -->
+  <div class="screen" id="s2">
+  <div class="scrtag"><span class="n">2</span><h2>선수 상세</h2><span>/coach/athlete/[id] — 한 선수의 모든 것. 세션·로그·배정·리포트</span></div>
+  <div class="win">
+    <div class="winbar"><i></i><i></i><i></i><span class="url">noctresearch.app/coach/athlete/yuna</span></div>
+    <div class="shell">
+      <aside class="side">
+        <div class="logo">NOCT <small>COACH</small></div>
+        <nav class="nav">
+          <a><span class="ic"></span>대시보드</a>
+          <a class="on"><span class="ic"></span>선수 관리</a>
+          <a><span class="ic"></span>세션</a>
+          <a><span class="ic"></span>일정</a>
+          <a><span class="ic"></span>리포트</a>
+        </nav>
+        <div class="prof"><span class="av"></span><div><div class="nm">소정</div><div class="rl">코치</div></div></div>
+      </aside>
+      <div class="main">
+        <div class="top">
+          <div><div class="crumb">대시보드 › 선수 › 윤이나</div><h3>윤이나 <span style="font-size:13px;color:#9298a2;font-weight:600">골프 · 진행중 · 8주 프로그램</span></h3></div>
+          <div class="tools"><span class="btn">선수 화면 보기</span><span class="btn pri">+ 새 세션</span></div>
+        </div>
+        <div class="grid2">
+          <div class="stack">
+            <div class="panel">
+              <div class="ph"><h4>세션</h4><span class="btn sm pri">✦ 다음 세션 가이드 준비</span></div>
+              <div class="listrow"><span class="rn">2회</span><div style="flex:1"><div class="rt">2회차 코칭 세션 <span class="chip a" style="margin-left:4px">노트 검토중</span></div><div class="rs">8.18 (화) 17:00</div></div><span class="btn sm pri">가이드 작성</span><span class="btn sm">노트</span></div>
+              <div class="listrow"><span class="rn">1회</span><div style="flex:1"><div class="rt">1회차 코칭 세션 <span class="chip g" style="margin-left:4px">공개됨</span></div><div class="rs">8.07 (목) 17:00</div></div><span class="btn sm">가이드</span><span class="btn sm">노트</span></div>
+              <div class="anno" style="margin:0;border-radius:0;border-left:none;border-right:none;border-bottom:none"><b>결정⑤</b> 각 회차 행의 [가이드 작성] = 그 세션 가이드 만들기/편집. 상단 [다음 세션 가이드 준비]는 가장 가까운 세션으로 바로.</div>
+            </div>
+            <div class="panel">
+              <div class="ph"><h4>수면 · 루틴 로그</h4><span class="lnk">최근 14일</span></div>
+              <div style="padding:14px 16px">
+                <div class="logwrap">
+                  <div class="logscroll"><div class="inner">일별 수면·루틴 타임라인 (컴팩트)</div></div>
+                  <span class="expand">⤢ 전체화면</span>
+                  <span class="scrollhint">← 좌우 스크롤 →</span>
+                </div>
+                <div class="note">컴팩트로 미리보기 · 좌우 스크롤로 날짜 이동 · 클릭/전체화면 → 팝업에서 크게 스크롤</div>
+              </div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="panel">
+              <div class="ph"><h4>배정 · 상태</h4></div>
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+                <div><div class="subhead">다음 세션 일시</div><div class="field"></div></div>
+                <div><div class="subhead">상태</div><div class="field"></div></div>
+                <div><div class="subhead">프로그램 · 주차</div><div class="field"></div></div>
+                <div class="btn pri" style="justify-content:center">저장</div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="ph"><h4>공개 리포트</h4></div>
+              <div class="listrow"><div style="flex:1"><div class="rt">1차 수면 리포트</div><div class="rs">1차 · 2026.08</div></div><span class="toggle"></span></div>
+            </div>
+            <div class="panel">
+              <div class="ph"><h4>사전 설문 요약</h4><span class="lnk">전체</span></div>
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px"><div class="line" style="width:90%"></div><div class="line" style="width:75%"></div><div class="line" style="width:82%"></div></div>
+            </div>
+            <div class="anno"><b>결정③</b> 좌=선수의 <b>실체</b>(세션·로그), 우=코치가 <b>관리</b>(배정·리포트공개·설문요약). 지금 모바일 세로 스택을 2단으로.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <!-- ============ SCREEN 3: 세션 워크스페이스 ============ -->
+  <div class="screen" id="s3">
+  <div class="scrtag"><span class="n">3</span><h2>세션 워크스페이스</h2><span>/coach/session/[id] — 세션 준비(가이드) + 세션 기록(노트)</span></div>
+  <div class="win">
+    <div class="winbar"><i></i><i></i><i></i><span class="url">noctresearch.app/coach/session/…</span></div>
+    <div class="shell">
+      <aside class="side">
+        <div class="logo">NOCT <small>COACH</small></div>
+        <nav class="nav">
+          <a><span class="ic"></span>대시보드</a>
+          <a><span class="ic"></span>선수 관리</a>
+          <a class="on"><span class="ic"></span>세션</a>
+          <a><span class="ic"></span>일정</a>
+          <a><span class="ic"></span>리포트</a>
+        </nav>
+        <div class="prof"><span class="av"></span><div><div class="nm">소정</div><div class="rl">코치</div></div></div>
+      </aside>
+      <div class="main">
+        <div class="top">
+          <div><div class="crumb">대시보드 › 윤이나 › 2회차</div><h3 style="display:flex;align-items:center;gap:14px">윤이나 · 2회차 <span class="tabs"><span class="t on">가이드 · 세션 전</span><span class="t">노트 · 세션 후</span></span></h3></div>
+          <div class="tools"><span class="btn">선수 화면 보기</span><span class="btn pri">가이드 저장</span></div>
+        </div>
+        <div style="margin-bottom:16px">
+          <div class="subhead">수면 · 루틴 패턴 (최근 로그 · 수면은 전날 밤 기준) · 클릭하면 전체화면</div>
+          <div class="logwrap">
+            <div class="logscroll"><div class="inner" style="height:172px">일별 수면·루틴 타임라인 (풀너비 · 좌우 스크롤)</div></div>
+            <span class="expand">⤢ 전체화면</span>
+            <span class="scrollhint">← 좌우 스크롤 →</span>
+          </div>
+        </div>
+        <div class="grid-note">
+          <div class="panel">
+            <div class="ph"><h4>세션 가이드 작성</h4><span class="lnk">위 타임라인 기반</span></div>
+            <div style="padding:16px 18px">
+              <div class="stepnum"><b>1</b>이번 세션에서 논의할 것 (코치 입력)</div>
+              <div class="field" style="height:74px"></div>
+              <div class="btn pri" style="justify-content:center;margin:14px 0 9px">✦ AI 가이드 생성</div>
+              <div class="flowhint">↓ AI가 타임라인 + 논의를 읽고 아래 4칸을 채워요 (편집 가능)</div>
+              <div class="stepnum"><b>2</b>AI가 만든 가이드</div>
+              <div class="genbox" style="border-color:#f4c9cc;background:#fdf4f4;margin-bottom:12px"><div class="gt" style="color:#c0554a">지난 세션 이행 점검 · 2회차부터</div><div class="gl" style="width:95%;background:#f2d5d7"></div><div class="gl" style="width:82%;background:#f2d5d7"></div><div class="gl" style="width:88%;background:#f2d5d7"></div><div style="font-size:10.5px;color:#b06a63;margin-top:5px">지난 세션 전사·처방 → 최근 로그 대조 → "했음/부분/안 함"</div></div>
+              <div class="grid2x2">
+                <div class="genbox"><div class="gt">이번 세션 목표</div><div class="gl" style="width:92%"></div><div class="gl" style="width:68%"></div></div>
+                <div class="genbox"><div class="gt">논의 주제</div><div class="gl"></div><div class="gl" style="width:82%"></div><div class="gl" style="width:60%"></div></div>
+                <div class="genbox"><div class="gt">확인·점검</div><div class="gl" style="width:86%"></div><div class="gl" style="width:64%"></div></div>
+                <div class="genbox"><div class="gt">던질 질문</div><div class="gl" style="width:88%"></div><div class="gl" style="width:72%"></div></div>
+              </div>
+              <div class="stepnum"><b>3</b>코치 메모</div>
+              <div class="field" style="height:54px"></div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="panel">
+              <div class="ph"><h4>이 선수 참고</h4></div>
+              <div style="padding:14px 16px">
+                <div class="subhead">지난 세션 요약</div>
+                <div class="line" style="width:92%"></div><div class="line" style="width:78%;margin-top:6px"></div>
+                <div class="subhead" style="margin-top:16px">사전 설문 핵심</div>
+                <div class="line" style="width:85%"></div><div class="line" style="width:70%;margin-top:6px"></div>
+              </div>
+            </div>
+            <div class="anno"><b>결정④</b> 좌우 분리 대신 <b>한 방향 흐름</b>: ①논의 입력 → [AI 생성] → ②결과 4칸 → ③메모 (위→아래). 우측은 참고용(지난 세션·설문). 노트 탭도 같은 뼈대(좌=상세노트 작성, 우=공개노트+녹음+공개토글).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- ============ SCREEN 4: 로그 전체화면 팝업 ============ -->
+  <div class="screen" id="s4">
+  <div class="scrtag"><span class="n">4</span><h2>수면·루틴 로그 전체화면 팝업</h2><span>로그 컴팩트 뷰에서 [전체화면] 클릭 시 · 큰 화면에서 좌우 스크롤</span></div>
+  <div class="win">
+    <div class="winbar"><i></i><i></i><i></i><span class="url">noctresearch.app/coach/athlete/yuna</span></div>
+    <div class="modal">
+      <div class="modalcard">
+        <div class="modalhead"><h4>윤이나 · 수면·루틴 로그 (최근 14일)</h4><span class="x">✕</span></div>
+        <div style="padding:18px">
+          <div class="logscroll"><div class="inner" style="height:440px">일별 수면·루틴 타임라인 — 크게 · 좌우 스크롤로 전체 기간 확인<br>(세션 가이드의 타임라인과 동일 시각화)</div></div>
+          <div class="scrollhint" style="position:static;display:inline-block;margin-top:10px">← 좌우 스크롤 →</div>
+        </div>
+      </div>
+    </div>
+    <div class="anno" style="margin:14px 18px 18px"><b>결정⑥</b> 상세·세션 어디서든 로그는 <b>컴팩트 미리보기</b>(좌우 스크롤). 자세히 볼 땐 [전체화면] → 팝업에서 크게. 모바일도 동일(전체화면 = 풀스크린 시트).</div>
+  </div>
+  </div>
+
+  <div style="height:20px"></div>
+</div>
+<script>
+  // #s1/#s2/#s3 해시가 있으면 그 화면만 표시 (개별 리뷰용)
+  var h = location.hash.replace('#','');
+  if (h) { document.querySelectorAll('.screen').forEach(function(s){ s.style.display = (s.id===h)?'block':'none'; }); document.querySelector('.doclead').style.display='none'; }
+</script>
+</body></html>
