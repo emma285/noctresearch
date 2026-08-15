@@ -4,7 +4,7 @@
 // 켜면 선수 포털에 해당 리포트 카드가 열린다. /api/coach/publish-report 호출(리포트별 상태).
 import { useState } from "react";
 
-export default function ReportPublishToggle({ uid, slug, initialOn = false }) {
+export default function ReportPublishToggle({ uid, email, slug, initialOn = false }) {
   const [on, setOn] = useState(initialOn === true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -19,7 +19,7 @@ export default function ReportPublishToggle({ uid, slug, initialOn = false }) {
       const res = await fetch("/api/coach/publish-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, slug, on: next }),
+        body: JSON.stringify({ uid, email, slug, on: next }),
       });
       const j = await res.json();
       if (j.success) setMsg(next ? "공개됨" : "비공개");

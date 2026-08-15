@@ -1,7 +1,8 @@
 // app/api/coach/publish-report/route.js
-// 코치가 특정 선수의 특정 리포트(slug)를 선수에게 공개/비공개.
-// 리포트별 공개 상태는 선수 Clerk publicMetadata.publishedReports(공개된 slug 배열)에 저장.
+// 코치가 특정 선수의 특정 리포트(slug)를 공개/비공개. 소스 = Neon clients.profile.publishedReports.
+// Clerk publicMetadata는 best-effort 동기화(하위호환).
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByEmail, setPublishedReports } from "../../../../lib/master";
@@ -23,28 +24,28 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "코치 권한이 없어요." }, { status: 403 });
     }
 
-    const { uid, slug, on } = await request.json();
-    if (!uid || !slug) return NextResponse.json({ success: false, message: "uid·slug가 필요해요." }, { status: 400 });
+    const { uid, email, slug, on } = await request.json();
+    if (!slug || (!email && !uid)) return NextResponse.json({ success: false, message: "email(또는 uid)·slug가 필요해요." }, { status: 400 });
     if (!/^[a-z0-9-]+$/i.test(String(slug))) return NextResponse.json({ success: false, message: "잘못된 slug." }, { status: 400 });
 
-    // 대상 선수의 현재 공개 목록을 읽어 slug 추가/제거 후 전체 배열로 저장 (배열은 병합이 아니라 교체됨)
-    const target = await cc.users.getUser(uid);
-    const cur = Array.isArray(target?.publicMetadata?.publishedReports)
-      ? target.publicMetadata.publishedReports.map(String).filter(Boolean)
-      : [];
-    const set = new Set(cur);
-    if (on === true) set.add(String(slug));
-    else set.delete(String(slug));
+    // 대상 이메일 확정 (email 우선, 없으면 uid→Clerk 조회)
+    let athleteEmail = email || "";
+    if (!athleteEmail && uid) { try { const t = await cc.users.getUser(uid); athleteEmail = t?.emailAddresses?.[0]?.emailAddress || ""; } catch {} }
+
+    // Neon(단일 소스) — 현재 공개목록 읽어 slug 추가/제거 후 저장
+    const row = athleteEmail ? await getAthleteByEmail(athleteEmail) : null;
+    if (!row?.pageId) return NextResponse.json({ success: false, message: "선수를 찾을 수 없어요." }, { status: 404 });
+    const set = new Set((row.publishedReports || []).map(String).filter(Boolean));
+    if (on === true) set.add(String(slug)); else set.delete(String(slug));
     const publishedReports = Array.from(set);
+    await setPublishedReports(row.pageId, publishedReports);
+    revalidateTag("athlete-data");
 
-    await cc.users.updateUserMetadata(uid, { publicMetadata: { publishedReports } });
-
-    // 마스터(단일 소스)에도 반영 — 이메일로 마스터 행 찾아 `공개 리포트` 갱신. 실패해도 Clerk 저장은 유지.
+    // Clerk 하위호환 동기화 (best-effort)
     try {
-      const email = target?.emailAddresses?.[0]?.emailAddress || "";
-      const row = email ? await getAthleteByEmail(email) : null;
-      if (row?.pageId) await setPublishedReports(row.pageId, publishedReports);
-    } catch (e) { console.error("publish-report master sync failed:", e?.message); }
+      const clerkUid = uid || row.clerkUserId;
+      if (clerkUid) await cc.users.updateUserMetadata(clerkUid, { publicMetadata: { publishedReports } });
+    } catch (e) { console.error("publish-report clerk sync failed:", e?.message); }
 
     return NextResponse.json({ success: true, published: publishedReports });
   } catch (e) {

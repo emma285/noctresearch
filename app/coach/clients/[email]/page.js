@@ -4,8 +4,10 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByEmail, getSessionsByAthlete } from "../../../../lib/master";
+import { resolveAssets } from "../../../../lib/athleteAssets";
 import { Surface, SectionHeader } from "../../../../components/app/primitives";
 import CoachManageForm from "../../../../components/coach/CoachManageForm";
+import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 
 export const metadata = { title: "선수 상세 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -21,6 +23,8 @@ export default async function CoachClientDetail({ params }) {
   const athlete = await getAthleteByEmail(email);
   if (!athlete) return <div className="p-10 text-center text-sm text-muted-foreground">선수를 찾을 수 없어요.</div>;
   const sessions = athlete.pageId ? await getSessionsByAthlete(athlete.pageId) : [];
+  const assets = resolveAssets(athlete);
+  const pubSet = new Set((athlete.publishedReports || []).map(String));
 
   const meta = [athlete.sport, athlete.tier, athlete.nextSession ? `다음 ${md(athlete.nextSession)}` : "다음 세션 미정"].filter(Boolean).join(" · ");
 
@@ -68,17 +72,22 @@ export default async function CoachClientDetail({ params }) {
           </Surface>
         )}
 
-        <SectionHeader title="공개 리포트" />
-        <Surface>
-          {athlete.publishedReports?.length ? (
-            athlete.publishedReports.map((slug) => (
-              <div key={slug} className="p-4 first:border-t-0 border-t border-border text-[15px] font-medium text-foreground">{slug}</div>
-            ))
-          ) : (
-            <div className="p-4 text-[13px] text-muted-foreground">공개된 리포트가 없어요.</div>
-          )}
-        </Surface>
-        <p className="text-[12px] text-muted-foreground/70 mt-4">리포트 공개 토글은 다음 단계에서 여기 연동돼요.</p>
+        <SectionHeader title="공개 리포트" caption="토글을 켜면 선수 홈에 리포트 카드가 열려요." />
+        {assets.reports.length === 0 ? (
+          <Surface><div className="p-4 text-[13px] text-muted-foreground">아직 등록된 리포트가 없어요.</div></Surface>
+        ) : (
+          <Surface>
+            {assets.reports.map((r) => (
+              <div key={r.slug} className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[15px] font-semibold text-foreground truncate">{r.label}</div>
+                  {(r.badge || r.date) ? <div className="text-[12.5px] text-muted-foreground mt-0.5">{[r.badge, r.date].filter(Boolean).join(" · ")}</div> : null}
+                </div>
+                <ReportPublishToggle email={athlete.email} uid={athlete.clerkUserId} slug={r.slug} initialOn={pubSet.has(r.slug)} />
+              </div>
+            ))}
+          </Surface>
+        )}
       </div>
     </div>
   );
