@@ -6,7 +6,7 @@ import { Calendar, Upload } from "lucide-react";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import Link from "next/link";
-import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes } from "../../lib/master";
+import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes, getLatestSessionByClient } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday } from "../../lib/log";
 
@@ -32,7 +32,7 @@ function progShort(program) {
 }
 async function getAthletes() {
   try {
-    const rows = await getAllAthletes();
+    const [rows, latestSession] = await Promise.all([getAllAthletes(), getLatestSessionByClient()]);
     const list = rows
       .filter((a) => a.email && !COACH_EMAILS.includes(String(a.email).toLowerCase()))
       .map((a) => ({
@@ -46,6 +46,7 @@ async function getAthletes() {
         sessionLabel: a.nextSession ? mmdd(a.nextSession) : "",
         programLabel: progShort(a.program),
         sport: a.sport || "",
+        latestSessionId: latestSession[a.pageId] || "",
       }));
     const rank = (a) => (a.ongoing ? 0 : a.intakeDone ? 1 : 2);
     list.sort((x, y) => rank(x) - rank(y) || (x.nextSession && y.nextSession ? x.nextSession.localeCompare(y.nextSession) : x.nextSession ? -1 : y.nextSession ? 1 : x.name.localeCompare(y.name)));

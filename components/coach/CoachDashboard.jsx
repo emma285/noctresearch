@@ -43,9 +43,8 @@ const CSS = `
 .noct-coach .acard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(13,27,42,.05);
   display:grid;grid-template-columns:1fr auto;gap:14px 18px;align-items:center;text-decoration:none;color:inherit;
   transition:transform .14s,box-shadow .14s,border-color .14s;}
-.noct-coach a.acard:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(13,27,42,.1);border-color:#c7cef0;}
-.noct-coach .ago{width:34px;height:34px;border-radius:50%;background:#eef0fb;color:var(--indigo);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;justify-self:end;}
-.noct-coach a.acard:hover .ago{background:var(--indigo);color:#fff;}
+.noct-coach .acard:hover{box-shadow:0 8px 22px rgba(13,27,42,.08);border-color:#dbe0f4;}
+.noct-coach .acardmain{min-width:0;text-decoration:none;color:inherit;display:block;}
 .noct-coach .aname{font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.4px;}
 .noct-coach .aname span{font-size:12.5px;font-weight:600;color:var(--gray2);margin-left:6px;}
 .noct-coach .aemail{font-size:12.5px;color:var(--gray);margin-top:3px;}
@@ -114,21 +113,27 @@ export default function CoachDashboard({ coachName = "코치", athletes = [] }) 
           <div className="empty">아직 가입한 선수가 없어요.<br />선수가 가입·설문을 완료하면 이 목록에 나타납니다.</div>
         ) : (
           <div className="alist">
-            {athletes.map((a) => (
-              <Link className="acard" key={a.uid} href={a.email ? `/coach/clients/${encodeURIComponent(a.email)}` : `/coach/athlete/${a.uid}`}>
-                <div>
-                  <div className="aname">{a.name}<span>{a.sport || "선수"}</span></div>
-                  {a.email && <div className="aemail">{a.email}</div>}
-                  <div className="ameta">
-                    {a.ongoing && <span className="chip g">{a.status || "진행중"}</span>}
-                    <span className={`chip ${a.intakeDone ? "g" : "w"}`}>{a.intakeDone ? "설문 완료" : "설문 대기"}</span>
-                    <span className="chip">다음 세션 <b>{a.sessionLabel || "미배정"}</b></span>
-                    <span className="chip">프로그램 <b>{a.programLabel || "미정"}</b></span>
+            {athletes.map((a) => {
+              const detailHref = a.email ? `/coach/clients/${encodeURIComponent(a.email)}` : `/coach/athlete/${a.uid}`;
+              return (
+                <div className="acard" key={a.uid}>
+                  <Link className="acardmain" href={detailHref}>
+                    <div className="aname">{a.name}<span>{a.sport || "선수"}</span></div>
+                    {a.email && <div className="aemail">{a.email}</div>}
+                    <div className="ameta">
+                      {a.ongoing && <span className="chip g">{a.status || "진행중"}</span>}
+                      <span className={`chip ${a.intakeDone ? "g" : "w"}`}>{a.intakeDone ? "설문 완료" : "설문 대기"}</span>
+                      <span className="chip">다음 세션 <b>{a.sessionLabel || "미배정"}</b></span>
+                      <span className="chip">프로그램 <b>{a.programLabel || "미정"}</b></span>
+                    </div>
+                  </Link>
+                  <div className="aact">
+                    {a.latestSessionId ? <Link className="btn primary" href={`/coach/session/${a.latestSessionId}`}>세션 가이드</Link> : null}
+                    <Link className="btn ghost" href={detailHref}>상세</Link>
                   </div>
                 </div>
-                <div className="ago">→</div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         )}
 

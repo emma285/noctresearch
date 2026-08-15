@@ -27,7 +27,7 @@ export default async function CoachClientDetail({ params }) {
   return (
     <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[560px]">
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-2 flex items-center gap-3">
-        <Link href="/coach/clients" className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></Link>
+        <Link href="/portal" className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></Link>
         <div className="min-w-0">
           <h1 className="text-[20px] font-bold tracking-[-0.3px] leading-tight">{athlete.name || email}</h1>
           <div className="text-[13px] text-muted-foreground truncate">{athlete.status || "-"} · {meta}</div>
