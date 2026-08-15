@@ -6,7 +6,7 @@ import { Calendar, Upload } from "lucide-react";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import Link from "next/link";
-import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes, getLatestSessionByClient } from "../../lib/master";
+import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes, getLatestSessionByClient, getCoachOverview } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday } from "../../lib/log";
 
@@ -85,9 +85,9 @@ export default async function PortalPage({ searchParams }) {
   // 코치면 대시보드(별도 콘솔). ?as=<이메일>이면 그 선수 미리보기.
   const previewEmail = isCoachEmail(myEmail) && searchParams?.as ? String(searchParams.as) : null;
   if (isCoachEmail(myEmail) && !previewEmail) {
-    const athletes = await getAthletes();
+    const [athletes, overview] = await Promise.all([getAthletes(), getCoachOverview()]);
     const coachName = user?.unsafeMetadata?.name || user?.firstName || myEmail?.split("@")[0] || "코치";
-    return <CoachDashboard coachName={coachName} athletes={athletes} />;
+    return <CoachDashboard coachName={coachName} athletes={athletes} overview={overview} />;
   }
 
   // 마스터(단일 소스) 조회. 없으면 Clerk 폴백.

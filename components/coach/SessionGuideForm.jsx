@@ -2,7 +2,7 @@
 // 세션 가이드(세션 전 준비) — 타임라인 + 코치 논의 입력 + AI 생성 + 편집 + 메모 + 저장.
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
-import LogTimeline from "../app/LogTimeline";
+import LogTimelinePanel from "./LogTimelinePanel";
 
 const TA = ({ value, onChange, rows = 3, ph }) => (
   <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={ph}
@@ -64,8 +64,7 @@ export default function SessionGuideForm({ session, timeline }) {
       {/* 1) 수면·루틴 패턴 */}
       <section>
         <div className="text-[13px] font-bold text-navy mb-2">수면·루틴 패턴 <span className="text-muted-foreground font-medium">· 최근 로그 (수면은 전날 밤 기준)</span></div>
-        {hasData ? <LogTimeline cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} />
-          : <div className="bg-muted/40 border border-border rounded-xl py-8 text-center text-[13px] text-muted-foreground">최근 기록이 없어요.</div>}
+        <LogTimelinePanel cols={timeline?.cols || []} sleeps={timeline?.sleeps || []} routines={timeline?.routines || []} compactHeight={360} />
       </section>
 
       <div className="max-w-[760px] space-y-6">

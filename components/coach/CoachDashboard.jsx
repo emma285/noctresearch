@@ -1,148 +1,135 @@
-/*
-  코치 대시보드 — emma@ 등 코치 이메일로 로그인하면 /portal 에서 이 화면이 뜬다.
-  선수 허브(.noct-hub) 대신 코치용. 담당 선수 목록 + 배정 링크.
-  디자인은 포털 팔레트와 동기화(다크 히어로 + 카드), .noct-coach 스코프.
-*/
-
+// 코치 대시보드 (데스크탑 콘솔). CoachShell 안에서 KPI + 선수 테이블 + 우측 '오늘 할 일'.
 import Link from "next/link";
-import LogoutButton from "../portal/LogoutButton";
+import { Search, ChevronRight, Sparkles, AlertCircle, CalendarDays } from "lucide-react";
+import CoachShell from "./CoachShell";
 
-const CSS = `
-.noct-coach{
-  --navy:#0D1B2A;--ink:#111;--gray:#6b7280;--gray2:#9aa3ad;--line:#e6e7eb;
-  --indigo:#4355B0;--sky:#7EC8E3;--grad:linear-gradient(90deg,#4355B0,#7EC8E3);
-  font-family:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:#F2F3F6;color:var(--ink);line-height:1.5;min-height:100vh;overflow-x:hidden;max-width:100vw;
-  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-.02em;
+const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+function whenLabel(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || "");
+  if (!m) return "일정 미정";
+  const dow = DOW[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()];
+  return `${+m[2]}.${m[3]} (${dow}) ${m[4]}:${m[5]}`;
 }
-.noct-coach .wrap{max-width:960px;margin:0 auto;padding:36px 24px 72px;width:100%;}
-.noct-coach .acard > div{min-width:0;}
-.noct-coach .aemail{overflow-wrap:anywhere;}
-.noct-coach .hero{position:relative;overflow:hidden;border-radius:20px;padding:30px 32px 28px;
-  background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%);color:#fff;box-shadow:0 18px 50px rgba(13,27,42,.22);}
-.noct-coach .hero::after{content:"";position:absolute;right:-90px;top:-130px;width:340px;height:340px;
-  border-radius:50%;background:radial-gradient(circle,rgba(126,200,227,.28),transparent 70%);pointer-events:none;}
-.noct-coach .htop{display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative;z-index:1;}
-.noct-coach .logo{height:16px;filter:brightness(0) invert(1);opacity:.94;}
-.noct-coach .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--sky);margin-top:20px;position:relative;z-index:1;}
-.noct-coach h1{font-size:28px;font-weight:800;letter-spacing:-.9px;margin-top:8px;position:relative;z-index:1;}
-.noct-coach h1 span{font-size:16px;font-weight:600;color:rgba(255,255,255,.6);margin-left:4px;}
-.noct-coach .kpis{display:flex;margin-top:24px;border-top:1px solid rgba(255,255,255,.12);padding-top:20px;position:relative;z-index:1;flex-wrap:wrap;}
-.noct-coach .kpi{flex:1;min-width:100px;padding:0 22px;border-left:1px solid rgba(255,255,255,.12);}
-.noct-coach .kpi:first-child{padding-left:0;border-left:none;}
-.noct-coach .kv{display:block;font-size:26px;font-weight:800;letter-spacing:-1px;color:#fff;line-height:1;font-variant-numeric:tabular-nums;}
-.noct-coach .kv i{font-style:normal;font-size:13px;font-weight:600;color:rgba(255,255,255,.66);margin-left:3px;}
-.noct-coach .kk{display:block;font-size:12px;color:rgba(255,255,255,.62);margin-top:8px;font-weight:500;}
-
-.noct-coach .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:38px 0 16px;}
-.noct-coach .sec-label{font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--indigo);}
-.noct-coach .sec-title{font-size:21px;font-weight:800;letter-spacing:-.4px;color:var(--navy);margin-top:3px;}
-.noct-coach .count{font-size:12.5px;font-weight:700;color:var(--gray);background:#fff;border:1px solid var(--line);padding:6px 13px;border-radius:999px;white-space:nowrap;}
-
-.noct-coach .alist{display:flex;flex-direction:column;gap:12px;}
-.noct-coach .acard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(13,27,42,.05);
-  display:grid;grid-template-columns:1fr auto;gap:14px 18px;align-items:center;text-decoration:none;color:inherit;
-  transition:transform .14s,box-shadow .14s,border-color .14s;}
-.noct-coach .acard:hover{box-shadow:0 8px 22px rgba(13,27,42,.08);border-color:#dbe0f4;}
-.noct-coach .acardmain{min-width:0;text-decoration:none;color:inherit;display:block;}
-.noct-coach .aname{font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.4px;}
-.noct-coach .aname span{font-size:12.5px;font-weight:600;color:var(--gray2);margin-left:6px;}
-.noct-coach .aemail{font-size:12.5px;color:var(--gray);margin-top:3px;}
-.noct-coach .ameta{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;}
-.noct-coach .chip{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;background:#f2f3f6;color:var(--gray);border:1px solid var(--line);}
-.noct-coach .chip.g{background:rgba(31,138,76,.1);color:#1f8a4c;border-color:rgba(31,138,76,.2);}
-.noct-coach .chip.w{background:rgba(185,119,14,.1);color:#9c6c16;border-color:rgba(185,119,14,.2);}
-.noct-coach .chip b{font-weight:800;}
-.noct-coach .aact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-self:end;justify-content:flex-end;max-width:320px;}
-.noct-coach .btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;text-decoration:none;
-  padding:8px 13px;border-radius:9px;white-space:nowrap;transition:transform .14s,box-shadow .14s,background .14s;cursor:pointer;}
-.noct-coach .btn.primary{background:var(--indigo);color:#fff;}
-.noct-coach .btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(67,85,176,.28);}
-.noct-coach .btn.ghost{background:#fff;color:var(--indigo);border:1px solid #dbe0f4;}
-.noct-coach .btn.ghost:hover{background:#eef0fb;}
-.noct-coach .btn.off{background:#f2f3f6;color:var(--gray2);border:1px solid var(--line);cursor:not-allowed;}
-
-.noct-coach .empty{background:#fff;border:1.5px dashed #d3d6de;border-radius:14px;padding:40px 24px;text-align:center;color:var(--gray2);font-size:14px;line-height:1.6;}
-.noct-coach .foot{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--gray2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-
-@media (max-width:720px){
-  .noct-coach .wrap{padding:24px 18px 56px;}
-  .noct-coach .hero{padding:24px 20px;}
-  .noct-coach h1{font-size:24px;}
-  .noct-coach .kpi{flex:0 0 50%;min-width:0;padding:12px 16px;border-left:none;}
-  .noct-coach .kpi:nth-child(odd){padding-left:0;}
-  .noct-coach .kpis{padding-top:8px;}
-  .noct-coach .acard{grid-template-columns:1fr;}
-  .noct-coach .aact{flex-direction:row;justify-self:start;align-items:center;}
+function dday(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); if (!m) return "";
+  const t = Date.UTC(+m[1], +m[2] - 1, +m[3]); const n = new Date();
+  const today = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+  const d = Math.round((t - today) / 86400000);
+  return d > 0 ? `D-${d}` : d === 0 ? "D-day" : "";
 }
-`;
 
-export default function CoachDashboard({ coachName = "코치", athletes = [] }) {
+function Kpi({ v, k, accent }) {
+  return (
+    <div className="bg-white border border-[#e6e7eb] rounded-xl px-[18px] py-4">
+      <div className={`text-[26px] font-extrabold tracking-[-0.5px] ${accent ? "text-primary" : "text-[#1b2a3f]"}`}>{v}</div>
+      <div className="text-[12px] text-[#8a90a0] mt-1.5">{k}</div>
+    </div>
+  );
+}
+
+export default function CoachDashboard({ coachName = "코치", athletes = [], overview = {} }) {
   const total = athletes.length;
-  const intakeDoneCount = athletes.filter((a) => a.intakeDone).length;
   const ongoingCount = athletes.filter((a) => a.ongoing).length;
+  const intakeDoneCount = athletes.filter((a) => a.intakeDone).length;
+  const { upcoming = [], pending = [], weekCount = 0, pendingCount = 0 } = overview;
 
   return (
-    <div className="noct-coach">
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="wrap">
-
-        <div className="hero">
-          <div className="htop">
-            <img src="/noct-logo.png" className="logo" alt="NOCT RESEARCH" />
-            <LogoutButton />
-          </div>
-          <div className="eyebrow">COACH DASHBOARD</div>
-          <h1>{coachName} <span>코치</span></h1>
-          <div className="kpis">
-            <div className="kpi"><span className="kv">{total}</span><span className="kk">담당 선수</span></div>
-            <div className="kpi"><span className="kv">{ongoingCount}</span><span className="kk">진행중</span></div>
-            <div className="kpi"><span className="kv">{intakeDoneCount}</span><span className="kk">설문 완료</span></div>
+    <CoachShell active="dashboard" coachName={coachName}>
+      <div className="px-5 lg:px-7 py-6 max-w-[1440px]">
+        {/* 상단 */}
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <h1 className="text-[21px] font-extrabold text-[#1b2a3f]">대시보드</h1>
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex items-center gap-2 w-[220px] h-9 border border-[#d9dce1] rounded-lg bg-white px-3 text-[12.5px] text-[#b6bbc4]"><Search className="w-3.5 h-3.5" />선수 검색…</div>
           </div>
         </div>
 
-        <div className="sec-head">
-          <div>
-            <div className="sec-label">Athletes</div>
-            <div className="sec-title">담당 선수</div>
-          </div>
-          <span className="count">진행중 먼저</span>
+        {/* KPI */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
+          <Kpi v={total} k="담당 선수" />
+          <Kpi v={ongoingCount} k="진행중" accent />
+          <Kpi v={weekCount} k="이번 주 세션" />
+          <Kpi v={pendingCount} k="AI 노트 검토 대기" />
         </div>
 
-        {total === 0 ? (
-          <div className="empty">아직 가입한 선수가 없어요.<br />선수가 가입·설문을 완료하면 이 목록에 나타납니다.</div>
-        ) : (
-          <div className="alist">
-            {athletes.map((a) => {
-              const detailHref = a.email ? `/coach/clients/${encodeURIComponent(a.email)}` : `/coach/athlete/${a.uid}`;
-              return (
-                <div className="acard" key={a.uid}>
-                  <Link className="acardmain" href={detailHref}>
-                    <div className="aname">{a.name}<span>{a.sport || "선수"}</span></div>
-                    {a.email && <div className="aemail">{a.email}</div>}
-                    <div className="ameta">
-                      {a.ongoing && <span className="chip g">{a.status || "진행중"}</span>}
-                      <span className={`chip ${a.intakeDone ? "g" : "w"}`}>{a.intakeDone ? "설문 완료" : "설문 대기"}</span>
-                      <span className="chip">다음 세션 <b>{a.sessionLabel || "미배정"}</b></span>
-                      <span className="chip">프로그램 <b>{a.programLabel || "미정"}</b></span>
-                    </div>
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-[18px] items-start">
+          {/* 선수 테이블 */}
+          <div className="bg-white border border-[#e6e7eb] rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#e7e9ed]">
+              <h2 className="text-[13.5px] font-extrabold text-[#2a3340]">담당 선수</h2>
+              <span className="text-[12px] text-[#9298a2] font-semibold">진행중 먼저</span>
+            </div>
+            {total === 0 ? (
+              <div className="py-14 text-center text-[13px] text-[#9aa0ab]">아직 담당 선수가 없어요.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse min-w-[640px]">
+                  <thead>
+                    <tr className="text-[11px] font-bold text-[#9aa0ab] uppercase tracking-[0.5px]">
+                      <th className="text-left px-4 py-2.5 border-b border-[#e7e9ed] font-bold">선수</th>
+                      <th className="text-left px-4 py-2.5 border-b border-[#e7e9ed] font-bold">상태</th>
+                      <th className="text-left px-4 py-2.5 border-b border-[#e7e9ed] font-bold">다음 세션</th>
+                      <th className="text-left px-4 py-2.5 border-b border-[#e7e9ed] font-bold">프로그램</th>
+                      <th className="text-right px-4 py-2.5 border-b border-[#e7e9ed] font-bold">액션</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {athletes.map((a) => (
+                      <tr key={a.uid} className="hover:bg-[#fafbfc]">
+                        <td className="px-4 py-3 border-b border-[#e7e9ed]">
+                          <Link href={`/coach/clients/${encodeURIComponent(a.email)}`} className="flex items-center gap-2.5">
+                            <span className="w-8 h-8 rounded-full bg-[#e4e7ec] flex-none flex items-center justify-center text-[12px] font-bold text-[#6b7280]">{(a.name || "선")[0]}</span>
+                            <span className="min-w-0"><span className="block text-[13px] font-bold text-[#1b2a3f] truncate">{a.name}</span><span className="block text-[11.5px] text-[#9298a2]">{a.sport || "선수"}</span></span>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#e7e9ed]">
+                          <span className={`inline-block text-[11px] font-bold px-2.5 py-1 rounded-full ${a.ongoing ? "bg-[#e7f4ec] text-[#1f8a4c]" : "bg-[#eef0f3] text-[#6b7280]"}`}>{a.ongoing ? (a.status || "진행중") : (a.intakeDone ? "설문 완료" : "설문 대기")}</span>
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#e7e9ed] text-[13px] text-[#3a3f48]">{a.sessionLabel || "미배정"}</td>
+                        <td className="px-4 py-3 border-b border-[#e7e9ed] text-[13px] text-[#3a3f48]">{a.programLabel || "미정"}</td>
+                        <td className="px-4 py-3 border-b border-[#e7e9ed]">
+                          <div className="flex gap-1.5 justify-end">
+                            {a.latestSessionId
+                              ? <Link href={`/coach/session/${a.latestSessionId}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">세션 가이드</Link>
+                              : null}
+                            <Link href={`/coach/clients/${encodeURIComponent(a.email)}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">상세</Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* 우측 오늘 할 일 */}
+          <div className="flex flex-col gap-[18px]">
+            <div className="bg-white border border-[#e6e7eb] rounded-xl overflow-hidden">
+              <div className="px-4 py-3.5 border-b border-[#e7e9ed]"><h2 className="text-[13.5px] font-extrabold text-[#2a3340]">이번 주 세션</h2></div>
+              {upcoming.length === 0 ? <div className="px-4 py-8 text-center text-[12.5px] text-[#9aa0ab]">예정된 세션이 없어요.</div>
+                : upcoming.map((s, i) => (
+                  <Link key={i} href={s.id ? `/coach/session/${s.id}` : `/coach/clients/${encodeURIComponent(s.email)}`} className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e7e9ed] last:border-b-0 hover:bg-[#fafbfc]">
+                    <span className="w-9 h-9 rounded-lg bg-[#eef0fb] text-primary flex items-center justify-center flex-none"><CalendarDays className="w-[18px] h-[18px]" /></span>
+                    <div className="flex-1 min-w-0"><div className="text-[13.5px] font-bold text-[#1b2a3f] truncate">{s.name}</div><div className="text-[12px] text-[#9298a2] mt-0.5">{whenLabel(s.at)}{dday(s.at) ? ` · ${dday(s.at)}` : ""}</div></div>
+                    <ChevronRight className="w-4 h-4 text-[#c2c7cf] flex-none" />
                   </Link>
-                  <div className="aact">
-                    {a.latestSessionId ? <Link className="btn primary" href={`/coach/session/${a.latestSessionId}`}>세션 가이드</Link> : null}
-                    <Link className="btn ghost" href={detailHref}>상세</Link>
-                  </div>
-                </div>
-              );
-            })}
+                ))}
+            </div>
+            <div className="bg-white border border-[#e6e7eb] rounded-xl overflow-hidden">
+              <div className="px-4 py-3.5 border-b border-[#e7e9ed] flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary" /><h2 className="text-[13.5px] font-extrabold text-[#2a3340]">AI 노트 검토 대기</h2></div>
+              {pending.length === 0 ? <div className="px-4 py-8 text-center text-[12.5px] text-[#9aa0ab]">검토할 노트가 없어요.</div>
+                : pending.map((s) => (
+                  <Link key={s.id} href={`/coach/session/${s.id}`} className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e7e9ed] last:border-b-0 hover:bg-[#fafbfc]">
+                    <span className="w-9 h-9 rounded-lg bg-[#fdecee] text-[#EC4A54] flex items-center justify-center flex-none"><AlertCircle className="w-[18px] h-[18px]" /></span>
+                    <div className="flex-1 min-w-0"><div className="text-[13.5px] font-bold text-[#1b2a3f] truncate">{s.name} · {s.n}회차 노트</div><div className="text-[12px] text-[#9298a2] mt-0.5">AI 초안 완료 · 검토 후 공개</div></div>
+                    <ChevronRight className="w-4 h-4 text-[#c2c7cf] flex-none" />
+                  </Link>
+                ))}
+            </div>
           </div>
-        )}
-
-        <div className="foot">
-          <span>NOCT RESEARCH · 코치 전용</span>
-          <span>선수 {total}명</span>
         </div>
-
       </div>
-    </div>
+    </CoachShell>
   );
 }
