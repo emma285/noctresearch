@@ -31,6 +31,40 @@ const sql = neon(DB);
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const kstToday = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
 
+// ── 다음 세션 일정 후처리 파서 ──
+// 자유서술(예: "화요일 17:00", "다음 주 화요일 오후 5시", "8월 14일(금)")에서 절대 ISO 계산.
+// refIso = 기준일(그 세션 날짜; 없으면 오늘). 요일만 있으면 기준일 이후 가장 가까운 그 요일로.
+const DOW_KO = { 일: 0, 월: 1, 화: 2, 수: 3, 목: 4, 금: 5, 토: 6 };
+function parseNextDate(text, refIso) {
+  if (!text) return "";
+  const refMs = refIso ? new Date(refIso).getTime() : Date.now();
+  const refK = new Date(refMs + 9 * 3600 * 1000); // KST 벽시계
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (y, mo, d, h, mi) => `${y}-${pad(mo)}-${pad(d)}T${h == null ? "00" : pad(h)}:${h == null ? "00" : pad(mi)}:00+09:00`;
+  // 시각
+  let h = null, mi = 0;
+  const ampm = /(오전|오후)/.exec(text);
+  const tm = /(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분)?/.exec(text) || /(\d{1,2}):(\d{2})/.exec(text);
+  if (tm) { h = +tm[1]; mi = tm[2] ? +tm[2] : 0; if (ampm && ampm[1] === "오후" && h < 12) h += 12; if (ampm && ampm[1] === "오전" && h === 12) h = 0; }
+  // 절대 날짜 "N월 M일" — 요일 붙은 날짜("8월 14일(금)")를 세션날짜로 우선(카톡 공유일 등과 혼동 방지)
+  const abs = /(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*\(?\s*[일월화수목금토]\s*\)?/.exec(text) || /(\d{1,2})\s*월\s*(\d{1,2})\s*일/.exec(text);
+  if (abs) {
+    const mo = +abs[1], d = +abs[2]; let y = refK.getUTCFullYear();
+    if (mo < refK.getUTCMonth() + 1 - 1) y += 1; // 지난 달이면 내년
+    return iso(y, mo, d, h, mi);
+  }
+  // 요일 "X요일"
+  const wd = /([일월화수목금토])\s*요일/.exec(text);
+  if (wd) {
+    const target = DOW_KO[wd[1]];
+    let add = (target - refK.getUTCDay() + 7) % 7;
+    if (add === 0) add = 7; // 같은 요일 → 다음 주 그 요일
+    const dt = new Date(Date.UTC(refK.getUTCFullYear(), refK.getUTCMonth(), refK.getUTCDate() + add));
+    return iso(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate(), h, mi);
+  }
+  return "";
+}
+
 // ── 상태 자동 승격: 세션 일시가 도래한 선수 → 진행중 (EARLY 상태만) ──
 const EARLY = ["", "초대됨", "로그인", "intake제출", "온보딩완료"];
 async function advanceStatuses() {
@@ -46,7 +80,7 @@ async function advanceStatuses() {
 
 // ── 대기 세션: 녹음 있고 아직 미처리(detail에 chief 없음) & 락 없음 ──
 async function pending() {
-  return await sql`SELECT id, audio_url, n FROM sessions
+  return await sql`SELECT id, audio_url, n, session_at FROM sessions
     WHERE audio_url IS NOT NULL
       AND coalesce(detail->>'chief','') = ''
       AND coalesce(detail->>'_lock','') = ''
@@ -207,6 +241,8 @@ async function processOne(s) {
   unlinkSync(mp3);
   log(`  전사 ${transcript.length}자 → 초안 생성 중…`);
   const draft = await generate(transcript, s.n);
+  // 모델이 못 잡은 다음세션 날짜는 자유서술(next)에서 후처리 파싱 (요일·절대날짜·시각)
+  if (!draft.nextSessionDate) { const p = parseNextDate(draft?.detail?.next || "", s.session_at); if (p) draft.nextSessionDate = p; }
   await saveToSession(s.id, draft, transcript);
   log(`  ✅ 저장 완료 (공개=off, 코치 검토 대기)${draft.nextSessionDate ? ` · 다음세션 ${draft.nextSessionDate.slice(0, 10)} 캐치` : ""}`);
 }
@@ -215,7 +251,7 @@ async function processOne(s) {
   const arg = process.argv[2];
   let list;
   if (arg) {
-    const rows = await sql`SELECT id, audio_url, n FROM sessions WHERE id=${arg}`;
+    const rows = await sql`SELECT id, audio_url, n, session_at FROM sessions WHERE id=${arg}`;
     if (!rows.length || !rows[0].audio_url) { console.error("이 세션에 녹음 URL이 없어요."); process.exit(1); }
     list = rows;
   } else {
