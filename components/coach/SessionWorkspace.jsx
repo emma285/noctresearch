@@ -10,6 +10,8 @@ import SessionNoteForm from "./SessionNoteForm";
 export default function SessionWorkspace({ session, timeline, dateLabel, clientName = "선수", clientEmail = "", initialTab = "guide" }) {
   const [tab, setTab] = useState(initialTab === "note" ? "note" : "guide");
   const n = session.n || 1;
+  // 노트 있음/공개됨 = 세션 종료 → 가이드 작성 비활성화(읽기전용)
+  const sessionDone = !!session.published || !!(session.detail && session.detail.chief);
 
   return (
     <div className="px-5 lg:px-7 py-6 max-w-[1440px]">
@@ -34,7 +36,7 @@ export default function SessionWorkspace({ session, timeline, dateLabel, clientN
       </div>
 
       {tab === "guide"
-        ? <SessionGuideForm session={session} timeline={timeline} />
+        ? <SessionGuideForm session={session} timeline={timeline} readOnly={sessionDone} />
         : <div className="bg-white border border-[#e6e7eb] rounded-xl overflow-hidden max-w-[720px]"><SessionNoteForm session={session} /></div>}
     </div>
   );

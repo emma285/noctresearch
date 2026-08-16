@@ -6,7 +6,7 @@ import { Calendar, Upload } from "lucide-react";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import Link from "next/link";
-import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes, getLatestSessionByClient, getCoachOverview } from "../../lib/master";
+import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes, getNextGuideSessionByClient, getCoachOverview } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday } from "../../lib/log";
 
@@ -32,7 +32,7 @@ function progShort(program) {
 }
 async function getAthletes() {
   try {
-    const [rows, latestSession] = await Promise.all([getAllAthletes(), getLatestSessionByClient()]);
+    const [rows, latestSession] = await Promise.all([getAllAthletes(), getNextGuideSessionByClient()]);
     const list = rows
       .filter((a) => a.email && !COACH_EMAILS.includes(String(a.email).toLowerCase()))
       .map((a) => ({

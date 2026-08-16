@@ -32,6 +32,7 @@ function Group({ title, items }) {
       {items.length === 0 ? <div className="py-8 text-center text-[13px] text-[#9aa0ab]">없어요.</div>
         : items.map((s) => {
           const st = statusOf(s);
+          const done = s.published || s.hasNote;
           return (
             <div key={s.id} className="flex items-center gap-3 px-4 py-3.5 border-t border-[#e7e9ed] first:border-t-0">
               <span className="w-9 h-9 rounded-lg bg-[#eef0fb] text-primary text-[12px] font-extrabold flex items-center justify-center flex-none">{s.n ?? "-"}회</span>
@@ -39,7 +40,11 @@ function Group({ title, items }) {
                 <div className="text-[14px] font-bold text-[#1b2a3f] flex items-center gap-2 flex-wrap">{s.name} · {s.n}회차<span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${st.c}`}>{st.t}</span></div>
                 <div className="text-[12.5px] text-[#9298a2] mt-0.5">{fmt(s.date)}</div>
               </div>
-              <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">가이드</Link>
+              {!done
+                ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">가이드 작성</Link>
+                : s.hasGuide
+                  ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">가이드 보기</Link>
+                  : <span className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#eef0f3] text-[#c2c7cf] whitespace-nowrap cursor-not-allowed" title="세션 종료 · 가이드 작성 불가">가이드 작성</span>}
               <Link href={`/coach/session/${s.id}?tab=note`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">노트</Link>
             </div>
           );

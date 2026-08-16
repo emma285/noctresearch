@@ -45,6 +45,7 @@ export default async function CoachClientDetail({ params }) {
   const assets = resolveAssets(athlete);
   const pubSet = new Set((athlete.publishedReports || []).map(String));
   const latestSessionId = sessions[0]?.id || "";
+  const nextGuideSession = sessions.find((s) => !(s.published || s.hasNote))?.id || ""; // 아직 안 끝난 세션의 가이드 준비
   const chips = [athlete.sport, athlete.tier, athlete.program].filter(Boolean).join(" · ");
 
   return (
@@ -64,11 +65,12 @@ export default async function CoachClientDetail({ params }) {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-[18px] items-start">
           {/* 좌: 세션 + 로그 */}
           <div className="flex flex-col gap-[18px]">
-            <Panel title="세션" right={latestSessionId ? <Link href={`/coach/session/${latestSessionId}`} className="inline-flex items-center gap-1.5 text-[12px] font-bold text-white bg-primary rounded-lg px-2.5 py-1.5"><Sparkles className="w-3.5 h-3.5" />다음 세션 가이드 준비</Link> : null}>
+            <Panel title="세션" right={nextGuideSession ? <Link href={`/coach/session/${nextGuideSession}`} className="inline-flex items-center gap-1.5 text-[12px] font-bold text-white bg-primary rounded-lg px-2.5 py-1.5"><Sparkles className="w-3.5 h-3.5" />다음 세션 가이드 준비</Link> : null}>
               {sessions.length === 0 ? (
                 <div className="py-10 text-center text-[13px] text-muted-foreground">아직 세션이 없어요.</div>
               ) : sessions.map((s) => {
-                const status = s.published ? { t: "공개됨", c: "bg-[#e7f4ec] text-[#1f8a4c]" } : s.hasNote ? { t: "노트 검토중", c: "bg-[#eef0fb] text-primary" } : { t: "준비", c: "bg-[#eef0f3] text-[#6b7280]" };
+                const done = s.published || s.hasNote; // 세션 종료(노트 있음/공개)
+                const status = s.published ? { t: "공개됨", c: "bg-[#e7f4ec] text-[#1f8a4c]" } : s.hasNote ? { t: "노트 검토중", c: "bg-[#eef0fb] text-primary" } : s.hasGuide ? { t: "가이드 준비됨", c: "bg-[#e8f5fb] text-[#2a7fa5]" } : { t: "준비 전", c: "bg-[#eef0f3] text-[#6b7280]" };
                 return (
                   <div key={s.id} className="flex items-center gap-3 px-4 py-3.5 border-t border-[#e7e9ed] first:border-t-0">
                     <span className="w-9 h-9 rounded-lg bg-[#eef0fb] text-primary text-[12px] font-extrabold flex items-center justify-center flex-none">{s.n ?? "-"}회</span>
@@ -76,7 +78,11 @@ export default async function CoachClientDetail({ params }) {
                       <div className="text-[14px] font-bold text-[#1b2a3f] flex items-center gap-2">{s.n ? `${s.n}회차 코칭 세션` : (s.title || "코칭 세션")}<span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${status.c}`}>{status.t}</span></div>
                       <div className="text-[12.5px] text-[#9298a2] mt-0.5">{md(s.date) || "날짜 미정"}</div>
                     </div>
-                    <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">가이드 작성</Link>
+                    {!done
+                      ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">가이드 작성</Link>
+                      : s.hasGuide
+                        ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">가이드 보기</Link>
+                        : <span className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#eef0f3] text-[#c2c7cf] whitespace-nowrap cursor-not-allowed" title="세션 종료 · 가이드 작성 불가">가이드 작성</span>}
                     <Link href={`/coach/session/${s.id}?tab=note`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">노트</Link>
                   </div>
                 );
