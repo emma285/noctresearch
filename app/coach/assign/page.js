@@ -42,7 +42,6 @@ export default async function CoachAssignPage({ searchParams }) {
       reportUrl: u?.publicMetadata?.reportUrl || "",
       guideUrl: u?.publicMetadata?.guideUrl || "",
       dataUrl: u?.publicMetadata?.dataUrl || "",
-      reportPublished: u?.publicMetadata?.reportPublished === true,
     };
   } catch {
     return <Notice>선수를 찾을 수 없어요. (uid: {uid})</Notice>;
