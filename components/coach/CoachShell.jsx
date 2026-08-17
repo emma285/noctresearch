@@ -14,29 +14,27 @@ const NAV = [
 
 export default function CoachShell({ active = "dashboard", coachName = "코치", children }) {
   return (
-    <div className="min-h-[100dvh] bg-[#f4f5f7] flex">
-      {/* 사이드바 — 네이비 배경은 전체 콘텐츠 높이만큼 늘어나고(self-stretch), 메뉴는 뷰포트에 sticky 고정 */}
-      <aside className="hidden md:flex w-[210px] flex-none self-stretch bg-[#111d2e] text-[#c7cfda]">
-        <div className="sticky top-0 h-[100dvh] w-full flex flex-col px-3.5 py-4">
-          <div className="px-2 pt-1.5 pb-4 text-[14px] font-extrabold text-white tracking-[0.4px]">NOCT <span className="text-[#7EC8E3] font-semibold">COACH</span></div>
-          <nav className="flex flex-col gap-0.5">
-            {NAV.map(({ key, label, href, Icon, soon }) => {
-              const on = key === active;
-              return (
-                <Link key={key} href={href}
-                  className={`flex items-center gap-2.5 text-[13.5px] font-semibold px-2.5 py-2.5 rounded-lg transition-colors ${on ? "bg-gradient-to-r from-[#3345a0] to-[#4355B0] text-white" : "text-[#aab4c2] hover:bg-white/5"}`}>
-                  <Icon className="w-4 h-4" strokeWidth={2} />
-                  <span className="flex-1">{label}</span>
-                  {soon ? <span className="text-[9.5px] font-bold text-[#6b7688] bg-white/5 px-1.5 py-0.5 rounded">곧</span> : null}
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="mt-auto flex items-center gap-2.5 px-2 py-2.5 border-t border-white/[0.08]">
-            <span className="w-8 h-8 rounded-full bg-[#3a465a] flex items-center justify-center text-[12px] font-bold text-white">{(coachName || "코")[0]}</span>
-            <div className="min-w-0 flex-1"><div className="text-[12.5px] font-bold text-white truncate">{coachName}</div><div className="text-[11px] text-[#8a94a2]">코치</div></div>
-            <LogoutButton />
-          </div>
+    <div className="min-h-[100dvh] bg-[#f4f5f7]">
+      {/* 사이드바 — viewport에 fixed 고정(스크롤해도 안 움직임). 본문은 폭만큼 왼쪽 여백. */}
+      <aside className="hidden md:flex fixed top-0 left-0 z-30 w-[210px] h-[100dvh] flex-col px-3.5 py-4 bg-[#111d2e] text-[#c7cfda]">
+        <div className="px-2 pt-1.5 pb-4 text-[14px] font-extrabold text-white tracking-[0.4px]">NOCT <span className="text-[#7EC8E3] font-semibold">COACH</span></div>
+        <nav className="flex flex-col gap-0.5">
+          {NAV.map(({ key, label, href, Icon, soon }) => {
+            const on = key === active;
+            return (
+              <Link key={key} href={href}
+                className={`flex items-center gap-2.5 text-[13.5px] font-semibold px-2.5 py-2.5 rounded-lg transition-colors ${on ? "bg-gradient-to-r from-[#3345a0] to-[#4355B0] text-white" : "text-[#aab4c2] hover:bg-white/5"}`}>
+                <Icon className="w-4 h-4" strokeWidth={2} />
+                <span className="flex-1">{label}</span>
+                {soon ? <span className="text-[9.5px] font-bold text-[#6b7688] bg-white/5 px-1.5 py-0.5 rounded">곧</span> : null}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="mt-auto flex items-center gap-2.5 px-2 py-2.5 border-t border-white/[0.08]">
+          <span className="w-8 h-8 rounded-full bg-[#3a465a] flex items-center justify-center text-[12px] font-bold text-white">{(coachName || "코")[0]}</span>
+          <div className="min-w-0 flex-1"><div className="text-[12.5px] font-bold text-white truncate">{coachName}</div><div className="text-[11px] text-[#8a94a2]">코치</div></div>
+          <LogoutButton />
         </div>
       </aside>
 
@@ -46,8 +44,8 @@ export default function CoachShell({ active = "dashboard", coachName = "코치",
         <LogoutButton />
       </div>
 
-      {/* 본문 */}
-      <main className="flex-1 min-w-0 pt-12 md:pt-0">{children}</main>
+      {/* 본문 — 고정 사이드바 폭만큼 왼쪽 여백(md+) */}
+      <main className="min-w-0 pt-12 md:pt-0 md:pl-[210px]">{children}</main>
     </div>
   );
 }
