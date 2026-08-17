@@ -76,7 +76,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
           const full = sl ? (sl.feel + (sl.memo ? " — " + sl.memo : "")) : "";
           const tgt = on ? targetByDate[cd] : null;
           return (
-            <div key={cd} style={{ flex: "0 0 118px", borderRight: ci === cols.length - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
+            <div key={cd} style={{ flex: "0 0 118px", width: 118, minWidth: 0, borderRight: ci === cols.length - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
               <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, borderBottom: "1px solid #e6e7eb", background: "#fff" }}>{dlabel(cd)}</div>
               <div onClick={(e) => full && openTip(e, full)} title={full}
                 style={{ height: 64, padding: "6px 7px", borderBottom: "1px solid #e6e7eb", fontSize: 10, lineHeight: 1.45, color: "#3f4453", overflow: "hidden", position: "relative", cursor: full ? "pointer" : "default" }}>
