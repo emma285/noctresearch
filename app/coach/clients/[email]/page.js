@@ -91,7 +91,7 @@ export default async function CoachClientDetail({ params }) {
 
             <Panel title="수면 · 루틴 로그" right={<span className="text-[12px] text-[#9298a2] font-semibold">최근 7일</span>}>
               <div className="p-4">
-                <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} compactHeight={320} />
+                <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} compactHeight={720} />
               </div>
             </Panel>
           </div>
