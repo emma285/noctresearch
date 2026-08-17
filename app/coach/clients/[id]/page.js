@@ -6,6 +6,7 @@ import { ChevronRight, Eye, Sparkles } from "lucide-react";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByRef, getSessionsByAthlete } from "../../../../lib/master";
 import { getAthleteEvents } from "../../../../lib/calendar";
+import { getSleepTargets, adherence } from "../../../../lib/targets";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
 import { resolveAssets } from "../../../../lib/athleteAssets";
 import CoachShell from "../../../../components/coach/CoachShell";
@@ -42,11 +43,15 @@ export default async function CoachClientDetail({ params }) {
   if (!athlete) return <CoachShell active="athletes" coachName={coachName}><div className="p-10 text-center text-sm text-muted-foreground">선수를 찾을 수 없어요.</div></CoachShell>;
   const email = athlete.email || "";
 
-  const [sessions, timeline, calEvents] = await Promise.all([
+  const [sessions, timeline, calEvents, sleepTargets] = await Promise.all([
     athlete.pageId ? getSessionsByAthlete(athlete.pageId) : [],
     getLogTimeline(email, kstToday(), 7),
     athlete.pageId ? getAthleteEvents(athlete.pageId) : [],
+    athlete.pageId ? getSleepTargets(athlete.pageId) : [],
   ]);
+  // 프로토콜 목표 vs 실제 순응도(타임라인 표시 기간 기준)
+  const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
+  const targetSummary = adherence(sleepTargets, sleepByDate);
   const assets = resolveAssets(athlete);
   const pubSet = new Set((athlete.publishedReports || []).map(String));
   const latestSessionId = sessions[0]?.id || "";
@@ -96,7 +101,7 @@ export default async function CoachClientDetail({ params }) {
 
             <Panel title="수면 · 루틴 로그" right={<span className="text-[12px] text-[#9298a2] font-semibold">최근 7일</span>}>
               <div className="p-4">
-                <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} compactHeight={720} />
+                <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} targets={sleepTargets} summary={targetSummary} compactHeight={720} />
               </div>
             </Panel>
 

@@ -22,7 +22,7 @@ const dobj = (s) => { const [y, m, d] = s.split("-").map(Number); return new Dat
 const dlabel = (s) => { const d = dobj(s); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}(${DOW[d.getUTCDay()]})`; };
 const fmt = (m) => { m = ((m % 1440) + 1440) % 1440; return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
 
-export default function LogTimeline({ cols = [], sleeps = [], routines = [] }) {
+export default function LogTimeline({ cols = [], sleeps = [], routines = [], targets = [], showTargets = false }) {
   const [tip, setTip] = useState(null);
   const idx = (s) => cols.indexOf(s);
   const abs = (d, c) => d * 1440 + c;
@@ -40,6 +40,19 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [] }) {
     segs(bA + sol, wA).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "sleep", bedT: fmt(s.bed), wakeT: fmt(s.wake), sol, out, woke: s.woke, waso: s.waso, isStart: i === 0 }));
     if (out > 0) segs(wA, wA + out).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "awake", tip: "침대밖 " + out + "분", isStart: i === 0 }));
   }
+
+  // 목표(프로토콜) 오버레이 — 실제 수면과 동일한 seg 로직으로 유령 막대 생성.
+  const on = showTargets && targets.length > 0;
+  const targetByDate = {}; if (on) for (const t of targets) targetByDate[t.date] = t;
+  const sleepByDate = {}; for (const s of sleeps) sleepByDate[s.date] = s;
+  const TARGET_BLOCKS = [];
+  if (on) for (const t of targets) {
+    const D = idx(t.date); if (D < 0 || typeof t.bed !== "number" || typeof t.wake !== "number") continue;
+    const bedDay = t.bed > t.wake ? D - 1 : D;
+    segs(abs(bedDay, t.bed), abs(D, t.wake)).forEach((sg, i) => TARGET_BLOCKS.push({ ...sg, isStart: i === 0 }));
+  }
+  // 편차 텍스트 (실제-목표, 분). 음수=이르게, 양수=늦게.
+  const DTXT = (a, t) => { const d = a - t, m = Math.abs(d), h = Math.floor(m / 60), mm = m % 60; return { s: (d < 0 ? "−" : d > 0 ? "+" : "") + ((h ? h + "h" : "") + (mm ? mm + "m" : "") || "정시"), c: d < 0 ? "#c0554a" : d > 0 ? "#2a7fa5" : "#1f8a4c" }; };
 
   const openTip = (e, text) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTip({ text, x: Math.min(r.left, window.innerWidth - 252), y: r.bottom + 4 }); };
   const hourLabels = Array.from({ length: 25 }, (_, r) => ({ r, h: (r + 6) % 24 }));
@@ -61,19 +74,33 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [] }) {
         {cols.map((cd, ci) => {
           const sl = sleeps.find((s) => s.date === cd);
           const full = sl ? (sl.feel + (sl.memo ? " — " + sl.memo : "")) : "";
+          const tgt = on ? targetByDate[cd] : null;
           return (
             <div key={cd} style={{ flex: "0 0 118px", borderRight: ci === cols.length - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
               <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, borderBottom: "1px solid #e6e7eb", background: "#fff" }}>{dlabel(cd)}</div>
               <div onClick={(e) => full && openTip(e, full)} title={full}
                 style={{ height: 64, padding: "6px 7px", borderBottom: "1px solid #e6e7eb", fontSize: 10, lineHeight: 1.45, color: "#3f4453", overflow: "hidden", position: "relative", cursor: full ? "pointer" : "default" }}>
-                {sl && <div style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sl.feel}{sl.memo && <span style={{ color: "#8a90a0" }}> {sl.memo}</span>}</div>}
-                {full.length > 42 && <span style={{ position: "absolute", right: 5, bottom: 2, color: "#aeb4c0", fontWeight: 800, background: "#fff", paddingLeft: 3 }}>⋯</span>}
+                {tgt && (
+                  <div style={{ fontSize: 9, fontWeight: 800, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {tgt.label && <span style={{ color: "#5A4FA6", background: "rgba(142,155,232,.16)", borderRadius: 4, padding: "1px 4px", marginRight: 4 }}>{tgt.label}</span>}
+                    {sl
+                      ? (<span style={{ color: "#6b7280" }}>기상 <b style={{ color: DTXT(sl.wake, tgt.wake).c }}>{DTXT(sl.wake, tgt.wake).s}</b> · 취침 <b style={{ color: DTXT(sl.bed, tgt.bed).c }}>{DTXT(sl.bed, tgt.bed).s}</b></span>)
+                      : <span style={{ color: "#c2c7cf" }}>기록 없음</span>}
+                  </div>
+                )}
+                {sl && <div style={{ display: "-webkit-box", WebkitLineClamp: tgt ? 2 : 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sl.feel}{sl.memo && <span style={{ color: "#8a90a0" }}> {sl.memo}</span>}</div>}
+                {!tgt && full.length > 42 && <span style={{ position: "absolute", right: 5, bottom: 2, color: "#aeb4c0", fontWeight: 800, background: "#fff", paddingLeft: 3 }}>⋯</span>}
               </div>
               <div style={{ position: "relative", height: H }}>
                 {hourLabels.map(({ r }) => <div key={r} style={{ position: "absolute", left: 0, right: 0, top: r * PXH, borderTop: "1px solid #f3f4f6" }} />)}
+                {on && TARGET_BLOCKS.filter((b) => b.col === ci).map((b, ti) => (
+                  <div key={"t" + ti} style={{ position: "absolute", left: 3, right: 3, top: b.top, height: Math.max(b.h, 8), borderRadius: 6, border: "2px dashed #8E9BE8", background: "rgba(142,155,232,.10)", boxSizing: "border-box", zIndex: 0, pointerEvents: "none" }}>
+                    {b.isStart && b.h > 26 ? <span style={{ position: "absolute", top: 1, left: 4, fontSize: 8, fontWeight: 800, color: "#5A4FA6", background: "rgba(255,255,255,.78)", borderRadius: 3, padding: "0 3px" }}>목표</span> : null}
+                  </div>
+                ))}
                 {BLOCKS.filter((b) => b.col === ci).map((b, bi) => {
                   const hh = Math.max(b.h, 6);
-                  const base = { position: "absolute", left: 3, right: 3, top: b.top, height: hh, borderRadius: 6, overflow: "hidden", background: b.bg };
+                  const base = { position: "absolute", left: 3, right: 3, top: b.top, height: hh, borderRadius: 6, overflow: "hidden", background: b.bg, zIndex: 1 };
                   if (b.kind === "awake") return <div key={bi} style={{ ...base, background: AWAKE, padding: "1px 6px" }}>{b.h >= 15 && <span style={{ color: "#33405c", fontWeight: 700, fontSize: 9, whiteSpace: "nowrap" }}>{b.tip}</span>}</div>;
                   if (b.kind === "sleep") return (
                     <div key={bi} style={{ ...base, background: ASLEEP, color: "#fff", padding: "3px 6px" }}>
@@ -100,6 +127,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [] }) {
       {/* 범례 */}
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 10, fontSize: 11, color: "#4b5563", fontWeight: 600 }}>
         {LEGEND.map(([l, c]) => <span key={l} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: c, display: "inline-block" }} />{l}</span>)}
+        {on && <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, border: "2px dashed #8E9BE8", background: "rgba(142,155,232,.12)", display: "inline-block", boxSizing: "border-box" }} />목표(프로토콜)</span>}
       </div>
       {tip && <div style={{ position: "fixed", left: tip.x, top: tip.y, maxWidth: 240, background: "#0D1B2A", color: "#fff", fontSize: 11, lineHeight: 1.5, padding: "9px 11px", borderRadius: 9, boxShadow: "0 8px 24px rgba(13,27,42,.28)", zIndex: 50 }}>{tip.text}</div>}
     </div>
