@@ -43,13 +43,19 @@ export default async function CoachClientDetail({ params }) {
   if (!athlete) return <CoachShell active="athletes" coachName={coachName}><div className="p-10 text-center text-sm text-muted-foreground">선수를 찾을 수 없어요.</div></CoachShell>;
   const email = athlete.email || "";
 
-  const [sessions, timeline, calEvents, sleepTargets] = await Promise.all([
+  const [sessions, calEvents, sleepTargets] = await Promise.all([
     athlete.pageId ? getSessionsByAthlete(athlete.pageId) : [],
-    getLogTimeline(email, kstToday(), 7),
     athlete.pageId ? getAthleteEvents(athlete.pageId) : [],
     athlete.pageId ? getSleepTargets(athlete.pageId) : [],
   ]);
-  // 프로토콜 목표 vs 실제 순응도(타임라인 표시 기간 기준)
+  // 타임라인 기간: 최근 7일 + 프로토콜 미래 목표일까지(있으면) → 우측 스크롤로 예정 확인
+  const today = kstToday();
+  const dayDiff = (a, b) => Math.round((Date.parse(a) - Date.parse(b)) / 86400000);
+  const maxTargetDate = sleepTargets.reduce((m, t) => (t.date > m ? t.date : m), today);
+  const endDate = maxTargetDate > today ? maxTargetDate : today;
+  const numDays = 7 + Math.max(0, dayDiff(endDate, today));
+  const timeline = await getLogTimeline(email, endDate, numDays);
+  // 프로토콜 목표 vs 실제 순응도(실제 로그 있는 날 기준)
   const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
   const targetSummary = adherence(sleepTargets, sleepByDate);
   const assets = resolveAssets(athlete);
@@ -99,7 +105,7 @@ export default async function CoachClientDetail({ params }) {
               })}
             </Panel>
 
-            <Panel title="수면 · 루틴 로그" right={<span className="text-[12px] text-[#9298a2] font-semibold">최근 7일</span>}>
+            <Panel title="수면 · 루틴 로그" right={<span className="text-[12px] text-[#9298a2] font-semibold">최근 7일{endDate > today ? " + 예정" : ""} · 우측 스크롤</span>}>
               <div className="p-4">
                 <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} targets={sleepTargets} summary={targetSummary} compactHeight={720} />
               </div>

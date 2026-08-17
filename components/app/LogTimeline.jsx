@@ -94,8 +94,8 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
               <div style={{ position: "relative", height: H }}>
                 {hourLabels.map(({ r }) => <div key={r} style={{ position: "absolute", left: 0, right: 0, top: r * PXH, borderTop: "1px solid #f3f4f6" }} />)}
                 {on && TARGET_BLOCKS.filter((b) => b.col === ci).map((b, ti) => (
-                  <div key={"t" + ti} style={{ position: "absolute", left: 3, right: 3, top: b.top, height: Math.max(b.h, 8), borderRadius: 6, border: "2px dashed #8E9BE8", background: "rgba(142,155,232,.10)", boxSizing: "border-box", zIndex: 0, pointerEvents: "none" }}>
-                    {b.isStart && b.h > 26 ? <span style={{ position: "absolute", top: 1, left: 4, fontSize: 8, fontWeight: 800, color: "#5A4FA6", background: "rgba(255,255,255,.78)", borderRadius: 3, padding: "0 3px" }}>목표</span> : null}
+                  <div key={"t" + ti} style={{ position: "absolute", left: 3, right: 3, top: b.top, height: Math.max(b.h, 8), borderRadius: 6, border: "2px dashed #EC6BA8", background: "rgba(236,107,168,.12)", boxSizing: "border-box", zIndex: 0, pointerEvents: "none" }}>
+                    {b.isStart && b.h > 26 ? <span style={{ position: "absolute", top: 1, left: 4, fontSize: 8, fontWeight: 800, color: "#C13E80", background: "rgba(255,255,255,.8)", borderRadius: 3, padding: "0 3px" }}>목표</span> : null}
                   </div>
                 ))}
                 {BLOCKS.filter((b) => b.col === ci).map((b, bi) => {
@@ -127,7 +127,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
       {/* 범례 */}
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 10, fontSize: 11, color: "#4b5563", fontWeight: 600 }}>
         {LEGEND.map(([l, c]) => <span key={l} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: c, display: "inline-block" }} />{l}</span>)}
-        {on && <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, border: "2px dashed #8E9BE8", background: "rgba(142,155,232,.12)", display: "inline-block", boxSizing: "border-box" }} />목표(프로토콜)</span>}
+        {on && <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, border: "2px dashed #EC6BA8", background: "rgba(236,107,168,.14)", display: "inline-block", boxSizing: "border-box" }} />목표(프로토콜)</span>}
       </div>
       {tip && <div style={{ position: "fixed", left: tip.x, top: tip.y, maxWidth: 240, background: "#0D1B2A", color: "#fff", fontSize: 11, lineHeight: 1.5, padding: "9px 11px", borderRadius: 9, boxShadow: "0 8px 24px rgba(13,27,42,.28)", zIndex: 50 }}>{tip.text}</div>}
     </div>
