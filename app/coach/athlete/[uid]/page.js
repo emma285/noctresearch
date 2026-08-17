@@ -149,6 +149,18 @@ export default async function AthleteDetailPage({ params }) {
               ))}
             </div>
           )}
+
+          {assets.extras && assets.extras.length > 0 && (
+            <>
+              <div className="rhead">부가자료 <span>{assets.extras.length}개 · 코치 참고용</span></div>
+              {assets.extras.map((x) => (
+                <a className="tile" key={x.url} href={x.url} target="_blank" rel="noopener noreferrer">
+                  <div><div className="tt">{x.label}</div><div className="td">{x.desc || "부가자료"}</div></div>
+                  <div className="go">→</div>
+                </a>
+              ))}
+            </>
+          )}
         </div>
 
         {/* 코칭 세션 */}
