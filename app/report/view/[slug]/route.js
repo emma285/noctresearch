@@ -1,12 +1,14 @@
 // 리포트 인증 서버 — report-assets/<slug>.html 을 로그인 상태에서만 서빙.
 // 예: /report/view/yuna-report
-// 권한: 코치는 모든 리포트 열람 / 선수는 "본인 리포트"이면서 코치가 공개(reportPublished)한 경우만.
+// 권한: 코치는 모든 리포트 열람 / 선수는 "본인 리포트"이면서 코치가 공개한 경우만.
+// 공개 소스 = Neon clients.profile.publishedReports (코치 콘솔 목록과 동일). Neon에 없으면 Clerk 폴백.
 // (리포트를 public/ 밖으로 빼서 URL만으로는 접근 불가)
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isCoachEmail } from "../../../../lib/coach";
+import { getAthleteByEmail } from "../../../../lib/master";
 import { resolveAssets, publishedReportSet } from "../../../../lib/athleteAssets";
 
 export const runtime = "nodejs";
@@ -33,12 +35,16 @@ export async function GET(_request, { params }) {
     if (isCoachEmail(email)) {
       allowed = true; // 코치는 모든 리포트 열람 가능
     } else {
-      // 선수 본인 리포트만 — 요청 slug가 본인 리포트 목록에 있고, 그 리포트가 공개됐을 때만
+      // 선수 본인 리포트만 — 요청 slug가 본인 리포트 목록에 있고, 그 리포트가 공개됐을 때만.
+      // 공개 판정 = Neon publishedReports(콘솔 목록과 동일 소스). Neon 미연결 선수는 Clerk 메타 폴백.
       const meta = me?.publicMetadata || {};
       const name = me?.unsafeMetadata?.name || me?.firstName || me?.username || "";
-      const mine = resolveAssets({ name, email, reportUrl: meta.reportUrl, guideUrl: meta.guideUrl, dataUrl: meta.dataUrl });
+      const athlete = await getAthleteByEmail(email);
+      const mine = resolveAssets(athlete || { name, email, reportUrl: meta.reportUrl, guideUrl: meta.guideUrl, dataUrl: meta.dataUrl });
       const isMine = mine.reports.some((r) => r.slug === slug);
-      const pub = publishedReportSet(meta, mine.reports[0]?.slug || "");
+      const pub = athlete
+        ? new Set((athlete.publishedReports || []).map(String))
+        : publishedReportSet(meta, mine.reports[0]?.slug || "");
       if (isMine && pub.has(slug)) allowed = true;
     }
     if (!allowed) return new NextResponse("이 리포트를 볼 권한이 없어요.", { status: 403 });
