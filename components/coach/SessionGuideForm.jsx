@@ -21,7 +21,7 @@ function Field({ label, value, onChange, rows, ph, readOnly }) {
   );
 }
 
-export default function SessionGuideForm({ session, timeline, readOnly = false }) {
+export default function SessionGuideForm({ session, timeline, readOnly = false, hasNote = false, onViewNote }) {
   const g0 = session.guide || {};
   const isFollowup = (session.n || 1) > 1;
   const [discuss, setDiscuss] = useState(g0.discuss || "");
@@ -72,7 +72,10 @@ export default function SessionGuideForm({ session, timeline, readOnly = false }
       <div className="max-w-[760px] space-y-6">
         {readOnly ? (
           /* ── 세션 종료: 작성 비활성화, 만들어둔 가이드만 읽기전용 ── */
-          <div className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-muted-foreground bg-muted rounded-full px-3 py-1.5"><Lock className="w-3.5 h-3.5" />세션 종료 · 가이드 읽기 전용</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-muted-foreground bg-muted rounded-full px-3 py-1.5"><Lock className="w-3.5 h-3.5" />세션 종료 · 가이드 읽기 전용</span>
+            {hasNote && onViewNote ? <button type="button" onClick={onViewNote} className="text-[12.5px] font-bold text-primary bg-primary/10 rounded-full px-3 py-1.5">코칭 노트 보기 →</button> : null}
+          </div>
         ) : (
           /* 2) 코치 논의 입력 + AI 생성 */
           <section className="space-y-2">
@@ -87,7 +90,10 @@ export default function SessionGuideForm({ session, timeline, readOnly = false }
 
         {/* 3) 가이드 섹션 */}
         {readOnly && !hasGuideContent ? (
-          <div className="bg-muted/40 border border-border rounded-xl py-10 text-center text-[13px] text-muted-foreground">이 세션은 가이드를 작성하지 않았어요.</div>
+          <div className="bg-muted/40 border border-border rounded-xl py-10 text-center text-[13px] text-muted-foreground">
+            이 세션은 가이드를 작성하지 않았어요.
+            {hasNote ? <div className="mt-2 text-foreground/80">대신 세션 후 <button type="button" onClick={onViewNote} className="font-bold text-primary underline underline-offset-2">코칭 노트</button>가 작성돼 있어요.</div> : null}
+          </div>
         ) : (
           <div className="space-y-4">
             {isFollowup ? <Field label="지난 세션 이행 점검" value={review} onChange={setReview} rows={4} ph="지난 세션에 하기로 한 것 → 로그·전사 기반 '했음/부분/안 함' 판정" readOnly={readOnly} /> : null}

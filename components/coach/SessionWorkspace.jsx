@@ -36,7 +36,7 @@ export default function SessionWorkspace({ session, timeline, dateLabel, clientN
       </div>
 
       {tab === "guide"
-        ? <SessionGuideForm session={session} timeline={timeline} readOnly={sessionDone} />
+        ? <SessionGuideForm session={session} timeline={timeline} readOnly={sessionDone} hasNote={!!(session.detail && session.detail.chief)} onViewNote={() => setTab("note")} />
         : <div className="bg-white border border-[#e6e7eb] rounded-xl overflow-hidden max-w-[720px]"><SessionNoteForm session={session} /></div>}
     </div>
   );
