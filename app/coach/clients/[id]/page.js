@@ -1,13 +1,16 @@
-// app/coach/clients/[email]/page.js — 코치 콘솔 · 선수 상세 (데스크탑 2단). 코치 전용.
+// app/coach/clients/[id]/page.js — 코치 콘솔 · 선수 상세 (데스크탑 2단). 코치 전용.
+// [id] = 마스터 pageId(UUID). 이메일 대신 불투명 id로 라우팅(URL에 PII 노출 안 함).
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { ChevronRight, Eye, Sparkles } from "lucide-react";
 import { isCoachEmail } from "../../../../lib/coach";
-import { getAthleteByEmail, getSessionsByAthlete } from "../../../../lib/master";
+import { getAthleteByRef, getSessionsByAthlete } from "../../../../lib/master";
+import { getAthleteEvents } from "../../../../lib/calendar";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
 import { resolveAssets } from "../../../../lib/athleteAssets";
 import CoachShell from "../../../../components/coach/CoachShell";
 import CoachManageForm from "../../../../components/coach/CoachManageForm";
+import CoachScheduleEditor from "../../../../components/coach/CoachScheduleEditor";
 import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
 
@@ -29,18 +32,20 @@ function Panel({ title, right, children }) {
 }
 
 export default async function CoachClientDetail({ params }) {
-  const email = decodeURIComponent(params.email);
+  const id = params.id;
   const user = await currentUser();
   if (!isCoachEmail(user?.emailAddresses?.[0]?.emailAddress)) {
     return <div className="p-10 text-center text-sm text-muted-foreground">코치 전용 페이지예요.</div>;
   }
   const coachName = user?.unsafeMetadata?.name || user?.firstName || "코치";
-  const athlete = await getAthleteByEmail(email);
+  const athlete = await getAthleteByRef(id); // id=pageId 우선, 옛 이메일 링크도 하위호환
   if (!athlete) return <CoachShell active="athletes" coachName={coachName}><div className="p-10 text-center text-sm text-muted-foreground">선수를 찾을 수 없어요.</div></CoachShell>;
+  const email = athlete.email || "";
 
-  const [sessions, timeline] = await Promise.all([
+  const [sessions, timeline, calEvents] = await Promise.all([
     athlete.pageId ? getSessionsByAthlete(athlete.pageId) : [],
     getLogTimeline(email, kstToday(), 7),
+    athlete.pageId ? getAthleteEvents(athlete.pageId) : [],
   ]);
   const assets = resolveAssets(athlete);
   const pubSet = new Set((athlete.publishedReports || []).map(String));
@@ -58,7 +63,7 @@ export default async function CoachClientDetail({ params }) {
             <h1 className="text-[22px] font-extrabold text-[#1b2a3f] tracking-[-0.3px]">{athlete.name || email} <span className="text-[13px] font-semibold text-[#9298a2]">{athlete.status || ""}{chips ? " · " + chips : ""}</span></h1>
           </div>
           <div className="flex items-center gap-2 flex-none">
-            <Link href={`/portal?as=${encodeURIComponent(email)}`} target="_blank" className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[#3a3f48] border border-[#d9dce1] rounded-lg px-3 py-2 bg-white"><Eye className="w-4 h-4" />선수 화면</Link>
+            <Link href={`/portal?as=${athlete.pageId}`} target="_blank" className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[#3a3f48] border border-[#d9dce1] rounded-lg px-3 py-2 bg-white"><Eye className="w-4 h-4" />선수 화면</Link>
           </div>
         </div>
 
@@ -94,6 +99,8 @@ export default async function CoachClientDetail({ params }) {
                 <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} compactHeight={720} />
               </div>
             </Panel>
+
+            <CoachScheduleEditor masterPageId={athlete.pageId} events={calEvents} athleteName={athlete.name || email} today={kstToday()} />
           </div>
 
           {/* 우: 배정·상태 / 리포트 / 설문 */}

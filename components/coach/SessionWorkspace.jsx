@@ -7,7 +7,7 @@ import { cn } from "../../lib/utils";
 import SessionGuideForm from "./SessionGuideForm";
 import SessionNoteForm from "./SessionNoteForm";
 
-export default function SessionWorkspace({ session, timeline, dateLabel, clientName = "선수", clientEmail = "", initialTab = "guide" }) {
+export default function SessionWorkspace({ session, timeline, dateLabel, clientName = "선수", clientPageId = "", initialTab = "guide" }) {
   const [tab, setTab] = useState(initialTab === "note" ? "note" : "guide");
   const n = session.n || 1;
   // 노트 있음/공개됨 = 세션 종료 → 가이드 작성 비활성화(읽기전용)
@@ -19,7 +19,7 @@ export default function SessionWorkspace({ session, timeline, dateLabel, clientN
       <div className="flex items-start justify-between gap-4 mb-5">
         <div className="min-w-0">
           <div className="text-[12.5px] text-[#9298a2] mb-1">
-            <Link href="/portal" className="hover:text-primary">대시보드</Link> › {clientEmail ? <Link href={`/coach/clients/${encodeURIComponent(clientEmail)}`} className="hover:text-primary">{clientName}</Link> : clientName} › {n}회차
+            <Link href="/portal" className="hover:text-primary">대시보드</Link> › {clientPageId ? <Link href={`/coach/clients/${clientPageId}`} className="hover:text-primary">{clientName}</Link> : clientName} › {n}회차
           </div>
           <div className="flex items-center gap-3.5 flex-wrap">
             <h1 className="text-[22px] font-extrabold text-[#1b2a3f] tracking-[-0.3px]">{clientName} · {n}회차</h1>

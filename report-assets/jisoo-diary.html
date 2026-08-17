@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이지수 · 수면일지 4개월차 리포트</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#F2F3F6; --fg:#0b0e14; --card:#fff; --border:#e6e7eb;
+    --primary:#4355B0; --sky:#7EC8E3; --lav:#A0B0FF; --coral:#F4978E; --navy:#0D1B2A;
+    --muted:#6b7280;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{overflow-x:hidden}
+  body{background:var(--bg);color:var(--fg);
+    font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
+    letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
+  .wrap{max-width:940px;margin:0 auto;padding:18px 24px calc(80px + env(safe-area-inset-bottom))}
+  .appbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid #E6E7EB;padding:12px 16px}
+  .appbar .back{font-size:15px;font-weight:600;color:#0D1B2A;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+  .appbar .back svg{width:20px;height:20px}
+  .appnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:60;display:flex;background:#fff;border-top:1px solid #E6E7EB;padding:9px 0 max(11px,env(safe-area-inset-bottom))}
+  .appnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#6b7280;text-decoration:none}
+  .appnav a svg{width:22px;height:22px}
+  .appnav a span{font-size:11px;font-weight:500}
+  .appnav a.on{color:#4355B0}
+  .appnav a.on span{font-weight:600}
+  section,.block{margin-bottom:28px}
+  .tabnum{font-variant-numeric:tabular-nums}
+
+  .hero{border-radius:12px;overflow:hidden;color:#fff;background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%)}
+  .hero .pad{padding:30px 32px 0}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--sky)}
+  .hero .titrow{margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .hero h1{font-size:24px;font-weight:800;letter-spacing:-.03em}
+  .hero .pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 13px;white-space:nowrap;
+    background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);color:#c4e7f5}
+  .hero .who{margin-top:11px;font-size:15px;font-weight:700;color:#fff}
+  .hero .who span{font-size:13px;font-weight:400;color:rgba(255,255,255,.65);margin-left:3px}
+  .hero .date{margin-top:5px;font-size:12px;color:rgba(255,255,255,.5)}
+  .kpis{margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.1)}
+  .kpi{padding:16px 20px} .kpi + .kpi{border-left:1px solid rgba(255,255,255,.1)}
+  .kpi .v{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .kpi .v small{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-left:2px}
+  .kpi .k{font-size:12px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.3}
+
+  .impression{border-radius:12px;background:#f5f6fb;border:1px solid #e3e6f4;padding:24px 26px}
+  .impression .lab{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--primary)}
+  .impression p{font-size:15px;line-height:1.75;color:var(--fg);margin-top:11px}
+  .impression p b{font-weight:800}
+
+  .shead .lab{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary)}
+  .shead h2{font-size:18px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
+  .shead .desc{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.6}
+  .shead{margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+  .s-g{color:#1f8a4c} .s-w{color:#b9770e} .s-b{color:#c0554a}
+
+  /* Tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .tile{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 15px}
+  .tile .tv{font-size:19px;font-weight:800;letter-spacing:-.03em;line-height:1.15} .tile .tv small{font-size:11px;font-weight:700}
+  .tile .tn{font-size:12px;color:var(--navy);margin-top:7px;font-weight:700}
+  .tile .tb{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+  /* Bar chart (월별) */
+  .chart{padding:22px 22px 16px}
+  .bars{display:flex;align-items:flex-end;gap:14px;height:160px;padding-top:8px}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .bval{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:6px}
+  .bfill{width:100%;max-width:52px;border-radius:7px 7px 3px 3px}
+  .bx{font-size:12.5px;font-weight:700;color:var(--muted);margin-top:9px}
+  .bsub{font-size:10px;color:#aeb4c0;margin-top:1px}
+  .chartnote{margin-top:16px;border-radius:8px;background:#f1f2fb;border:1px solid #dde1f6;padding:14px;font-size:13px;line-height:1.65;color:#3a3f52}
+  .chartnote b{font-weight:800;color:var(--navy)}
+
+  /* Baseline bars (2월 워치) */
+  .wchart{padding:20px 20px 14px;overflow-x:auto}
+  .wbars{display:flex;align-items:flex-end;gap:4px;height:150px;min-width:520px;position:relative;border-bottom:1px solid var(--border)}
+  .wref{position:absolute;left:0;right:0;border-top:1px dashed #c3c8d4;z-index:1}
+  .wref span{position:absolute;right:0;top:-14px;font-size:10px;color:#9aa0aa;font-weight:700;background:#fff;padding:0 4px}
+  .wcol{flex:1;min-width:14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;z-index:2}
+  .wfill{width:100%;max-width:16px;border-radius:3px 3px 0 0}
+  .wx{display:flex;gap:4px;min-width:520px;margin-top:6px}
+  .wx span{flex:1;min-width:14px;text-align:center;font-size:8.5px;color:#aeb4c0;font-weight:600}
+  .wlegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;color:#4b5563;font-weight:600}
+  .wlegend span{display:inline-flex;align-items:center;gap:6px}
+  .wlegend i{width:11px;height:11px;border-radius:3px}
+
+  /* Routines chips */
+  .rgroup{margin-bottom:16px} .rgroup:last-child{margin-bottom:0}
+  .rgh{font-size:12.5px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .rgh i{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+  .rgh span{font-size:11px;font-weight:600;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:#fbfbfc;color:#3a3f52}
+
+  .interp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ibox{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px}
+  .ibox .ih{font-size:13px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .ibox.good .ih{color:#1f8a4c} .ibox.bad .ih{color:#c0554a}
+  .ibox .ih i{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .ibox.good .ih i{background:#1f8a4c} .ibox.bad .ih i{background:#c0554a}
+  .il{display:flex;gap:9px;align-items:flex-start;padding:10px 0;border-top:1px solid #f0f1f4}
+  .il:first-of-type{border-top:none}
+  .il .ick{flex-shrink:0;margin-top:5px;width:6px;height:6px;border-radius:50%}
+  .ibox.good .ick{background:#8fce9f} .ibox.bad .ick{background:#e0a89c}
+  .il .it{font-size:12.5px;line-height:1.55;color:#4a4f60} .il .it b{color:var(--navy);font-weight:700}
+  .il .it .src{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+
+  .bigstep{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(13,27,42,.05);padding:24px 26px;margin-bottom:14px}
+  .bigstep:last-child{margin-bottom:0}
+  .bigstep .bn{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--primary);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .bigstep .bwhen{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.02em}
+  .bigstep .bt{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--navy);margin-top:5px}
+  .bigstep .bd{font-size:14px;color:#4a4f60;line-height:1.7;margin-top:9px}
+
+  .footlogo{padding-top:20px;display:flex;justify-content:center;align-items:center;gap:7px;color:#aeb4c0;font-weight:800;font-size:12px;letter-spacing:.04em}
+  .footlogo i{width:7px;height:7px;border-radius:50%;background:#7EC8E3}
+  .disc{margin-top:14px;font-size:11px;color:#a7abb2;line-height:1.7;text-align:center}
+
+  @media print{body{background:#fff}}
+  @media(max-width:760px){
+    .wrap{padding:22px 14px}
+    .hero .pad{padding:24px 18px 0}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi{padding:14px 16px} .kpi:nth-child(3),.kpi:nth-child(4){border-top:1px solid rgba(255,255,255,.1)}
+    .kpi:nth-child(odd){border-left:none}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .interp{grid-template-columns:1fr}
+    .impression,.chart,.wchart,.bigstep{padding-left:16px;padding-right:16px}
+  }
+</style>
+</head>
+<body>
+<div class="appbar"><a href="/reports" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>리포트</a></div>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero block">
+    <div class="pad">
+      <div class="eyebrow">수면 코칭 · 4개월차</div>
+      <div class="titrow">
+        <h1>수면일지 경과 리포트</h1>
+        <span class="pill">4개월차 · 2–6월</span>
+      </div>
+      <div class="who">이지수</div>
+      <div class="date">직접 남긴 수면일지 기반 · 2026. 2. 9 → 6. 17</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v tabnum">4<small>개월</small></div><div class="k">코칭 기간</div></div>
+      <div class="kpi"><div class="v tabnum">11<small>회</small></div><div class="k">상담 세션</div></div>
+      <div class="kpi"><div class="v tabnum">65<small>%</small></div><div class="k">밤에 안 깬 날</div></div>
+      <div class="kpi"><div class="v tabnum">6.3<small>h</small></div><div class="k">평균 총수면</div></div>
+    </div>
+  </div>
+
+  <!-- Overview -->
+  <section class="impression block">
+    <div class="lab">OVERVIEW · 현재 요약</div>
+    <p>처음 가장 힘드셨던 건 <b>새벽 3~4시에 자꾸 깨는 것</b>이었어요. 4개월간 직접 남겨주신 일지로 보면, 이 부분이 <b>4~5월에 거의 사라졌어요</b>. 이제 밤에 <b>한 번도 안 깨는 날이 65%</b>고, 눕고 잠드는 데는 <b>평균 3분</b>밖에 안 걸려요 — 잠드는 능력은 원래부터 좋으셨어요. 6월 초에 새벽 각성이 잠깐 다시 올라온 건 술자리(지난주 3회)와 양압기 압력을 바꾸던 시기랑 겹쳐요. 다시 나빠진 게 아니라 그때 컨디션이 잠깐 흔들린 거예요. 지금 <b>남은 1순위 과제는 취침 시각</b>이에요. 매일 ±1.2시간씩 들쭉날쭉해서, 여기를 다듬는 게 다음 목표예요.</p>
+  </section>
+
+  <!-- 요약 지표 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">SUMMARY</div>
+      <h2>4개월 요약 지표</h2>
+      <div class="desc">직접 남겨주신 일지 43일(시차적응 기간 4/21~5/13 제외)로 계산했어요.</div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="tv s-g">65<small> %</small></div><div class="tn">밤에 안 깬 날</div><div class="tb">가장 힘들던 새벽 각성 → 거의 사라짐</div></div>
+      <div class="tile"><div class="tv s-w">6.3<small> h</small></div><div class="tn">평균 총수면</div><div class="tb">권장 7시간엔 약간 못 미쳐요</div></div>
+      <div class="tile"><div class="tv s-g">3<small> 분</small></div><div class="tn">평균 입면</div><div class="tb">눕자마자 잠들어요 (강점)</div></div>
+      <div class="tile"><div class="tv s-w">±1.2<small> h</small></div><div class="tn">취침 시각 변동폭</div><div class="tb">남은 1순위 과제, 매일 달라요</div></div>
+    </div>
+  </section>
+
+  <!-- 새벽 각성 변화 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">AWAKENINGS</div>
+      <h2>새벽 각성 변화</h2>
+      <div class="desc">하룻밤에 평균 몇 번 깼는지를 월별로 봤어요. 막대가 낮을수록 덜 깬 거예요(좋아요).</div>
+    </div>
+    <div class="card chart">
+      <div class="bars">
+        <div class="bcol"><div class="bval">0.73<small style="font-size:10px">회</small></div><div class="bfill" style="height:86%;background:#d0a15f"></div><div class="bx">3월</div><div class="bsub">n=11</div></div>
+        <div class="bcol"><div class="bval">0.13<small style="font-size:10px">회</small></div><div class="bfill" style="height:15%;background:#5bb489"></div><div class="bx">4월</div><div class="bsub">n=15</div></div>
+        <div class="bcol"><div class="bval">0.17<small style="font-size:10px">회</small></div><div class="bfill" style="height:20%;background:#5bb489"></div><div class="bx">5월</div><div class="bsub">n=6</div></div>
+        <div class="bcol"><div class="bval">0.64<small style="font-size:10px">회</small></div><div class="bfill" style="height:75%;background:#cf9f5c"></div><div class="bx">6월</div><div class="bsub">n=11</div></div>
+      </div>
+      <div class="chartnote"><b>4~5월엔 평균 0.1~0.2회로, 거의 안 깨는 수준까지 내려왔어요.</b> 처음 거의 매일 새벽에 깨던 것에 비하면 정말 큰 변화예요. 6월에 다시 조금 올라온 건 술자리(지난주 3회)와 양압기 압력을 바꿔보던 시기랑 겹치는 일시적 흔들림이에요. 양압기를 벗으면 나빠지고 끼면 안정된다는 패턴이 일관돼서, 압력만 잘 맞추면 이 부분은 다시 내려올 거예요.</div>
+    </div>
+  </section>
+
+  <!-- 시도한 루틴 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">ROUTINES</div>
+      <h2>세션에서 함께 시도한 루틴</h2>
+      <div class="desc">4개월간 세션마다 같이 이야기하고 시도한 것들이에요. 효과가 어땠는지로 나눠봤어요. 지수님껜 대부분 "긴장을 내려놓는 쪽"이 잘 맞았어요.</div>
+    </div>
+    <div class="card" style="padding:20px 22px">
+      <div class="rgroup">
+        <div class="rgh"><i style="background:#4355B0"></i>도움됨 <span>· 효과를 본 것</span></div>
+        <div class="chips">
+          <span class="chip">명상하고 자기</span><span class="chip">자극조절: 거실서 예능</span><span class="chip">밤샘 작업 돌리기 중단</span><span class="chip">스마트워치·데이터 격리</span><span class="chip">why tree로 생각 정리</span><span class="chip">Wind down(정리·노트)</span><span class="chip">새벽 각성 시 침대 밖으로</span><span class="chip">일 직렬화(TODO Skill)</span><span class="chip">슬립케어 복용</span>
+        </div>
+      </div>
+      <div class="rgroup">
+        <div class="rgh"><i style="background:#A0B0FF"></i>부분 효과 <span>· 상황 따라</span></div>
+        <div class="chips">
+          <span class="chip">취침 마지노선(23:30→22:30)</span><span class="chip">낮잠(20분)</span><span class="chip">밤 10:30 취침 데드라인</span><span class="chip">술+양압기 병행 테스트</span>
+        </div>
+      </div>
+      <div class="rgroup">
+        <div class="rgh"><i style="background:#F4978E"></i>효과 없음 · 중단</div>
+        <div class="chips">
+          <span class="chip">압축수면(늦게 자기)</span><span class="chip">알람 없이 기상</span><span class="chip">멜라토닌</span>
+        </div>
+      </div>
+      <div class="rgroup">
+        <div class="rgh"><i style="background:#7EC8E3"></i>논의 <span>· 효과 미확인</span></div>
+        <div class="chips">
+          <span class="chip">철분제 복용</span><span class="chip">상기도 근육 강화 운동</span><span class="chip">외부 일정 늘리기</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 도움된 것 / 안 된 것 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">WHAT WORKED</div>
+      <h2>도움이 된 것 · 안 된 것</h2>
+      <div class="desc">직접 일지에 남겨주신 기록을 바탕으로 나눠봤어요. 긴장을 내려놓는 것은 거의 다 도움이 됐고, 억지로 자려는 것은 그렇지 않았어요.</div>
+    </div>
+    <div class="interp">
+      <div class="ibox good">
+        <div class="ih"><i></i>도움됨 · 효과를 본 것</div>
+        <div class="il"><span class="ick"></span><div class="it"><b>자기 전 명상</b> → 입면·안정감 좋아짐<span class="src">4/9 일지 "명상을 했는데 도움이 된 듯"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>밤 작업 멈추고 거실서 예능</b> → 잠들기 전 과각성 ↓<span class="src">7차 메모 · 각성 낮추는 데 도움</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>밤에 코딩 돌려놓기 중단</b> → 아침 조기각성 사라짐<span class="src">7차 메모 · 궁금증에 일찍 깸 → 중지</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>스마트워치·수면앱 내려놓기</b> → 데이터 강박 ↓<span class="src">3차 "워치 풀고 자기" 실천</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>why tree로 생각 정리</b> → 불안·반추 ↓<span class="src">8차 메모 · 긴장·불안 인지</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>슬립케어 복용</b> → 빠르게 잠이 쏟아짐<span class="src">3차 · 6/10 일지 복용 후 잠듦</span></div></div>
+      </div>
+      <div class="ibox bad">
+        <div class="ih"><i></i>안 됨 · 효과 없음·악화</div>
+        <div class="il"><span class="ick"></span><div class="it"><b>음주(단독)</b> → 수면 질에 도움 안 됨<span class="src">6/2 일지 "술 먹고 자봤는데 별로"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>양압기 벗고 잠</b> → 머리 띵·개운하지 않음<span class="src">6/12 일지 "벗고 잤더니 머리가 띵"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>압축수면(늦게 자기)</b> → 아예 못 자는 날 발생<span class="src">3차 "늦게 자려다 아예 못 잠"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>알람 없이 기상</b> → 기상 들쭉날쭉<span class="src">3·5차 · 리듬 유지엔 불리</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2월 베이스라인 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">BASELINE</div>
+      <h2>코칭 시작 시점 기록 · 2월</h2>
+      <div class="desc">코칭을 막 시작한 2월, 갤럭시 워치에 남은 밤중 각성 시간이에요. 지금과 나란히 보면 얼마나 멀리 오셨는지 보여요. (미착용·여행·낮잠처럼 기록이 정확하지 않은 날은 뺐어요.)</div>
+    </div>
+    <div class="card wchart">
+      <div class="wbars">
+        <div class="wref" style="bottom:15.8%"><span>30분</span></div>
+        <div class="wcol"><div class="wfill" style="height:15.8%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:24.7%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:4.7%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:14.2%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:81.1%;background:#F4978E"></div></div>
+        <div class="wcol"><div class="wfill" style="height:100%;background:#F4978E"></div></div>
+        <div class="wcol"><div class="wfill" style="height:27.4%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:17.4%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:26.3%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:12.6%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:7.9%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:46.8%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:23.7%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:15.8%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:4.7%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:32.6%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:35.8%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:11.1%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:8.4%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:20.5%;background:#7EC8E3"></div></div>
+        <div class="wcol"><div class="wfill" style="height:16.3%;background:#7EC8E3"></div></div>
+      </div>
+      <div class="wx">
+        <span>2/9</span><span>2/10</span><span>2/11</span><span>2/13</span><span>2/16</span><span>2/17</span><span>2/19</span><span>2/20</span><span>2/21</span><span>2/24</span><span>2/25</span><span>2/26</span><span>2/27</span><span>2/28</span><span>3/1</span><span>3/4</span><span>3/5</span><span>3/6</span><span>3/7</span><span>3/8</span><span>3/9</span>
+      </div>
+      <div class="wlegend">
+        <span><i style="background:#7EC8E3"></i>밤중 깬 시간(분)</span>
+        <span><i style="background:#F4978E"></i>호흡(SpO2) 같이 떨어진 날</span>
+      </div>
+    </div>
+    <div class="chartnote" style="margin-top:12px">2월엔 밤중에 깨어 있던 시간이 <b>거의 매일 30분 이상</b>, 여행·시차(2/16~17) 땐 <b>2~3시간(154·190분)</b>까지 갔어요. 그날들은 호흡(SpO2)도 같이 떨어져서, 양압기가 왜 중요한지 보여줘요. 지금은 일지에서 <b>대부분 안 깨는 날</b>이니, 정말로 푹 자게 되신 거예요.</div>
+  </section>
+
+  <!-- 남은 과제 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">NEXT</div>
+      <h2>남은 과제 · 다음 목표</h2>
+      <div class="desc">4개월 데이터가 가리키는, 지금 집중할 지점이에요.</div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">1</div>
+      <div class="bx">
+        <div class="bwhen">1순위 과제</div>
+        <div class="bt">취침 시각 일정하게 (변동폭 ±1.2h → 줄이기)</div>
+        <div class="bd">각성은 잡혔고 입면도 빠르세요. 이제 매일 ±1.2시간씩 들쭉날쭉한 취침 시각을 다듬는 게 다음 목표예요. 밤 작업 마무리 시각을 정해두면 취침이 일정해지고, 총수면도 자연스럽게 늘어요.</div>
+      </div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">2</div>
+      <div class="bx">
+        <div class="bwhen">유지</div>
+        <div class="bt">양압기 압력 맞추기 · 꾸준히 착용</div>
+        <div class="bd">양압기를 끼면 안정, 벗으면 나빠지는 패턴이 일지로 일관돼요. 6월 초 새벽 각성 반등도 압력을 바꾸던 시기와 겹쳐요. 압력을 전문의와 맞추고 꾸준히 쓰는 게 각성 재발을 막는 열쇠예요.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footlogo"><i></i>NOCT RESEARCH · 김소정 IPHI 인증 국제수면코치</div>
+  <div class="disc">이 리포트는 직접 남겨주신 수면일지와 코칭 세션 기록을 요약·분석한 자료로, 의학적 진단을 대체하지 않아요. 미착용·여행·낮잠처럼 기록이 정확하지 않은 날은 감안해서 봤어요.</div>
+
+</div>
+<nav class="appnav">
+  <a href="/portal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+  <a href="/log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+  <a href="/reports" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+  <a href="/me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
+</nav>
+</body>
+</html>

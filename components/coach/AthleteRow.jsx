@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 export default function AthleteRow({ a }) {
   const router = useRouter();
-  const detail = `/coach/clients/${encodeURIComponent(a.email)}`;
+  const detail = `/coach/clients/${a.uid}`; // a.uid = 마스터 pageId(UUID)
   const go = (e, href) => { e.stopPropagation(); router.push(href); };
   return (
     <tr onClick={() => router.push(detail)} className="hover:bg-[#fafbfc] cursor-pointer">

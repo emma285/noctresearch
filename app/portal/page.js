@@ -6,7 +6,7 @@ import { Calendar, Upload } from "lucide-react";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import Link from "next/link";
-import { getAthleteByEmail, getSessionsByAthlete, getAllAthletes, getNextGuideSessionByClient, getCoachOverview } from "../../lib/master";
+import { getAthleteByEmail, getAthleteByRef, getSessionsByAthlete, getAllAthletes, getNextGuideSessionByClient, getCoachOverview } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday } from "../../lib/log";
 
@@ -82,17 +82,16 @@ export default async function PortalPage({ searchParams }) {
   const user = await currentUser();
   const myEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-  // 코치면 대시보드(별도 콘솔). ?as=<이메일>이면 그 선수 미리보기.
-  const previewEmail = isCoachEmail(myEmail) && searchParams?.as ? String(searchParams.as) : null;
-  if (isCoachEmail(myEmail) && !previewEmail) {
+  // 코치면 대시보드(별도 콘솔). ?as=<pageId 또는 이메일>이면 그 선수 미리보기.
+  const previewRef = isCoachEmail(myEmail) && searchParams?.as ? String(searchParams.as) : null;
+  if (isCoachEmail(myEmail) && !previewRef) {
     const [athletes, overview] = await Promise.all([getAthletes(), getCoachOverview()]);
     const coachName = user?.unsafeMetadata?.name || user?.firstName || myEmail?.split("@")[0] || "코치";
     return <CoachDashboard coachName={coachName} athletes={athletes} overview={overview} />;
   }
 
-  // 마스터(단일 소스) 조회. 없으면 Clerk 폴백.
-  const lookupEmail = previewEmail || myEmail;
-  const athlete = lookupEmail ? await getAthleteByEmail(lookupEmail) : null;
+  // 마스터(단일 소스) 조회. 미리보기=pageId/이메일 해석, 아니면 본인 이메일. 없으면 Clerk 폴백.
+  const athlete = previewRef ? await getAthleteByRef(previewRef) : (myEmail ? await getAthleteByEmail(myEmail) : null);
   const meta = user?.publicMetadata || {};
   const masterDone = athlete?.status ? MASTER_DONE_STATES.includes(athlete.status) : null;
 
@@ -117,13 +116,15 @@ export default async function PortalPage({ searchParams }) {
   const ddayText = dday === null ? "미정" : dday > 0 ? `D-${dday}` : dday === 0 ? "D-day" : "진행중";
 
   // 지난 세션 + 다가오는 일정 — 둘 다 pageId만 필요하고 서로 독립이라 병렬 조회 (waterfall 제거)
-  const [sessions, calEvents] = ongoing && athlete?.pageId
+  const [allSessions, calEvents] = ongoing && athlete?.pageId
     ? await Promise.all([
         getSessionsByAthlete(athlete.pageId),
         getAthleteEvents(athlete.pageId, { forAthlete: true }),
       ])
     : [[], []];
-  const effectiveCount = sessions.length || (searchParams?.stage === "ongoing" ? 1 : 0);
+  // 선수에겐 코치가 공개한 세션만 노출 (비공개=코치 검토 중은 목록에서 숨김)
+  const sessions = allSessions.filter((s) => s.published);
+  const effectiveCount = allSessions.length || (searchParams?.stage === "ongoing" ? 1 : 0);
   const nextOrdinal = effectiveCount + 1;
   const upcoming = calEvents.filter((e) => e.kind === "event" && (e.end || e.start).slice(0, 10) >= kstToday()).slice(0, 4);
 
