@@ -115,6 +115,17 @@ export default async function CoachClientDetail({ params }) {
               ))}
             </Panel>
 
+            <Panel title="부가자료" right={<span className="text-[12px] text-[#9298a2] font-semibold">{assets.extras?.length || 0}개</span>}>
+              {(!assets.extras || assets.extras.length === 0) ? (
+                <div className="p-4 text-[13px] text-muted-foreground">아직 등록된 부가자료가 없어요.</div>
+              ) : assets.extras.map((x) => (
+                <a key={x.url} href={x.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3.5 border-t border-[#e7e9ed] first:border-t-0 hover:bg-[#fafbfc]">
+                  <div className="flex-1 min-w-0"><div className="text-[14px] font-semibold text-[#1b2a3f] truncate">{x.label}</div>{x.desc ? <div className="text-[12px] text-[#9298a2] mt-0.5 truncate">{x.desc}</div> : null}</div>
+                  <span className="text-[#9298a2]">→</span>
+                </a>
+              ))}
+            </Panel>
+
             <Panel title="사전 설문 요약" right={<span className="text-[12px] text-[#c2c7cf] font-semibold">준비중</span>}>
               <div className="p-4 text-[13px] text-muted-foreground leading-relaxed">설문 데이터 요약은 다음 단계에서 연동돼요.</div>
             </Panel>
