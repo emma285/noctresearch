@@ -14,9 +14,9 @@ const NAV = [
 
 export default function CoachShell({ active = "dashboard", coachName = "코치", children }) {
   return (
-    <div className="min-h-[100dvh] bg-[#f4f5f7] flex">
-      {/* 사이드바 */}
-      <aside className="hidden md:flex w-[210px] flex-none bg-[#111d2e] text-[#c7cfda] flex-col px-3.5 py-4 sticky top-0 h-[100dvh]">
+    <div className="min-h-[100dvh] bg-[#f4f5f7]">
+      {/* 사이드바 — viewport에 fixed 고정(스크롤해도 안 움직임). 본문은 폭만큼 왼쪽 여백. */}
+      <aside className="hidden md:flex fixed top-0 left-0 z-30 w-[210px] h-[100dvh] flex-col px-3.5 py-4 bg-[#111d2e] text-[#c7cfda]">
         <div className="px-2 pt-1.5 pb-4 text-[14px] font-extrabold text-white tracking-[0.4px]">NOCT <span className="text-[#7EC8E3] font-semibold">COACH</span></div>
         <nav className="flex flex-col gap-0.5">
           {NAV.map(({ key, label, href, Icon, soon }) => {
@@ -44,8 +44,8 @@ export default function CoachShell({ active = "dashboard", coachName = "코치",
         <LogoutButton />
       </div>
 
-      {/* 본문 */}
-      <main className="flex-1 min-w-0 pt-12 md:pt-0">{children}</main>
+      {/* 본문 — 고정 사이드바 폭만큼 왼쪽 여백(md+) */}
+      <main className="min-w-0 pt-12 md:pt-0 md:pl-[210px]">{children}</main>
     </div>
   );
 }

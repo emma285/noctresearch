@@ -1,10 +1,10 @@
-// app/coach/clients/[email]/logs/[date]/page.js — 코치 콘솔 · 그날 선수 기록 상세.
-// 수면 필드 + 루틴 타임라인. 앱의 /log/day/[date]와 동일 렌더, 코치 스코프(이메일=params).
+// app/coach/clients/[id]/logs/[date]/page.js — 코치 콘솔 · 그날 선수 기록 상세.
+// 수면 필드 + 루틴 타임라인. 앱의 /log/day/[date]와 동일 렌더, 코치 스코프([id]=마스터 pageId).
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { isCoachEmail } from "../../../../../../lib/coach";
-import { getAthleteByEmail } from "../../../../../../lib/master";
+import { getAthleteByRef } from "../../../../../../lib/master";
 import { getDayEntries } from "../../../../../../lib/log";
 import { TYPES } from "../../../../../../components/app/routineTypes";
 import { Surface, Row, SectionHeader } from "../../../../../../components/app/primitives";
@@ -17,13 +17,14 @@ const fmtMin = (m) => (typeof m === "number" ? `${String(Math.floor(m / 60)).pad
 const tmin = (t) => { const [h, m] = String(t || "0:0").split(":").map(Number); return h * 60 + m; };
 
 export default async function CoachAthleteDayDetail({ params }) {
-  const email = decodeURIComponent(params.email);
+  const id = params.id;
   const date = params.date;
   const user = await currentUser();
   if (!isCoachEmail(user?.emailAddresses?.[0]?.emailAddress)) {
     return <div className="p-10 text-center text-sm text-muted-foreground">코치 전용 페이지예요.</div>;
   }
-  const athlete = await getAthleteByEmail(email);
+  const athlete = await getAthleteByRef(id);
+  const email = athlete?.email || "";
   const { sleep, blocks } = await getDayEntries(email, date);
 
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date || "");
@@ -45,7 +46,7 @@ export default async function CoachAthleteDayDetail({ params }) {
   return (
     <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[560px]">
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-2 flex items-center gap-3">
-        <Link href={`/coach/clients/${encodeURIComponent(email)}/logs`} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></Link>
+        <Link href={`/coach/clients/${id}/logs`} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></Link>
         <div className="min-w-0">
           <h1 className="text-[20px] font-bold tracking-[-0.3px] leading-tight">{dateLabel}</h1>
           <div className="text-[13px] text-muted-foreground truncate">{athlete?.name || email}</div>

@@ -1,10 +1,10 @@
-// app/coach/clients/[email]/logs/page.js — 코치 콘솔 · 선수 기록(수면·루틴) 목록.
-// 선수가 남긴 일별 로그를 최신순으로. 각 날짜 → 상세(수면 필드 + 루틴 타임라인).
+// app/coach/clients/[id]/logs/page.js — 코치 콘솔 · 선수 기록(수면·루틴) 목록.
+// [id]=마스터 pageId. 선수가 남긴 일별 로그를 최신순으로. 각 날짜 → 상세(수면 필드 + 루틴 타임라인).
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Moon, ListChecks } from "lucide-react";
 import { isCoachEmail } from "../../../../../lib/coach";
-import { getAthleteByEmail } from "../../../../../lib/master";
+import { getAthleteByRef } from "../../../../../lib/master";
 import { getLogDays } from "../../../../../lib/log";
 import { Surface, SectionHeader } from "../../../../../components/app/primitives";
 
@@ -26,12 +26,13 @@ function recentMonths(n) {
 }
 
 export default async function CoachAthleteLogs({ params }) {
-  const email = decodeURIComponent(params.email);
+  const id = params.id;
   const user = await currentUser();
   if (!isCoachEmail(user?.emailAddresses?.[0]?.emailAddress)) {
     return <div className="p-10 text-center text-sm text-muted-foreground">코치 전용 페이지예요.</div>;
   }
-  const athlete = await getAthleteByEmail(email);
+  const athlete = await getAthleteByRef(id);
+  const email = athlete?.email || "";
 
   // 최근 3개월 로그 집계
   let days = {};
@@ -41,7 +42,7 @@ export default async function CoachAthleteLogs({ params }) {
   return (
     <div className="min-h-[100dvh] bg-background mx-auto w-full max-w-[560px]">
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-2 flex items-center gap-3">
-        <Link href={`/coach/clients/${encodeURIComponent(email)}`} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></Link>
+        <Link href={`/coach/clients/${id}`} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></Link>
         <div className="min-w-0">
           <h1 className="text-[20px] font-bold tracking-[-0.3px] leading-tight">{athlete?.name || email} · 기록</h1>
           <div className="text-[13px] text-muted-foreground">수면·루틴 로그 (최근 3개월)</div>
@@ -57,7 +58,7 @@ export default async function CoachAthleteLogs({ params }) {
             {dates.map((d) => {
               const day = days[d];
               return (
-                <Link key={d} href={`/coach/clients/${encodeURIComponent(email)}/logs/${d}`} className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border active:bg-muted/40 transition-colors">
+                <Link key={d} href={`/coach/clients/${id}/logs/${d}`} className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border active:bg-muted/40 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="text-[15px] font-semibold text-foreground">{dLabel(d)}</div>
                     <div className="flex items-center gap-3 mt-1 text-[13px] text-muted-foreground">

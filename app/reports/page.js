@@ -3,7 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import AppShell, { AppBody } from "../../components/app/AppShell";
 import { Surface, ReportRow } from "../../components/app/primitives";
-import { getAthleteByEmail } from "../../lib/master";
+import { getAthleteByEmail, getAthleteByRef } from "../../lib/master";
 import { resolveAssets, publishedReportSet } from "../../lib/athleteAssets";
 import { isCoachEmail } from "../../lib/coach";
 
@@ -13,9 +13,9 @@ export const dynamic = "force-dynamic";
 export default async function ReportsPage({ searchParams }) {
   const user = await currentUser();
   const myEmail = user?.emailAddresses?.[0]?.emailAddress;
-  const previewEmail = isCoachEmail(myEmail) && searchParams?.as ? String(searchParams.as) : null;
-  const lookupEmail = previewEmail || myEmail;
-  const athlete = lookupEmail ? await getAthleteByEmail(lookupEmail) : null;
+  const previewRef = isCoachEmail(myEmail) && searchParams?.as ? String(searchParams.as) : null;
+  const athlete = previewRef ? await getAthleteByRef(previewRef) : (myEmail ? await getAthleteByEmail(myEmail) : null);
+  const lookupEmail = athlete?.email || myEmail;
   const meta = user?.publicMetadata || {};
   const clientName = athlete?.name || user?.unsafeMetadata?.name || user?.firstName || myEmail?.split("@")[0] || "선수";
 
@@ -32,10 +32,11 @@ export default async function ReportsPage({ searchParams }) {
       </div>
       <AppBody className="pt-4">
         <Surface>
-          <ReportRow soon date="예정" title="다음 점검 리포트" sub={newest.length > 0 ? "세션 후 점검 리포트가 쌓여요." : "첫 리포트가 준비되면 여기에 열려요."} />
-          {newest.map((r) => (
+          {newest.length > 0 ? newest.map((r) => (
             <ReportRow key={r.slug} date={r.date || "리포트"} badge={r.badge} title={r.label} sub={r.desc || "코치가 공개한 리포트예요."} href={`/report/view/${r.slug}`} />
-          ))}
+          )) : (
+            <div className="p-5 text-[13px] text-muted-foreground">첫 리포트가 준비되면 여기에 열려요.</div>
+          )}
         </Surface>
       </AppBody>
     </AppShell>

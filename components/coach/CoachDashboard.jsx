@@ -88,7 +88,7 @@ export default function CoachDashboard({ coachName = "코치", athletes = [], ov
               <div className="px-4 py-3.5 border-b border-[#e7e9ed]"><h2 className="text-[13.5px] font-extrabold text-[#2a3340]">이번 주 세션</h2></div>
               {upcoming.length === 0 ? <div className="px-4 py-8 text-center text-[12.5px] text-[#9aa0ab]">예정된 세션이 없어요.</div>
                 : upcoming.map((s, i) => (
-                  <Link key={i} href={s.id ? `/coach/session/${s.id}` : `/coach/clients/${encodeURIComponent(s.email)}`} className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e7e9ed] last:border-b-0 hover:bg-[#fafbfc]">
+                  <Link key={i} href={s.id ? `/coach/session/${s.id}` : `/coach/clients/${s.pageId}`} className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e7e9ed] last:border-b-0 hover:bg-[#fafbfc]">
                     <span className="w-9 h-9 rounded-lg bg-[#eef0fb] text-primary flex items-center justify-center flex-none"><CalendarDays className="w-[18px] h-[18px]" /></span>
                     <div className="flex-1 min-w-0"><div className="text-[13.5px] font-bold text-[#1b2a3f] truncate">{s.name}</div><div className="text-[12px] text-[#9298a2] mt-0.5">{whenLabel(s.at)}{dday(s.at) ? ` · ${dday(s.at)}` : ""}</div></div>
                     <ChevronRight className="w-4 h-4 text-[#c2c7cf] flex-none" />

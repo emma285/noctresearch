@@ -42,7 +42,7 @@ export default async function CoachSessionNotePage({ params, searchParams }) {
 
   return (
     <CoachShell active="sessions" coachName={coachName}>
-      <SessionWorkspace session={session} timeline={timeline} dateLabel={fmtDate(session.date)} clientName={clientName} clientEmail={clientEmail} initialTab={searchParams?.tab === "note" ? "note" : "guide"} />
+      <SessionWorkspace session={session} timeline={timeline} dateLabel={fmtDate(session.date)} clientName={clientName} clientPageId={session.clientId} initialTab={searchParams?.tab === "note" ? "note" : "guide"} />
     </CoachShell>
   );
 }
