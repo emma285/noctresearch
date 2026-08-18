@@ -2,6 +2,7 @@
 // 세션 가이드(세션 전 준비) — 타임라인 + 코치 논의 입력 + AI 생성 + 편집 + 메모 + 저장.
 // readOnly=true(세션 종료: 노트 있음/공개됨) → 작성 비활성화, 만들어둔 가이드만 읽기전용 표시.
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles, Lock } from "lucide-react";
 import LogTimelinePanel from "./LogTimelinePanel";
 
@@ -22,6 +23,7 @@ function Field({ label, value, onChange, rows, ph, readOnly }) {
 }
 
 export default function SessionGuideForm({ session, timeline, targets = [], targetSummary = null, readOnly = false, hasNote = false, onViewNote }) {
+  const router = useRouter();
   const g0 = session.guide || {};
   const isFollowup = (session.n || 1) > 1;
   const [discuss, setDiscuss] = useState(g0.discuss || "");
@@ -44,7 +46,7 @@ export default function SessionGuideForm({ session, timeline, targets = [], targ
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: session.id, action: "generate", discuss }),
       }).then((r) => r.json());
-      if (r.success && r.guide) { setReview(r.guide.review || ""); setGoal(r.guide.goal || ""); setTopics(r.guide.topics || ""); setChecks(r.guide.checks || ""); setQuestions(r.guide.questions || ""); }
+      if (r.success && r.guide) { setReview(r.guide.review || ""); setGoal(r.guide.goal || ""); setTopics(r.guide.topics || ""); setChecks(r.guide.checks || ""); setQuestions(r.guide.questions || ""); router.refresh(); }
       else alert(r.message || "생성 실패");
     } catch (e) { alert("생성 실패: " + e.message); }
     setGen(false);
@@ -56,7 +58,7 @@ export default function SessionGuideForm({ session, timeline, targets = [], targ
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: session.id, action: "save", guide: { discuss, review, goal, topics, checks, questions, memo } }),
       }).then((r) => r.json());
-      if (r.success) { setSaved(true); setTimeout(() => setSaved(false), 2000); } else alert(r.message || "저장 실패");
+      if (r.success) { setSaved(true); setTimeout(() => setSaved(false), 2000); router.refresh(); } else alert(r.message || "저장 실패");
     } catch (e) { alert("저장 실패: " + e.message); }
     setSaving(false);
   }
