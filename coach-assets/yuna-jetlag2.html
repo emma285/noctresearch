@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>윤이나 · 보스턴 도착 후 3일 타임테이블</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+*{box-sizing:border-box}
+body{font-family:'Pretendard',system-ui,sans-serif;background:#F4F6F8;color:#0D1B2A;margin:0;padding:32px 20px 56px}
+.wrap{max-width:960px;margin:0 auto}
+.flag{display:inline-block;font-size:11px;font-weight:800;color:#8a5a00;background:#fbf3e6;border:1px solid #f0dcae;border-radius:999px;padding:3px 10px;margin-bottom:12px}
+h1{font-size:23px;font-weight:800;margin:0 0 4px}
+.sub{color:#5B6773;font-size:13.5px;line-height:1.65;margin:0 0 16px}
+.sub b{color:#20506A}
+.why{background:#EAF4FB;border:1px solid #CFE6F5;border-radius:12px;padding:13px 15px;margin:0 0 18px;font-size:13px;line-height:1.7;color:#20506A}
+.why b{color:#12405c}
+.legend{display:flex;flex-wrap:wrap;gap:13px;margin:0 0 14px;font-size:12.5px;color:#37434F}
+.lg{display:flex;align-items:center;gap:6px}
+.lg i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+.cal{display:grid;grid-template-columns:54px repeat(4,1fr);gap:0;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden}
+.gut{position:relative;border-right:1px solid #EEF1F4}
+.gut .gtop{height:104px;border-bottom:1px solid #EEF1F4}
+.gutgrid{position:relative}
+.hr{position:absolute;left:0;right:6px;transform:translateY(-50%);text-align:right;font-size:10.5px;color:#9aa6b2;font-weight:600}
+.col{border-right:1px solid #EEF1F4}.col:last-child{border-right:none}
+.ch{min-height:104px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
+.cd{font-size:15px;font-weight:800}.cd span{font-size:11px;color:#9aa6b2;margin-left:2px}
+.ct{font-size:10.5px;font-weight:800;color:#20506A;background:#e8f2f8;border-radius:5px;padding:1px 7px;display:inline-block;margin:2px 0 4px}
+.cn{font-size:10.5px;line-height:1.45;color:#7a8794}.cn b{color:#37434F}
+.grid{position:relative;background:repeating-linear-gradient(#F5F7F9 0 1px,transparent 1px 42px)}
+.band{position:absolute;left:0;right:0;z-index:0;background:rgba(180,140,0,.10);border-top:1px dashed rgba(180,140,0,.45);border-bottom:1px dashed rgba(180,140,0,.45)}
+.band span{position:absolute;top:3px;left:5px;right:5px;font-size:9px;font-weight:800;color:#8a6d00;background:rgba(255,255,255,.75);padding:1px 4px;border-radius:4px;line-height:1.25}
+.ev{position:absolute;left:6px;right:6px;z-index:1;border-radius:9px;padding:4px 8px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+.ev .tl{font-size:11px;font-weight:800;line-height:1.2}
+.ev .nm{font-size:11px;font-weight:800;line-height:1.25;margin-top:1px}
+.ev.sleep .nm{font-size:12px}
+.ev .sub{display:block;font-size:9.5px;font-weight:500;line-height:1.35;margin-top:2px;opacity:.82}
+.ev.sleep .sub{opacity:1;font-size:10px;font-weight:600;color:#e4ebf2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="flag">시차적응 프로토콜 (2) · 도착 이후</span>
+  <h1>보스턴 시차적응 프로토콜 (2) <span style="font-size:13px;font-weight:600;color:#9298a2;margin-left:6px">비행 ~ 도착 후 이틀</span></h1>
+  <p class="sub">8/19 아침 서울 출발부터 보스턴에 내린 뒤 이틀까지예요. 첫 칸(기내)은 <b>서울 시각</b>, 내린 뒤부턴 <b>보스턴 현지 시각</b>으로 지내요. 대회(8/27~) 전에 리듬 잡는 게 목표예요.</p>
+  <div class="legend" id="legend"></div>
+  <div class="cal" id="cal"></div>
+</div>
+
+<script>
+const PXH = 42, AX0 = 6, AX1 = 30, H = (AX1 - AX0) * PXH;
+const h6 = t => (t >= AX0 ? t : t + 24) - AX0;
+const hhmm = t => { t = t % 24; let hh = Math.floor(t), mm = Math.round((t - hh) * 60); if (mm === 60) { hh = (hh + 1) % 24; mm = 0; } return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); };
+const COLOR = {
+  수면:['#26374A','#e4ebf2'], 식사:['#E4F2E8','#2E7D46'], 커피:['#F6E7CE','#8a5a00'],
+  낮잠:['#DCEEF6','#1f5b78'], 빛:['#FBF1CE','#8a6d00'], 이완:['#E7EAEE','#3a4652'], 훈련:['#EEF0FB','#4355B0'],
+  비행:['#E3EDF6','#1F5B8A'], 선글라스:['#ECE9F8','#5A4FA6'],
+};
+// [start, end, type, 시각라벨, 이름, dashed]
+const DAYS = [
+  { date:'8/19', dow:'수', tag:'기내 · 서울 시각',
+    note:'06:00에 일어나 선글라스 쓰고 공항으로 가요. 앞부분은 깨어있다가, 보스턴 밤 시간대(대략 15:00부터)에 안대 쓰고 자는 게 제일 중요해요. 멜라토닌 0.5mg 도움받고요.',
+    bands:[], cards:[
+      [6.0,8.5,'선글라스','06:00','일어나서 공항 이동 · 선글라스로 아침빛 가리기',false],
+      [9.5,15.0,'비행','09:30','이륙 KE091 · 앞부분은 깨어있기 · 물이랑 가벼운 식사',false],
+      [15.0,22.0,'수면','15:00','기내수면 (보스턴 밤 시간대) · 안대·귀마개 · 멜라토닌 0.5mg',false],
+      [22.0,23.3,'비행','22:00','착륙 1~2시간 전 · 안대 벗고 빛 쐬기 · 물이랑 스트레칭',false],
+      [23.3,24.6,'비행','23:20','착륙 (보스턴 10:20) · 내려서 밖에서 햇빛 흠뻑',false],
+    ]},
+  { date:'8/19', dow:'수', tag:'보스턴 도착 · 졸음 버티기',
+    note:'10:20에 내리면 바로 햇빛 많이 쬐고, 낮엔 움직이면서 안 졸게 버텨요. 많이 졸리면 20~30분만 자고, 저녁엔 빛 줄여서 22:30에 누워요.',
+    bands:[], cards:[
+      [10.33,11.1,'빛','10:20','내려서 밖에서 햇빛',false],
+      [12.5,13.3,'식사','12:30','점심 (커피 1잔은 괜찮아요)',false],
+      [14.0,14.6,'낮잠','14:00','졸리면 20~30분만',true],
+      [15.0,17.0,'빛','15:00','산책하면서 햇빛 계속',false],
+      [18.5,19.3,'식사','18:30','저녁 (이후로는 빛 줄이기)',false],
+      [21.5,22.5,'이완','21:30','샤워하고 폰 내려놓기',false],
+      [22.5,30.0,'수면','22:30','취침 22:30 · 멜라토닌 0.5mg',false],
+    ]},
+  { date:'8/20', dow:'목', tag:'보스턴 시간에 맞추기',
+    note:'07:30에 딱 맞춰 일어나서 밖에서 아침 햇빛을 30분 쬐요. 커피는 오전에만 마시고, 훈련은 아직 시차가 남았으니 가볍게 해요.',
+    bands:[[7.5,8.4,'☀️ 야외 아침 햇빛 (리듬 잡기)']], cards:[
+      [6.0,7.5,'수면','','기상 07:30',false],
+      [7.5,8.4,'빛','07:30','밖에서 아침 햇빛 30분',false],
+      [8.5,9.2,'식사','08:30','아침',false],
+      [9.3,10.0,'커피','09:20','커피 (14:30 이후엔 끊기)',true],
+      [10.5,12.5,'훈련','10:30','훈련 (가볍게)',false],
+      [13.0,13.8,'식사','13:00','점심',false],
+      [14.5,15.0,'낮잠','14:30','필요하면 20분 이내',true],
+      [18.5,19.3,'식사','18:30','저녁 (이후로는 빛 줄이기)',false],
+      [21.5,22.5,'이완','21:30','이완 · 샤워',false],
+      [22.5,30.0,'수면','22:30','취침 22:30 · 멜라토닌 0.5mg',false],
+    ]},
+  { date:'8/21', dow:'금', tag:'리듬 자리잡기',
+    note:'리듬이 자리잡는 날이에요. 컨디션 봐가며 훈련을 조금 올리고, 낮잠은 되도록 줄여요. 멜라토닌도 점점 끊고요.',
+    bands:[[7.5,8.4,'☀️ 야외 아침 햇빛 (리듬 잡기)']], cards:[
+      [6.0,7.5,'수면','','기상 07:30',false],
+      [7.5,8.4,'빛','07:30','밖에서 아침 햇빛 30분',false],
+      [8.5,9.2,'식사','08:30','아침',false],
+      [9.3,10.0,'커피','09:20','커피 (14:30 이후엔 끊기)',true],
+      [10.0,12.5,'훈련','10:00','훈련 (조금 올리기)',false],
+      [13.0,13.8,'식사','13:00','점심',false],
+      [15.0,17.0,'빛','15:00','밖에서 활동하며 햇빛',false],
+      [18.5,19.3,'식사','18:30','저녁',false],
+      [21.5,22.5,'이완','21:30','이완',false],
+      [22.5,30.0,'수면','22:30','취침 22:30 · 멜라토닌은 필요할 때만',false],
+    ]},
+];
+
+function evHtml(c){
+  const [s,e,t,tl,nm,dash] = c;
+  const top = h6(s)*PXH + 1, hgt = Math.max((h6(e)-h6(s))*PXH - 2, 14);
+  const [bg,fg] = COLOR[t];
+  const border = dash ? ';border:2px dashed #b98a3e' : ';border:1px solid rgba(0,0,0,.05)';
+  // 첫 " · " 기준으로 메인 라벨과 부가 설명을 줄바꿈 분리
+  const si = nm.indexOf(' · ');
+  const main = si < 0 ? nm : nm.slice(0, si);
+  const sub = si < 0 ? '' : nm.slice(si + 3);
+  const subh = sub ? `<span class="sub">${sub}</span>` : '';
+  if (t === '수면'){
+    const align = s < 12 ? 'flex-end' : 'flex-start';
+    return `<div class="ev sleep" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg};justify-content:${align}"><span class="nm">${main}</span>${subh}</div>`;
+  }
+  const tlh = tl ? `<span class="tl" style="color:${fg}">${tl}</span>` : '';
+  return `<div class="ev" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg}${border}">${tlh}<span class="nm">${main}</span>${subh}</div>`;
+}
+function bandHtml(b){ const [s,e,label]=b; const top=h6(s)*PXH, hgt=(h6(e)-h6(s))*PXH; return `<div class="band" style="top:${top}px;height:${hgt}px"><span>${label}</span></div>`; }
+
+let gutter = '';
+for (let h=0; h<=AX1-AX0; h++) gutter += `<div class="hr" style="top:${h*PXH}px">${hhmm(AX0+h)}</div>`;
+let html = `<div class="gut"><div class="gtop"></div><div class="gutgrid" style="height:${H}px">${gutter}</div></div>`;
+for (const d of DAYS){
+  const bands = (d.bands||[]).map(bandHtml).join('');
+  const cards = d.cards.map(evHtml).join('');
+  html += `<div class="col"><div class="ch"><div class="cd">${d.date} <span>(${d.dow})</span></div><div class="ct">${d.tag}</div><div class="cn">${d.note}</div></div><div class="grid" style="height:${H}px">${bands}${cards}</div></div>`;
+}
+document.getElementById('cal').innerHTML = html;
+
+// 헤더(날짜+메모) 높이 균일화: 메모 길이가 달라도 안 잘리고 그리드 시작선 정렬 유지
+const chs = [...document.querySelectorAll('.ch')];
+const maxH = Math.max(104, ...chs.map((c) => c.offsetHeight));
+chs.forEach((c) => (c.style.height = maxH + 'px'));
+const gtop = document.querySelector('.gtop');
+if (gtop) gtop.style.height = maxH + 'px';
+
+const legendItems = [['수면','수면'],['비행','비행'],['선글라스','선글라스(빛 가리기)'],['빛','햇빛'],['식사','식사'],['훈련','훈련'],['이완','이완·샤워'],['커피','커피(옵션·점선)'],['낮잠','낮잠(옵션·점선)']];
+document.getElementById('legend').innerHTML = legendItems.map(([k,n])=>`<span class="lg"><i style="background:${COLOR[k][0]}"></i>${n}</span>`).join('');
+</script>
+</body>
+</html>

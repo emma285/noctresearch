@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>윤이나 · KPMG 여자 PGA 4라운드 수면 리뷰</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--navy:#0D1B2A;--ink:#1b2a3f;--primary:#4355B0;--sky:#7EC8E3;--pink:#EC6BA8;--line:#e6e7eb;--gray:#6b7280;--gray2:#9298a2}
+  body{font-family:'Pretendard',system-ui,sans-serif;background:#F4F6F8;color:var(--ink);letter-spacing:-.02em;line-height:1.55}
+  .wrap{max-width:1040px;margin:0 auto;padding:34px 22px 70px}
+  .flag{display:inline-block;font-size:11px;font-weight:800;color:#8a5a00;background:#fbf3e6;border:1px solid #f0dcae;border-radius:999px;padding:3px 10px;margin-bottom:12px}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.5px}
+  h1 span{font-size:13.5px;font-weight:600;color:var(--gray2);margin-left:8px}
+  .sub{color:var(--gray);font-size:13.5px;margin:5px 0 20px}
+  .sub b{color:#20506A}
+  .sec-l{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--primary);margin-top:34px}
+  .sec-t{font-size:19px;font-weight:800;color:var(--navy);margin:3px 0 13px}
+  /* 표 */
+  .tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px}
+  .tbl th{text-align:left;font-size:10.5px;font-weight:800;color:var(--gray2);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;background:#FAFBFC;border-bottom:1px solid var(--line)}
+  .tbl td{padding:11px 12px;border-bottom:1px solid #eef0f3;vertical-align:top}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl .rd{font-weight:800;color:var(--navy)}
+  .tbl .num{font-variant-numeric:tabular-nums;font-weight:700}
+  .tag{display:inline-block;font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px}
+  .t-turn{color:#C13E80;background:rgba(236,107,168,.14)}
+  .t-pm{color:#20506A;background:#e8f2f8}
+  /* 라운드 카드 */
+  .cards{display:flex;flex-direction:column;gap:12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 2px rgba(13,27,42,.04)}
+  .card.turn{border-color:#f3cfe1;background:#fffafc}
+  .ct{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+  .ct .n{font-size:15px;font-weight:800;color:var(--navy)}
+  .ct .tt{font-size:12.5px;color:var(--gray2);font-weight:600}
+  .times{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin-bottom:8px}
+  .times b{color:var(--navy);font-variant-numeric:tabular-nums}
+  .times span{color:var(--gray)}
+  .body{font-size:13px;color:#3a4652;line-height:1.65}
+  .body b{color:var(--navy)}
+  ul{margin:4px 0 0;padding-left:17px}
+  li{margin:3px 0;font-size:12.8px;color:#3a4652}
+  li b{color:var(--navy)}
+  .prin{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .prin .h{font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:4px}
+  .prov{font-size:11.5px;color:var(--gray2);margin-top:22px;line-height:1.65}
+  .prov b{color:var(--gray)}
+  /* 타임테이블 */
+  .legend{display:flex;flex-wrap:wrap;gap:13px;margin:0 0 14px;font-size:12.5px;color:#37434F}
+  .lg{display:flex;align-items:center;gap:6px}
+  .lg i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+  .cal{display:grid;grid-template-columns:54px repeat(5,1fr);gap:0;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden}
+  .gut{position:relative;border-right:1px solid #EEF1F4}
+  .gut .gtop{height:110px;border-bottom:1px solid #EEF1F4}
+  .gutgrid{position:relative}
+  .hr{position:absolute;left:0;right:6px;transform:translateY(-50%);text-align:right;font-size:10.5px;color:#9aa6b2;font-weight:600}
+  .col{border-right:1px solid #EEF1F4}.col:last-child{border-right:none}
+  .ch{min-height:110px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
+  .cd{font-size:15px;font-weight:800}.cd span{font-size:11px;color:#9aa6b2;margin-left:2px}
+  .coltag{font-size:10.5px;font-weight:800;color:#20506A;background:#e8f2f8;border-radius:5px;padding:1px 7px;display:inline-block;margin:2px 0 4px}
+  .coltag.turn{color:#C13E80;background:rgba(236,107,168,.14)}
+  .res{font-size:11px;font-weight:800;color:#1b2a3f;background:#fff;border:1px solid #e6e7eb;border-radius:6px;padding:2px 7px;display:inline-block;margin:3px 0 2px}
+  .cn{font-size:10.5px;line-height:1.45;color:#7a8794}.cn b{color:#37434F}
+  .grid{position:relative;background:repeating-linear-gradient(#F5F7F9 0 1px,transparent 1px 42px)}
+  .ev{position:absolute;left:6px;right:6px;z-index:1;border-radius:9px;padding:4px 8px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+  .ev .tl{font-size:11px;font-weight:800;line-height:1.2}
+  .ev .nm{font-size:11px;font-weight:800;line-height:1.25;margin-top:1px}
+  .ev.sleep .nm{font-size:12px}
+  .ev .sub{display:block;font-size:9.5px;font-weight:500;line-height:1.35;margin-top:2px;opacity:.82}
+  .ev.sleep .sub{opacity:1;font-size:10px;font-weight:600;color:#e4ebf2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="flag">리뷰 · 실제 케이스</span>
+  <h1>대회 4라운드 수면 리뷰 <span>KPMG 여자 PGA 챔피언십 · 6.25~28</span></h1>
+  <p class="sub">R1 오전조 / R2·R3·R4 오후조. 핵심은 <b>R1(오전)에서 R2(오후)로 넘어갈 때 "버티기"</b>로 리듬을 오후 블록에 안착시키는 거예요. 아래에 라운드별 스케줄·성적과 전략·리커버리를 정리했어요.</p>
+
+  <div class="sec-l">Timetable</div>
+  <div class="sec-t">라운드별 수면 스케줄 + 성적</div>
+  <div class="legend" id="legend"></div>
+  <div class="cal" id="cal"></div>
+
+  <div class="sec-l">Round by Round</div>
+  <div class="sec-t">라운드별 루틴</div>
+  <div class="cards">
+    <div class="card">
+      <div class="ct"><span class="n">대회 전 · 적응</span><span class="tt">이른 앵커를 미리 깔아두기</span></div>
+      <div class="body">R1이 오전조라 <b>05:45 기상</b>이 필요해요. 대회 당일 갑자기 못 만드니까, 며칠 전부터 아래를 습관으로 깔아둬요.</div>
+      <ul>
+        <li><b>기상 06:00~06:30 고정</b> (취침 22:00~22:30). 윤이나 자연 리듬(이른 기상)이랑 맞아서 저비용.</li>
+        <li><b>자기 전 2시간 버퍼존</b>을 매일 반복 → "이 루틴 = 잔다"로 몸에 조건화.</li>
+        <li><b>낮에 빛·활동 충분히</b>(수면압력↑), 낮잠은 짧게·이르게, 카페인 이른 컷.</li>
+        <li>저녁 빛 낮추고 아침 햇빛 → 멜라토닌 제때 나오게.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="n">R1 · 목 오전 09:17</span><span class="tt">윤이나 강점 구간</span></div>
+      <div class="times"><span>취침</span> <b>22:00</b> <span>·</span> <span>기상</span> <b>05:45</b> <span>·</span> <span>티오프</span> <b>09:17</b></div>
+      <div class="body">오전조는 <b>이른 컨디션·앞나인 peak</b>라 윤이나한테 유리해요. 그대로 살려요.</div>
+      <ul>
+        <li>전날 밤 일찍 자서 <b>05:45 기상</b>. 기상 후 <b>아침 햇빛 + 카페인 + 워밍업</b>으로 확 깨우기.</li>
+        <li>앞나인에서 집중력 몰아 쓰고, 뒤나인은 걸어갈 때 풀며 <b>전략적 분배</b>.</li>
+        <li><b>라운드 끝나고(오후 2시경) 바로 뻗지 않기.</b> 여기서 크래시하면 다음날 오후조 리듬이 깨져요.</li>
+      </ul>
+    </div>
+    <div class="card turn">
+      <div class="ct"><span class="n">R1 → R2 · 금 오후 14:42</span><span class="tag t-turn">전환 · 버티기</span></div>
+      <div class="times"><span>취침</span> <b>23:00</b> <span>·</span> <span>기상</span> <b>07:00</b> <span>·</span> <span>준비</span> <b>11:10</b> <span>·</span> <span>티오프</span> <b>14:42</b></div>
+      <div class="body">가장 중요한 밤이에요. 오전조 끝나고 피곤해도 <b>일찍 안 자고 버텨서</b>, 리듬을 오후 블록(R2~R4)에 안착시켜요. (2세션 결론: 경기 땐 버티는 쪽)</div>
+      <ul>
+        <li>R1 밤: <b>저녁 버퍼존 → 23:00 취침 → 07:00 기상.</b> 일찍 자서 4시에 깨는 패턴 피하기.</li>
+        <li>왜: 일찍 자면 오후 티오프까지 대기가 너무 길어져 <b>전반 9홀에 지쳐 집중력이 무너져요.</b> 버티면 그 무너짐이 천천히 와요.</li>
+        <li>07:00 기상 후 티오프까지 <b>대기 시간(약 4시간)을 잘 보내기</b>. 가만히 눕기는 최악이에요. 가벼운 산책·식사·워밍업.</li>
+        <li><b>아미노산 3팩 금지.</b> 지쳐서 각성제 몰아 먹으면 그날 밤 잠 안 옴(악순환).</li>
+        <li>못 자겠으면 멜라토닌은 필요할 때만, 목표 취침 30분 전.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="n">R3 · 토 오후 15:01</span><span class="tag t-pm">오후 유지</span></div>
+      <div class="times"><span>취침</span> <b>23:00</b> <span>·</span> <span>기상</span> <b>07:00</b> <span>·</span> <span>준비</span> <b>11:30</b> <span>·</span> <span>티오프</span> <b>15:01</b></div>
+      <div class="body">R2랑 거의 같은 오후조라 <b>리듬을 그대로 유지</b>해요. 흔들지 않는 게 이득.</div>
+      <ul>
+        <li><b>취침 23:00 / 기상 07:00 고정.</b> 챔피언 조라 늦게 끝나도 다음날 같은 시각 기상.</li>
+        <li>대기 시간 루틴 동일. 뒤나인 집중력 분배.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="n">R4 · 일 오후 14:40</span><span class="tag t-pm">오후 유지</span></div>
+      <div class="times"><span>취침</span> <b>23:00</b> <span>·</span> <span>기상</span> <b>07:00</b> <span>·</span> <span>준비</span> <b>11:10</b> <span>·</span> <span>티오프</span> <b>14:40</b></div>
+      <div class="body">마지막 라운드도 <b>같은 리듬 유지</b>. 성적 압박이 커도 수면 루틴은 흔들지 않기.</div>
+      <ul>
+        <li>취침 23:00 / 기상 07:00 고정. 잠 안 오면 시계 보지 않기("1시간 못 자도 큰일 안 나요").</li>
+        <li>버퍼존 이완으로 대회 각성 낮추기.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec-l">Result</div>
+  <div class="sec-t">실제 성적 + 관찰</div>
+  <table class="tbl">
+    <thead><tr><th>라운드</th><th>성적</th><th>누적·순위</th><th>메모</th></tr></thead>
+    <tbody>
+      <tr><td class="rd">R1 <span style="font-weight:600;color:#9298a2">목 오전</span></td><td class="num">9언더 63타 🥇</td><td>단독 선두</td><td>보기 0·버디 9. 대회 1R 최저타 타이</td></tr>
+      <tr><td class="rd">R2 <span style="font-weight:600;color:#9298a2">금 오후</span></td><td class="num">3언더 69타 🥇</td><td>누적 −12 · 단독 선두</td><td>2위와 5타 차 독주. 36홀 최저타 신기록</td></tr>
+      <tr><td class="rd">R3 <span style="font-weight:600;color:#9298a2">토 오후</span></td><td class="num">3오버 75타 🥉</td><td>누적 −9 · 단독 3위</td><td>샷 감각 흔들림. 선두 내줌</td></tr>
+      <tr><td class="rd">R4 <span style="font-weight:600;color:#9298a2">일 오후</span></td><td class="num">2언더 70타 🥈</td><td>최종 −11 · 준우승</td><td>악천후 지연 속 반등. 커리어 하이</td></tr>
+    </tbody>
+  </table>
+  <div class="prin" style="margin-top:12px">
+    <div class="h">수면 관점에서 읽으면 (단정 아님, 관찰)</div>
+    <ul>
+      <li><b>R1(오전조)이 커리어 베스트.</b> 윤이나 강점(이른 리듬·앞나인 peak)이랑 오전 티오프가 딱 맞아떨어진 라운드예요. "오전조가 강점"이 실제로 드러난 거죠.</li>
+      <li><b>오후 블록에서 R3이 흔들림(75타).</b> 기록상 원인은 "샷 감각"이라 수면 탓으로 단정할 순 없어요. 다만 오후조가 사흘째 이어지면서 <b>대기 시간·늦은 라운드·누적 피로</b>가 배경에 깔렸을 수 있어요.</li>
+      <li><b>시사점.</b> 오전조 강점은 그대로 살리고, 오후 블록은 <b>3~4일차에 흔들림이 오기 쉬우니</b> 그때 수면 루틴(기상 고정·버퍼존·대기 시간 설계·후반 집중력 분배)을 더 타이트하게 잡아주면 좋아요.</li>
+    </ul>
+  </div>
+
+  <div class="sec-l">Recovery</div>
+  <div class="sec-t">후반 체력 저하 · 리커버리</div>
+  <div class="body" style="margin-bottom:10px">전·후반 성적을 보면 <b>오후 라운드 후반(마지막 9홀)에서 체력·집중력이 떨어져요</b>(R2 −4→+1, R3 +1→+2). 오전 R1만 후반이 절정(−4→−5). 두 축으로 리커버리해요.</div>
+  <div class="prin" style="margin-bottom:12px">
+    <div class="h">A. 라운드 중 (후반 붕괴 예방)</div>
+    <ul>
+      <li><b>연료 페이싱</b>: 전반에 다 쏟지 말고 짝수 홀마다 탄수화물(바나나·젤)+수분·전해질. 특히 <b>9홀 턴 직전에 보충</b>.</li>
+      <li><b>아미노산 몰아먹기 금지</b>: 지쳐서 3팩 먹으면 그날 밤 각성돼 잠 안 와요. 규칙적 소량으로.</li>
+      <li><b>집중력 전략 분배</b>: 공 칠 때만 집중, 걸을 땐 힘 빼기. 후반 승부처에 집중력 아껴두기.</li>
+      <li><b>홀 사이 미니 리셋</b>: 호흡·이완으로 과각성 낮추기. 러프 같은 어려운 상황일수록 루틴 간결하게.</li>
+    </ul>
+  </div>
+  <div class="prin">
+    <div class="h">B. 라운드 사이 (누적 피로 관리)</div>
+    <ul>
+      <li><b>수면 질 최우선</b>: 깊은잠이 신체 회복이에요. 기상 07:00 고정 + 버퍼존으로 질 확보. R2·R3 밤이 특히 중요.</li>
+      <li><b>낮잠 뱅킹</b>: 오후조 날은 라운드 전 짧은 낮잠(20~30분, 이른 오후)으로 에너지 예치. 길거나 늦게는 안 돼요.</li>
+      <li><b>액티브 리커버리</b>: 라운드 후 쿨다운·스트레칭·폼롤러·다리 회복(부상 고려) + 수분·영양 리필.</li>
+      <li><b>심리 회복</b>: 3R 선두 압박은 이완·불안관리로 각성을 낮춰요(안 그러면 밤잠 방해).</li>
+      <li><b>3일차 집중 관리</b>: R3에 실제로 흔들림이 왔으니, R2 밤부터 R3 낮까지 수면·영양·집중을 특별히 타이트하게.</li>
+    </ul>
+  </div>
+
+  <div class="sec-l">Principle</div>
+  <div class="sec-t">관통하는 원칙</div>
+  <div class="prin">
+    <div class="h">1. 티오프 바뀌면 완벽한 수면은 불가 → 트레이드오프</div>
+    <div class="body" style="margin-bottom:10px">경기 땐 "덜 피곤"보다 <b>라운드 전체(4~5h) 퍼포먼스</b>가 우선. 그래서 오전→오후 전환은 버티는 쪽을 골라요.</div>
+    <div class="h">2. 기상 시각 일관성 &gt; 취침</div>
+    <div class="body" style="margin-bottom:10px">오후 블록(R2~R4)은 <b>기상 07:00 하나만 고정</b>하면 나머지가 따라와요. 오전조 뒤 늦잠으로 4시 기상 패턴 만들지 않기.</div>
+    <div class="h">3. 그 밤에 만드는 게 아니라 미리 깔아둔다</div>
+    <div class="body">일찍 잘 수 있는 건 <b>기상 고정 · 버퍼존 습관 · 낮 활동/수면압력 · 빛 리듬</b>이 평소에 있을 때 가능해요. 멜라토닌·샤워는 그날 도구일 뿐.</div>
+  </div>
+
+  <p class="prov"><b>근거</b>: 윤이나 2세션 전사(경기 땐 버티기 · 기상 후 대기시간 설계 · 버퍼존) · 수면지식베이스(광노출타이밍 · 멜라토닌 · 낮활동각성도-밤잠깊이) · 라운드별 전·후반 성적 분석. 티오프는 실제 기준(R4 지연 무시).</p>
+</div>
+
+<script>
+const PXH = 42, AX0 = 5, AX1 = 29, H = (AX1 - AX0) * PXH;
+const h = t => (t >= AX0 ? t : t + 24) - AX0;
+const hhmm = t => { t = ((t % 24) + 24) % 24; let hh = Math.floor(t), mm = Math.round((t - hh) * 60); if (mm === 60) { hh = (hh + 1) % 24; mm = 0; } return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); };
+const COLOR = {
+  수면:['#26374A','#e4ebf2'], 식사:['#E4F2E8','#2E7D46'], 커피:['#F6E7CE','#8a5a00'],
+  낮잠:['#DCEEF6','#1f5b78'], 빛:['#FBF1CE','#8a6d00'], 이완:['#E7EAEE','#3a4652'],
+  준비:['#EEF0FB','#4355B0'], 대기:['#EEF0F2','#6b7280'], 경기:['#F9DED8','#a8483b'],
+};
+const DAYS = [
+  { date:'대회 전', dow:'적응', tag:'이른 앵커 만들기',
+    note:'기상 06:30 고정. 버퍼존·낮 활동·빛 리듬을 미리 습관으로.',
+    cards:[
+      [5.0,6.5,'수면','','기상 06:30',false],
+      [6.5,7.0,'빛','06:30','아침 햇빛',false],
+      [8.0,8.7,'식사','08:00','아침',false],
+      [10.0,12.0,'준비','10:00','낮 활동·훈련 · 수면압력 쌓기',false],
+      [12.5,13.2,'식사','12:30','점심',false],
+      [20.5,22.0,'이완','20:30','버퍼존 · 이완·독서·미지근 샤워',false],
+      [22.0,29.0,'수면','22:00','취침 22:00 · R1 오전조 대비',false],
+    ]},
+  { date:'R1', dow:'목', tag:'오전 09:17 · 강점', result:'9언더 63타 🥇 선두',
+    note:'기상 05:45. 앞나인 peak 살리고, 끝나고 바로 안 뻗기.',
+    cards:[
+      [5.0,5.75,'수면','','기상 05:45',false],
+      [5.75,9.28,'준비','05:45','준비·워밍업 · 아침 햇빛·카페인',false],
+      [9.28,11.8,'경기','09:17','전반 −4 · 10~18홀',false],
+      [11.8,14.3,'경기','','후반 −5 · 1~9홀 (절정)',false],
+      [15.0,16.5,'준비','15:00','가벼운 회복 · 바로 안 뻗기',false],
+      [18.5,19.2,'식사','18:30','저녁',false],
+      [20.5,23.0,'이완','20:30','버퍼존 · 이완·샤워',false],
+      [23.0,29.0,'수면','23:00','취침 23:00 · 버티기',false],
+    ]},
+  { date:'R2', dow:'금', tag:'오후 14:42 · 버티기', turn:true, result:'3언더 69타 🥇 선두 −12',
+    note:'오전조 뒤라 일찍 안 자고 버텨서 오후 리듬에 안착. 기상 07:00.',
+    cards:[
+      [5.0,7.0,'수면','','기상 07:00',false],
+      [7.5,8.2,'식사','07:30','아침',false],
+      [8.2,11.17,'대기','08:15','대기 시간 · 산책·식사로 잘 보내기',false],
+      [11.17,14.7,'준비','11:10','준비·워밍업',false],
+      [14.7,17.2,'경기','14:42','전반 −4 · 1~9홀',false],
+      [17.2,19.7,'경기','','후반 +1 · 10~18홀 (첫 위기)',false],
+      [20.0,20.7,'식사','20:00','저녁',false],
+      [21.0,23.0,'이완','21:00','버퍼존 · 각성 낮추기',false],
+      [23.0,29.0,'수면','23:00','취침 23:00',false],
+    ]},
+  { date:'R3', dow:'토', tag:'오후 15:01 · 유지', result:'3오버 75타 🥉 3위',
+    note:'리듬 그대로. 취침 23:00 / 기상 07:00 고정. 챔피언 조.',
+    cards:[
+      [5.0,7.0,'수면','','기상 07:00',false],
+      [7.5,8.2,'식사','07:30','아침',false],
+      [8.2,11.5,'대기','08:15','대기 시간 · 산책·식사',false],
+      [11.5,15.02,'준비','11:30','준비·워밍업',false],
+      [15.02,17.5,'경기','15:01','전반 +1 · 1~9홀',false],
+      [17.5,20.0,'경기','','후반 +2 · 10~18홀 (체력↓·러프 리커버리 실패)',false],
+      [20.3,21.0,'식사','20:15','저녁',false],
+      [21.5,23.0,'이완','21:30','버퍼존',false],
+      [23.0,29.0,'수면','23:00','취침 23:00',false],
+    ]},
+  { date:'R4', dow:'일', tag:'오후 14:40 · 유지', result:'2언더 70타 🥈 준우승',
+    note:'마지막도 같은 리듬. 성적 압박에 수면 루틴 안 흔들기.',
+    cards:[
+      [5.0,7.0,'수면','','기상 07:00',false],
+      [7.5,8.2,'식사','07:30','아침',false],
+      [8.2,11.17,'대기','08:15','대기 시간 · 산책·식사',false],
+      [11.17,14.67,'준비','11:10','준비·워밍업',false],
+      [14.67,17.17,'경기','14:40','전반 E · 1~9홀',false],
+      [17.17,19.67,'경기','','후반 −2 · 10~18홀 (반등)',false],
+      [20.0,20.7,'식사','20:00','저녁',false],
+      [21.0,23.0,'이완','21:00','버퍼존',false],
+      [23.0,29.0,'수면','23:00','취침 23:00',false],
+    ]},
+];
+
+function evHtml(c){
+  const [s,e,t,tl,nm,dash] = c;
+  const top = h(s)*PXH + 1, hgt = Math.max((h(e)-h(s))*PXH - 2, 14);
+  const [bg,fg] = COLOR[t];
+  const border = dash ? ';border:2px dashed #b98a3e' : ';border:1px solid rgba(0,0,0,.05)';
+  const si = nm.indexOf(' · ');
+  const main = si < 0 ? nm : nm.slice(0, si);
+  const sub = si < 0 ? '' : nm.slice(si + 3);
+  const subh = sub ? `<span class="sub">${sub}</span>` : '';
+  if (t === '수면'){
+    const align = s < 12 ? 'flex-end' : 'flex-start';
+    return `<div class="ev sleep" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg};justify-content:${align}"><span class="nm">${main}</span>${subh}</div>`;
+  }
+  const tlh = tl ? `<span class="tl" style="color:${fg}">${tl}</span>` : '';
+  return `<div class="ev" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg}${border}">${tlh}<span class="nm">${main}</span>${subh}</div>`;
+}
+
+let gutter = '';
+for (let i=0; i<=AX1-AX0; i++) gutter += `<div class="hr" style="top:${i*PXH}px">${hhmm(AX0+i)}</div>`;
+let html = `<div class="gut"><div class="gtop"></div><div class="gutgrid" style="height:${H}px">${gutter}</div></div>`;
+for (const d of DAYS){
+  const cards = d.cards.map(evHtml).join('');
+  const tagcls = d.turn ? 'coltag turn' : 'coltag';
+  const resh = d.result ? `<div class="res">${d.result}</div>` : '';
+  html += `<div class="col"><div class="ch"><div class="cd">${d.date} <span>(${d.dow})</span></div>${resh}<div class="${tagcls}">${d.tag}</div><div class="cn">${d.note}</div></div><div class="grid" style="height:${H}px">${cards}</div></div>`;
+}
+document.getElementById('cal').innerHTML = html;
+
+const chs = [...document.querySelectorAll('.ch')];
+const maxH = Math.max(110, ...chs.map((c) => c.offsetHeight));
+chs.forEach((c) => (c.style.height = maxH + 'px'));
+const gtop = document.querySelector('.gtop'); if (gtop) gtop.style.height = maxH + 'px';
+
+const legendItems = [['수면','수면'],['경기','라운드'],['준비','준비·워밍업'],['대기','대기'],['식사','식사'],['이완','버퍼존·이완'],['빛','햇빛']];
+document.getElementById('legend').innerHTML = legendItems.map(([k,n])=>`<span class="lg"><i style="background:${COLOR[k][0]}"></i>${n}</span>`).join('');
+</script>
+</body>
+</html>
