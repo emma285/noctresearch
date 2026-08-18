@@ -8,7 +8,7 @@ import LogTimelinePanel from "./LogTimelinePanel";
 const TA = ({ value, onChange, rows = 3, ph, readOnly }) => (
   <textarea value={value} onChange={readOnly ? undefined : (e) => onChange(e.target.value)} rows={rows} placeholder={ph} readOnly={readOnly}
     style={{ fontFamily: "inherit" }}
-    className={`w-full rounded-xl border p-3 text-[14.5px] resize-none leading-relaxed ${readOnly ? "border-border/70 bg-muted/40 text-foreground/90 cursor-default" : "border-border bg-card text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary"}`} />
+    className={`w-full rounded-xl border p-3 text-[14.5px] resize-y leading-relaxed ${readOnly ? "border-border/70 bg-muted/40 text-foreground/90 cursor-default" : "border-border bg-card text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary"}`} />
 );
 
 function Field({ label, value, onChange, rows, ph, readOnly }) {
@@ -79,7 +79,7 @@ export default function SessionGuideForm({ session, timeline, readOnly = false, 
         ) : (
           /* 2) 코치 논의 입력 + AI 생성 */
           <section className="space-y-2">
-            <Field label="이번 세션에서 논의할 것 (코치 입력)" value={discuss} onChange={setDiscuss} rows={3} ph="예: 8/13 입면 30분 걸린 이유 · 카페인 타이밍 · 원정 앞두고 리듬 점검…" />
+            <Field label="이번 세션에서 논의할 것 (코치 입력)" value={discuss} onChange={setDiscuss} rows={6} ph="예: 8/13 입면 30분 걸린 이유 · 카페인 타이밍 · 원정 앞두고 리듬 점검…" />
             <button type="button" onClick={generate} disabled={gen}
               className="inline-flex items-center gap-1.5 bg-primary text-white text-[14px] font-bold px-4 py-2.5 rounded-xl active:opacity-90 disabled:opacity-60">
               <Sparkles className="w-4 h-4" viewBox="0 0 24 24" />{gen ? "AI가 가이드 만드는 중…" : "AI 가이드 생성"}
@@ -96,12 +96,12 @@ export default function SessionGuideForm({ session, timeline, readOnly = false, 
           </div>
         ) : (
           <div className="space-y-4">
-            {isFollowup ? <Field label="지난 세션 이행 점검" value={review} onChange={setReview} rows={4} ph="지난 세션에 하기로 한 것 → 로그·전사 기반 '했음/부분/안 함' 판정" readOnly={readOnly} /> : null}
-            <Field label="이번 세션 목표" value={goal} onChange={setGoal} rows={2} ph="AI 생성 or 직접 작성" readOnly={readOnly} />
-            <Field label="논의 주제" value={topics} onChange={setTopics} rows={5} ph="AI 생성 or 직접 작성" readOnly={readOnly} />
-            <Field label="확인·점검할 것" value={checks} onChange={setChecks} rows={4} ph="로그에서 관찰된 패턴 기반" readOnly={readOnly} />
-            <Field label="던질 질문" value={questions} onChange={setQuestions} rows={4} ph="세션에서 물어볼 것" readOnly={readOnly} />
-            <Field label="코치 메모" value={memo} onChange={setMemo} rows={3} ph="세션 중/전 자유 메모" readOnly={readOnly} />
+            {isFollowup ? <Field label="지난 세션 이행 점검" value={review} onChange={setReview} rows={9} ph="지난 세션에 하기로 한 것 → 로그·전사 기반 '했음/부분/안 함' 판정" readOnly={readOnly} /> : null}
+            <Field label="이번 세션 목표" value={goal} onChange={setGoal} rows={4} ph="AI 생성 or 직접 작성" readOnly={readOnly} />
+            <Field label="논의 주제" value={topics} onChange={setTopics} rows={14} ph="AI 생성 or 직접 작성" readOnly={readOnly} />
+            <Field label="확인·점검할 것" value={checks} onChange={setChecks} rows={9} ph="로그에서 관찰된 패턴 기반" readOnly={readOnly} />
+            <Field label="던질 질문" value={questions} onChange={setQuestions} rows={9} ph="세션에서 물어볼 것" readOnly={readOnly} />
+            <Field label="코치 메모" value={memo} onChange={setMemo} rows={6} ph="세션 중/전 자유 메모" readOnly={readOnly} />
           </div>
         )}
 
