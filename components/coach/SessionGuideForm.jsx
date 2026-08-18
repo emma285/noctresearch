@@ -21,7 +21,7 @@ function Field({ label, value, onChange, rows, ph, readOnly }) {
   );
 }
 
-export default function SessionGuideForm({ session, timeline, readOnly = false, hasNote = false, onViewNote }) {
+export default function SessionGuideForm({ session, timeline, targets = [], targetSummary = null, readOnly = false, hasNote = false, onViewNote }) {
   const g0 = session.guide || {};
   const isFollowup = (session.n || 1) > 1;
   const [discuss, setDiscuss] = useState(g0.discuss || "");
@@ -66,7 +66,7 @@ export default function SessionGuideForm({ session, timeline, readOnly = false, 
       {/* 1) 수면·루틴 패턴 */}
       <section>
         <div className="text-[13px] font-bold text-navy mb-2">수면·루틴 패턴 <span className="text-muted-foreground font-medium">· 최근 로그 (수면은 전날 밤 기준)</span></div>
-        <LogTimelinePanel cols={timeline?.cols || []} sleeps={timeline?.sleeps || []} routines={timeline?.routines || []} compactHeight={360} />
+        <LogTimelinePanel cols={timeline?.cols || []} sleeps={timeline?.sleeps || []} routines={timeline?.routines || []} targets={targets} summary={targetSummary} compactHeight={360} />
       </section>
 
       <div className="max-w-[760px] space-y-6">

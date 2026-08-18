@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getSessionById } from "../../../../lib/master";
+import { getSleepTargets, adherence } from "../../../../lib/targets";
 import { db, schema } from "../../../../lib/db";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
 import CoachShell from "../../../../components/coach/CoachShell";
@@ -31,18 +32,30 @@ export default async function CoachSessionNotePage({ params, searchParams }) {
     return <CoachShell active="sessions" coachName={coachName}><div className="p-10 text-center text-sm text-muted-foreground">세션을 찾을 수 없어요.</div></CoachShell>;
   }
 
-  // 선수 정보(이름·이메일) + 세션 가이드 타임라인
+  // 선수 정보(이름·이메일) + 세션 가이드 타임라인 + 프로토콜 목표(비교 토글용)
   let clientName = "선수", clientEmail = "";
   let timeline = { cols: [], sleeps: [], routines: [] };
+  let sleepTargets = [], targetSummary = null;
   try {
     const c = (await db.select({ email: schema.clients.email, name: schema.clients.name }).from(schema.clients).where(eq(schema.clients.id, session.clientId)).limit(1))[0];
     if (c) { clientName = c.name || c.email || "선수"; clientEmail = c.email || ""; }
-    if (clientEmail) timeline = await getLogTimeline(clientEmail, kstToday(), 7);
+    sleepTargets = session.clientId ? await getSleepTargets(session.clientId) : [];
+    if (clientEmail) {
+      // 타임라인 기간: 최근 7일 + 프로토콜 미래 목표일까지(있으면)
+      const today = kstToday();
+      const dayDiff = (a, b) => Math.round((Date.parse(a) - Date.parse(b)) / 86400000);
+      const maxTargetDate = sleepTargets.reduce((m, t) => (t.date > m ? t.date : m), today);
+      const endDate = maxTargetDate > today ? maxTargetDate : today;
+      const numDays = 7 + Math.max(0, dayDiff(endDate, today));
+      timeline = await getLogTimeline(clientEmail, endDate, numDays);
+      const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
+      targetSummary = adherence(sleepTargets, sleepByDate);
+    }
   } catch (e) { console.error("session page load failed:", e?.message); }
 
   return (
     <CoachShell active="sessions" coachName={coachName}>
-      <SessionWorkspace session={session} timeline={timeline} dateLabel={fmtDate(session.date)} clientName={clientName} clientPageId={session.clientId} initialTab={searchParams?.tab === "note" ? "note" : "guide"} />
+      <SessionWorkspace session={session} timeline={timeline} targets={sleepTargets} targetSummary={targetSummary} dateLabel={fmtDate(session.date)} clientName={clientName} clientPageId={session.clientId} initialTab={searchParams?.tab === "note" ? "note" : "guide"} />
     </CoachShell>
   );
 }
