@@ -80,19 +80,37 @@ export async function POST(request) {
       }
     }
 
-    const userMsg = `선수: ${c.name || c.email} (${c.program || "프로그램 미정"}) · ${s.n || 1}회차 세션 준비\n\n[최근 수면·루틴 로그]\n${summarize(tl)}\n\n[코치가 이번에 논의하려는 것]\n${discuss || "(미입력)"}\n${prev ? "\n[" + prev + "]" : ""}\n\n위를 바탕으로 세션 가이드 JSON을 만들어줘.`;
+    const userMsg = `선수: ${c.name || c.email} (${c.program || "프로그램 미정"}) · ${s.n || 1}회차 세션 준비\n\n[최근 수면·루틴 로그]\n${summarize(tl)}\n\n[코치가 이번에 논의하려는 것]\n${discuss || "(미입력)"}\n${prev ? "\n[" + prev + "]" : ""}\n\n위를 바탕으로, 머리말·설명 없이 [[이행점검]]부터 시작해 위 5개 섹션 형식 그대로 세션 가이드를 만들어줘.`;
 
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, system: SYS, messages: [{ role: "user", content: userMsg }] }),
-    });
-    if (!r.ok) return NextResponse.json({ success: false, message: "AI 생성 실패: " + (await r.text()).slice(0, 150) }, { status: 500 });
-    const j = await r.json();
-    const txt = (j.content?.[0]?.text || "").trim();
-    // [[섹션]] 구분자 파싱 — 멀티라인 안전
-    const grab = (tag) => { const m = txt.match(new RegExp("\\[\\[\\s*" + tag + "\\s*\\]\\]([\\s\\S]*?)(?=\\[\\[|$)")); return m ? m[1].trim() : ""; };
-    const gen = { review: grab("이행점검"), goal: grab("목표"), topics: grab("논의주제"), checks: grab("확인"), questions: grab("질문") };
+    const TAGS = ["이행점검", "목표", "논의주제", "확인", "질문"];
+    // 헤더가 [[..]] 아닌 [..]·**..**·# .. 등으로 와도 [[..]]로 통일 후 파싱(형식 이탈 방어)
+    const parseGuide = (raw) => {
+      let t = (raw || "").trim();
+      for (const tag of TAGS) {
+        t = t.replace(new RegExp("(?<!\\[)\\[\\s*" + tag + "\\s*\\](?!\\])", "g"), "[[" + tag + "]]");                       // [목표] → [[목표]]
+        t = t.replace(new RegExp("^[ \\t>#*_]*\\[{0,2}\\s*" + tag + "\\s*\\]{0,2}\\s*[:：]?[ \\t]*$", "gm"), "[[" + tag + "]]"); // 헤더 라인(**목표**, # 목표, 목표: 등)
+      }
+      const grab = (tag) => { const m = t.match(new RegExp("\\[\\[\\s*" + tag + "\\s*\\]\\]([\\s\\S]*?)(?=\\[\\[|$)")); return m ? m[1].trim() : ""; };
+      return { review: grab("이행점검"), goal: grab("목표"), topics: grab("논의주제"), checks: grab("확인"), questions: grab("질문") };
+    };
+    const callAI = async (extra) => {
+      const rr = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 6000, system: SYS, messages: [{ role: "user", content: userMsg + (extra || "") }] }),
+      });
+      if (!rr.ok) throw new Error("AI 생성 실패: " + (await rr.text()).slice(0, 150));
+      const jj = await rr.json();
+      return (jj.content?.[0]?.text || "").trim();
+    };
+
+    let txt = await callAI("");
+    let gen = parseGuide(txt);
+    if (!gen.goal && !gen.topics && !gen.checks && !gen.questions) {
+      // 형식 이탈 시 1회 재시도(더 강한 지시)
+      txt = await callAI("\n\n중요: 머리말·설명·코드블록 없이, 반드시 이중 대괄호 [[이행점검]] [[목표]] [[논의주제]] [[확인]] [[질문]] 5개 헤더를 그대로 써서 바로 출력해.");
+      gen = parseGuide(txt);
+    }
     if (!gen.goal && !gen.topics && !gen.checks && !gen.questions) {
       console.error("session-guide parse empty, raw:", txt.slice(0, 200));
       return NextResponse.json({ success: false, message: "AI 응답 파싱 실패: " + txt.slice(0, 80) }, { status: 500 });
