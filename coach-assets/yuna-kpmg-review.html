@@ -57,14 +57,14 @@
   .lg{display:flex;align-items:center;gap:6px}
   .lg i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
   .scrollhint{display:none;font-size:11.5px;font-weight:700;color:var(--gray2);text-align:center;margin:-4px 0 8px}
-  .calwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #E3E8EC;border-radius:14px;background:#fff}
+  .calwrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid #E3E8EC;border-radius:14px;background:#fff;max-height:78vh}
   .cal{display:grid;grid-template-columns:48px repeat(5,150px);gap:0;background:#fff;width:max-content;min-width:100%}
-  .gut{position:relative;border-right:1px solid #EEF1F4}
-  .gut .gtop{height:110px;border-bottom:1px solid #EEF1F4}
+  .gut{position:sticky;left:0;z-index:3;border-right:1px solid #EEF1F4;background:#fff}
+  .gut .gtop{position:sticky;top:0;z-index:4;height:110px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
   .gutgrid{position:relative}
   .hr{position:absolute;left:0;right:6px;transform:translateY(-50%);text-align:right;font-size:10.5px;color:#9aa6b2;font-weight:600}
   .col{border-right:1px solid #EEF1F4}.col:last-child{border-right:none}
-  .ch{min-height:110px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
+  .ch{position:sticky;top:0;z-index:2;min-height:110px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
   .cd{font-size:15px;font-weight:800}.cd span{font-size:11px;color:#9aa6b2;margin-left:2px}
   .coltag{font-size:10.5px;font-weight:800;color:#20506A;background:#e8f2f8;border-radius:5px;padding:1px 7px;display:inline-block;margin:2px 0 4px}
   .coltag.turn{color:#C13E80;background:rgba(236,107,168,.14)}
@@ -95,12 +95,7 @@
   <h1>KPMG 여자 PGA 챔피언십 <span>· 6.25~28</span></h1>
   <p class="sub">4라운드를 실제로 어떻게 보냈는지 복기했어요. 라운드별 수면·루틴과 성적을 같이 봐요.</p>
 
-  <div class="sec-t">라운드별 실제 루틴 + 성적 <span style="font-weight:600;color:#9298a2;font-size:14px">· 세션3 전사 기반</span></div>
-  <div class="legend" id="legend"></div>
-  <div class="scrollhint">← 좌우로 밀어서 보세요 →</div>
-  <div class="calwrap"><div class="cal" id="cal"></div></div>
-
-  <div class="sec-t" style="margin-top:36px">실제 성적 + 관찰</div>
+  <div class="sec-t">실제 성적 + 관찰</div>
   <table class="tbl">
     <thead><tr><th>라운드</th><th>성적</th><th>순위</th></tr></thead>
     <tbody>
@@ -124,6 +119,11 @@
       <div class="od">선두에서 밀려나 쫓아가는 입장이 되니 오히려 평온해졌다고 했어요. "그래도 성장하고 있다"로 마음을 정리하면서 긴장도가 내려갔어요.</div>
     </div>
   </div>
+
+  <div class="sec-t" style="margin-top:36px">라운드별 실제 루틴 + 성적 <span style="font-weight:600;color:#9298a2;font-size:14px">· 세션3 전사 기반</span></div>
+  <div class="legend" id="legend"></div>
+  <div class="scrollhint">← 표 안에서 좌우·상하로 스크롤 →</div>
+  <div class="calwrap"><div class="cal" id="cal"></div></div>
 
 </div>
 
