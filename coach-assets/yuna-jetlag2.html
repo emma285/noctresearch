@@ -26,12 +26,16 @@ h1{font-size:23px;font-weight:800;margin:0 0 4px}
 .col{border-right:1px solid #EEF1F4}.col:last-child{border-right:none}
 .ch{min-height:104px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
 .cd{font-size:15px;font-weight:800}.cd span{font-size:11px;color:#9aa6b2;margin-left:2px}
+.tz{display:inline-block;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:5px;margin:3px 0 2px}
+.tz.kst{color:#20506A;background:#e8f2f8}
+.tz.edt{color:#7A4F9E;background:#F0E7F7}
+.tz.shift{color:#a8483b;background:#F9DED8}
 .ct{font-size:10.5px;font-weight:800;color:#20506A;background:#e8f2f8;border-radius:5px;padding:1px 7px;display:inline-block;margin:2px 0 4px}
 .cn{font-size:10.5px;line-height:1.45;color:#7a8794}.cn b{color:#37434F}
 .grid{position:relative;background:repeating-linear-gradient(#F5F7F9 0 1px,transparent 1px 42px)}
 .band{position:absolute;left:0;right:0;z-index:0;background:rgba(180,140,0,.10);border-top:1px dashed rgba(180,140,0,.45);border-bottom:1px dashed rgba(180,140,0,.45)}
 .band span{position:absolute;top:3px;left:5px;right:5px;font-size:9px;font-weight:800;color:#8a6d00;background:rgba(255,255,255,.75);padding:1px 4px;border-radius:4px;line-height:1.25}
-.ev{position:absolute;left:6px;right:6px;z-index:1;border-radius:9px;padding:4px 8px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+.ev{position:absolute;left:6px;right:6px;z-index:1;border-radius:9px;padding:5px 8px;overflow:visible;display:flex;flex-direction:column;justify-content:center;box-shadow:0 1px 2px rgba(13,27,42,.05)}
 .ev .tl{font-size:11px;font-weight:800;line-height:1.2}
 .ev .nm{font-size:11px;font-weight:800;line-height:1.25;margin-top:1px}
 .ev.sleep .nm{font-size:12px}
@@ -59,7 +63,7 @@ const COLOR = {
 };
 // [start, end, type, 시각라벨, 이름, dashed]
 const DAYS = [
-  { date:'8/19', dow:'수', tag:'기내 · 서울 시각',
+  { date:'8/19', dow:'수', tz:{t:'서울 KST', cls:'kst'}, tag:'기내 · 서울 시계',
     note:'06:00에 일어나 선글라스 쓰고 공항으로 가요. 앞부분은 깨어있다가, 보스턴 밤 시간대(대략 15:00부터)에 안대 쓰고 자는 게 제일 중요해요. 멜라토닌 5mg 도움받고요.',
     bands:[], cards:[
       [6.0,8.5,'선글라스','06:00','일어나서 공항 이동 · 선글라스로 아침빛 가리기',false],
@@ -68,18 +72,18 @@ const DAYS = [
       [22.0,23.3,'비행','22:00','착륙 1~2시간 전 · 안대 벗고 빛 쐬기 · 물이랑 스트레칭',false],
       [23.3,24.6,'비행','23:20','착륙 (보스턴 10:20) · 내려서 밖에서 햇빛 흠뻑',false],
     ]},
-  { date:'8/19', dow:'수', tag:'보스턴 도착 · 졸음 버티기',
+  { date:'8/19', dow:'수', tz:{t:'보스턴 EDT · 여기서 시계 −13h', cls:'shift'}, tag:'보스턴 도착 · 졸음 버티기',
     note:'10:20에 내리면 바로 햇빛 많이 쬐고, 낮엔 움직이면서 안 졸게 버텨요. 많이 졸리면 20~30분만 자고, 저녁엔 빛 줄여서 22:30에 누워요.',
     bands:[], cards:[
       [10.33,11.1,'빛','10:20','내려서 밖에서 햇빛',false],
       [12.5,13.3,'식사','12:30','점심 (커피 1잔은 괜찮아요)',false],
-      [14.0,14.6,'낮잠','14:00','졸리면 20~30분만',true],
+      [14.0,14.6,'낮잠','14:00','낮잠 · 졸리면 20~30분만',true],
       [15.0,17.0,'빛','15:00','산책하면서 햇빛 계속',false],
       [18.5,19.3,'식사','18:30','저녁 (이후로는 빛 줄이기)',false],
       [21.5,22.5,'이완','21:30','샤워하고 폰 내려놓기',false],
       [22.5,30.0,'수면','22:30','취침 22:30 · 멜라토닌 5mg',false],
     ]},
-  { date:'8/20', dow:'목', tag:'보스턴 시간에 맞추기',
+  { date:'8/20', dow:'목', tz:{t:'보스턴 EDT', cls:'edt'}, tag:'보스턴 시간에 맞추기',
     note:'07:30에 딱 맞춰 일어나서 밖에서 아침 햇빛을 30분 쬐요. 커피는 오전에만 마시고, 훈련은 아직 시차가 남았으니 가볍게 해요.',
     bands:[[7.5,8.4,'☀️ 야외 아침 햇빛 (리듬 잡기)']], cards:[
       [6.0,7.5,'수면','','기상 07:30',false],
@@ -88,12 +92,12 @@ const DAYS = [
       [9.3,10.0,'커피','09:20','커피 (14:30 이후엔 끊기)',true],
       [10.5,12.5,'훈련','10:30','훈련 (가볍게)',false],
       [13.0,13.8,'식사','13:00','점심',false],
-      [14.5,15.0,'낮잠','14:30','필요하면 20분 이내',true],
+      [14.5,15.0,'낮잠','14:30','낮잠 · 필요하면 20분 이내',true],
       [18.5,19.3,'식사','18:30','저녁 (이후로는 빛 줄이기)',false],
       [21.5,22.5,'이완','21:30','이완 · 샤워',false],
       [22.5,30.0,'수면','22:30','취침 22:30 · 멜라토닌 5mg',false],
     ]},
-  { date:'8/21', dow:'금', tag:'리듬 자리잡기',
+  { date:'8/21', dow:'금', tz:{t:'보스턴 EDT', cls:'edt'}, tag:'리듬 자리잡기',
     note:'리듬이 자리잡는 날이에요. 컨디션 봐가며 훈련을 조금 올리고, 낮잠은 되도록 줄여요. 멜라토닌도 점점 끊고요.',
     bands:[[7.5,8.4,'☀️ 야외 아침 햇빛 (리듬 잡기)']], cards:[
       [6.0,7.5,'수면','','기상 07:30',false],
@@ -111,7 +115,7 @@ const DAYS = [
 
 function evHtml(c){
   const [s,e,t,tl,nm,dash] = c;
-  const top = h6(s)*PXH + 1, hgt = Math.max((h6(e)-h6(s))*PXH - 2, 14);
+  const top = h6(s)*PXH + 1, hgt = Math.max((h6(e)-h6(s))*PXH - 2, 6);
   const [bg,fg] = COLOR[t];
   const border = dash ? ';border:2px dashed #b98a3e' : ';border:1px solid rgba(0,0,0,.05)';
   // 첫 " · " 기준으로 메인 라벨과 부가 설명을 줄바꿈 분리
@@ -124,7 +128,8 @@ function evHtml(c){
     return `<div class="ev sleep" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg};justify-content:${align}"><span class="nm">${main}</span>${subh}</div>`;
   }
   const tlh = tl ? `<span class="tl" style="color:${fg}">${tl}</span>` : '';
-  return `<div class="ev" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg}${border}">${tlh}<span class="nm">${main}</span>${subh}</div>`;
+  // 블록 높이 = 스케줄 시간에 정확히 비례. 글이 길면 블록 밖으로 자연스럽게 넘침(안 잘림).
+  return `<div class="ev" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg};justify-content:flex-start${border}">${tlh}<span class="nm">${main}</span>${subh}</div>`;
 }
 function bandHtml(b){ const [s,e,label]=b; const top=h6(s)*PXH, hgt=(h6(e)-h6(s))*PXH; return `<div class="band" style="top:${top}px;height:${hgt}px"><span>${label}</span></div>`; }
 
@@ -134,7 +139,8 @@ let html = `<div class="gut"><div class="gtop"></div><div class="gutgrid" style=
 for (const d of DAYS){
   const bands = (d.bands||[]).map(bandHtml).join('');
   const cards = d.cards.map(evHtml).join('');
-  html += `<div class="col"><div class="ch"><div class="cd">${d.date} <span>(${d.dow})</span></div><div class="ct">${d.tag}</div><div class="cn">${d.note}</div></div><div class="grid" style="height:${H}px">${bands}${cards}</div></div>`;
+  const tzb = d.tz ? `<div class="tz ${d.tz.cls}">${d.tz.t}</div>` : '';
+  html += `<div class="col"><div class="ch"><div class="cd">${d.date} <span>(${d.dow})</span></div>${tzb}<div class="ct">${d.tag}</div><div class="cn">${d.note}</div></div><div class="grid" style="height:${H}px">${bands}${cards}</div></div>`;
 }
 document.getElementById('cal').innerHTML = html;
 
