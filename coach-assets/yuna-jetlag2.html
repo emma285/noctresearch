@@ -18,13 +18,14 @@ h1{font-size:23px;font-weight:800;margin:0 0 4px}
 .legend{display:flex;flex-wrap:wrap;gap:13px;margin:0 0 14px;font-size:12.5px;color:#37434F}
 .lg{display:flex;align-items:center;gap:6px}
 .lg i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
-.cal{display:grid;grid-template-columns:54px repeat(4,1fr);gap:0;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden}
-.gut{position:relative;border-right:1px solid #EEF1F4}
-.gut .gtop{height:104px;border-bottom:1px solid #EEF1F4}
+.calwrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid #E3E8EC;border-radius:14px;background:#fff;max-height:78vh}
+.cal{display:grid;grid-template-columns:54px repeat(4,150px);gap:0;background:#fff;width:max-content;min-width:100%}
+.gut{position:sticky;left:0;z-index:3;border-right:1px solid #EEF1F4;background:#fff}
+.gut .gtop{position:sticky;top:0;z-index:4;height:104px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
 .gutgrid{position:relative}
 .hr{position:absolute;left:0;right:6px;transform:translateY(-50%);text-align:right;font-size:10.5px;color:#9aa6b2;font-weight:600}
 .col{border-right:1px solid #EEF1F4}.col:last-child{border-right:none}
-.ch{min-height:104px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
+.ch{position:sticky;top:0;z-index:2;min-height:104px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
 .cd{font-size:15px;font-weight:800}.cd span{font-size:11px;color:#9aa6b2;margin-left:2px}
 .tz{display:inline-block;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:5px;margin:3px 0 2px}
 .tz.kst{color:#20506A;background:#e8f2f8}
@@ -49,7 +50,7 @@ h1{font-size:23px;font-weight:800;margin:0 0 4px}
   <h1>보스턴 시차적응 프로토콜 (2) <span style="font-size:13px;font-weight:600;color:#9298a2;margin-left:6px">비행 ~ 도착 후 이틀</span></h1>
   <p class="sub">8/19 아침 서울 출발부터 보스턴에 내린 뒤 이틀까지예요. 첫 칸(기내)은 <b>서울 시각</b>, 내린 뒤부턴 <b>보스턴 현지 시각</b>으로 지내요. 대회(8/27~) 전에 리듬 잡는 게 목표예요.</p>
   <div class="legend" id="legend"></div>
-  <div class="cal" id="cal"></div>
+  <div class="calwrap"><div class="cal" id="cal"></div></div>
 </div>
 
 <script>
