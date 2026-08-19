@@ -8,7 +8,8 @@ import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import Link from "next/link";
 import { getAthleteByEmail, getAthleteByRef, getSessionsByAthlete, getAllAthletes, getNextGuideSessionByClient, getCoachOverview } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
-import { kstToday } from "../../lib/log";
+import { kstToday, getLatestLogTz } from "../../lib/log";
+import { HOME_TZ, todayIn } from "../../lib/tz";
 
 const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0ab", 경기: "#F4978E", 이동: "#7EC8E3", 훈련: "#A0B0FF", 기타: "#6b7280" };
 import AppShell, { AppBody } from "../../components/app/AppShell";
@@ -63,16 +64,16 @@ function ymd(iso) {
   return m ? { y: +m[1], mo: +m[2], d: +m[3] } : null;
 }
 function mmdd(iso) { const p = ymd(iso); return p ? `${String(p.mo).padStart(2, "0")}.${String(p.d).padStart(2, "0")}` : ""; }
-function fullDate(iso) {
+function fullDate(iso, abroad = false) {
   const p = ymd(iso); if (!p) return "";
   const dow = DOW[new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay()];
-  return `${p.mo}월 ${p.d}일(${dow}) 오전 10시`;
+  return `${p.mo}월 ${p.d}일(${dow}) 오전 10시${abroad ? " (한국 시간)" : ""}`;
 }
-function ddayOf(iso) {
+function ddayOf(iso, tz = HOME_TZ) {
   const p = ymd(iso); if (!p) return null;
   const target = Date.UTC(p.y, p.mo - 1, p.d);
-  const n = new Date();
-  const today = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+  const [ty, tm, td] = todayIn(tz).split("-").map(Number); // 선수 현지 오늘 기준
+  const today = Date.UTC(ty, tm - 1, td);
   return Math.round((target - today) / 86400000);
 }
 
@@ -112,7 +113,10 @@ export default async function PortalPage({ searchParams }) {
     ? (/(\d+주)/.exec(athlete.program)?.[1] || (athlete.program.includes("케어") ? "케어" : athlete.program))
     : (programWeeks ? `${programWeeks}주` : "미정");
   const scheduleDone = !!nextSessionAt;
-  const dday = ddayOf(nextSessionAt);
+  // 선수 최근 로그 tz → 해외면 D-day를 현지 오늘 기준으로, 세션 시각엔 "(한국 시간)" 표기.
+  const athleteTz = (await getLatestLogTz(athlete?.email || myEmail)) || HOME_TZ;
+  const abroad = athleteTz !== HOME_TZ;
+  const dday = ddayOf(nextSessionAt, athleteTz);
   const ddayText = dday === null ? "미정" : dday > 0 ? `D-${dday}` : dday === 0 ? "D-day" : "진행중";
 
   // 지난 세션 + 다가오는 일정 — 둘 다 pageId만 필요하고 서로 독립이라 병렬 조회 (waterfall 제거)
@@ -157,7 +161,7 @@ export default async function PortalPage({ searchParams }) {
               <CheckRow title="사전 수면 설문 작성" desc={intakeDone ? "완료" : "68문항 · 약 15분"} done={intakeDone} href={intakeDone ? undefined : "/athlete"} />
               <CheckRow
                 title="첫 세션 일정 잡기"
-                desc={scheduleDone ? fullDate(nextSessionAt) : "코치가 일정을 잡아드려요"}
+                desc={scheduleDone ? fullDate(nextSessionAt, abroad) : "코치가 일정을 잡아드려요"}
                 done={scheduleDone}
               />
               <CheckRow title="도움될 자료 업로드" desc={prepDone ? "완료" : "경기·훈련·수면 관련 자료"} done={prepDone} href={prepDone ? undefined : "/prep"} />
@@ -174,7 +178,7 @@ export default async function PortalPage({ searchParams }) {
                   <StatusBadge>{nextOrdinal}회차</StatusBadge>
                 </div>
                 <div className="text-lg font-bold text-foreground mt-[11px] tracking-[-0.3px]">
-                  {nextSessionAt ? fullDate(nextSessionAt) : "일정 조율 중"}
+                  {nextSessionAt ? fullDate(nextSessionAt, abroad) : "일정 조율 중"}
                 </div>
                 <div className="text-[13px] text-muted-foreground mt-1">
                   {nextSessionAt ? `${ddayText} · ${nextOrdinal}회차 코칭 세션` : `${nextOrdinal}회차 코칭 세션은 코치와 조율 중이에요`}
@@ -188,7 +192,7 @@ export default async function PortalPage({ searchParams }) {
                 <SectionHeader title="다가오는 일정" right={<Link href="/schedule" className="text-[13px] font-semibold text-primary">전체</Link>} />
                 <Surface>
                   {upcoming.length ? upcoming.map((e) => {
-                    const dd = ddayOf(e.start);
+                    const dd = ddayOf(e.start, athleteTz);
                     return (
                       <Link key={e.id} href="/schedule" className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border active:bg-muted/40 transition-colors">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: TYPE_COLOR[e.type] || "#6b7280" }} />

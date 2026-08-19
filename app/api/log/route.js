@@ -3,7 +3,7 @@
 // 응답 형태는 기존 Notion 버전과 100% 동일하게 유지(프론트 무변경).
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { and, eq, gte, lt } from "drizzle-orm";
+import { and, eq, gte, lt, desc } from "drizzle-orm";
 import { db, schema } from "../../../lib/db";
 import { notifyCoaching } from "../../../lib/notify";
 import { getAthleteByEmail } from "../../../lib/master";
@@ -87,6 +87,15 @@ export async function GET(request) {
     const user = url.searchParams.get("user");
     const month = url.searchParams.get("month");
     if (!user) return NextResponse.json({ ok: true, route: "log", db: "neon" });
+
+    // 최근 로그 tz (위저드가 "타임존 바뀜" 감지용). 최근 8건 중 tz 있는 첫 값.
+    if (url.searchParams.get("latestTz")) {
+      const rows = await db.select({ data: logs.data }).from(logs)
+        .where(eq(logs.userEmail, user)).orderBy(desc(logs.createdAt)).limit(8);
+      let tz = null;
+      for (const r of rows) { const t = r.data?.wakeTz || r.data?.tz; if (t) { tz = t; break; } }
+      return NextResponse.json({ tz });
+    }
 
     const where = [eq(logs.userEmail, user)];
     if (month && /^\d{4}-\d{2}$/.test(month)) {

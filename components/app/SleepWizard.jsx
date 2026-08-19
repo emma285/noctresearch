@@ -3,10 +3,12 @@
 // data={bed,sol,wake,outbed,woke,waso,feel[],memo} · kind="sleep". 수면효율/총수면은 코치 전용(선수 숨김).
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Clock } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { todayIn, yesterdayIn, deviceTz, tzRegionLabel, HOME_TZ } from "../../lib/tz";
 import AppShell from "./AppShell";
 import TimeWheel from "./TimeWheel";
+import TzAskModal from "./TzAskModal";
 
 const SOL = ["바로 잠들어요", "15분 이내", "30분쯤", "1시간쯤", "1시간 이상"];
 const OUTBED = ["바로 나왔어요", "10분 이내", "30분쯤", "1시간쯤", "1시간 이상"];
@@ -21,8 +23,9 @@ const hint = (m) => {
   let hh = h % 12; if (hh === 0) hh = 12;
   return `${period} ${hh}시 ${String(mm).padStart(2, "0")}분`;
 };
-const kstToday = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
-const kstYesterday = () => new Date(Date.now() + 9 * 3600 * 1000 - 86400000).toISOString().slice(0, 10);
+// 기기 로컬(모바일 시계) 기준 오늘/어제. 해외면 현지 날짜로 잡힘.
+const kstToday = () => todayIn();
+const kstYesterday = () => yesterdayIn();
 const DOWk = ["일", "월", "화", "수", "목", "금", "토"];
 const dlabel = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? `${+m[2]}/${+m[3]}(${DOWk[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()]})` : ""; };
 // 기록 날짜 선택 (오늘/어제/직접) — 지난 날짜 기록용
@@ -67,7 +70,29 @@ export default function SleepWizard({ email, date: initDate }) {
   const [date, setDate] = useState(initDate || kstToday());
   const [saving, setSaving] = useState(false);
   const [dateHasSleep, setDateHasSleep] = useState(false); // 이 날짜에 이미 수면기록 있나
+  const [recentTz, setRecentTz] = useState(null); // 최근 로그 tz (바뀜 감지용)
+  const [logTz, setLogTz] = useState(null); // 명시적으로 고른 tz (null=기본값 사용)
+  const [tzAsk, setTzAsk] = useState(false); // tz 확인 팝업
   const set = (k, v) => setAm((s) => ({ ...s, [k]: v }));
+
+  // 최근 로그 tz 조회 (마운트 시 1회) → 지금 기기 tz와 다르면 물어봄
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/log?user=${encodeURIComponent(email)}&latestTz=1`);
+        const j = await r.json();
+        if (!cancel) setRecentTz(j?.tz || null);
+      } catch { /* 무시 */ }
+    })();
+    return () => { cancel = true; };
+  }, [email]);
+
+  const dev = deviceTz();
+  const tzChanged = !!(recentTz && recentTz !== dev);
+  const effTz = logTz || (tzChanged ? recentTz : dev); // 저장될 tz. 바뀌었으면 기본=이전 지역.
+  // tz가 바뀐 게 감지되면 팝업 1회 자동 오픈.
+  useEffect(() => { if (tzChanged) setTzAsk(true); }, [tzChanged]);
 
   // 날짜 바뀔 때 기존 수면기록 여부 조회 → 처음(step0)에 미리 알려주기
   useEffect(() => {
@@ -91,7 +116,8 @@ export default function SleepWizard({ email, date: initDate }) {
   async function submit() {
     setSaving(true);
     const summary = `취침 ${fmt(am.bed)} · 입면 ${am.sol || "-"} · 기상 ${fmt(am.wake)} · 침대밖까지 ${am.outbed || "-"} · 밤중깸 ${am.woke ?? 0}회 · WASO ${am.waso || "-"} · 느낌 ${am.feel.join(",")}`;
-    const payload = { user: email, kind: "sleep", date, data: { bed: am.bed, sol: am.sol, wake: am.wake, outbed: am.outbed, woke: am.woke ?? 0, waso: am.waso, feel: am.feel, memo: am.memo }, summary };
+    // tz는 기기 시계에서 자동 캡처. tz가 바뀐 경우(여행 직후)만 이전/현재 선택 반영(effTz).
+    const payload = { user: email, kind: "sleep", date, data: { bed: am.bed, sol: am.sol, wake: am.wake, outbed: am.outbed, woke: am.woke ?? 0, waso: am.waso, feel: am.feel, memo: am.memo, tz: effTz }, summary };
     const post = (extra) => fetch("/api/log", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...payload, ...extra }),
@@ -119,6 +145,18 @@ export default function SleepWizard({ email, date: initDate }) {
             <div className="h-full bg-primary transition-all" style={{ width: `${((step + 1) / flow.length) * 100}%` }} />
           </div>
           <div className="text-[13px] font-semibold text-muted-foreground tabular-nums">{step + 1}/{flow.length}</div>
+        </div>
+        <div className="flex justify-end mt-1.5">
+          {tzChanged ? (
+            <button type="button" onClick={() => setTzAsk(true)}
+              className={`inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1 ${effTz !== HOME_TZ ? "text-primary bg-primary/10" : "text-muted-foreground bg-muted"}`}>
+              <Clock className="w-3 h-3" strokeWidth={2.2} />{tzRegionLabel(effTz)} 기준
+            </button>
+          ) : (
+            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1 ${effTz !== HOME_TZ ? "text-primary bg-primary/10" : "text-muted-foreground bg-muted"}`}>
+              <Clock className="w-3 h-3" strokeWidth={2.2} />{tzRegionLabel(effTz)} 기준
+            </span>
+          )}
         </div>
       </div>
 
@@ -157,6 +195,9 @@ export default function SleepWizard({ email, date: initDate }) {
           {saving ? "저장 중…" : last ? "기록 완료" : "다음"}
         </button>
       </div>
+
+      <TzAskModal open={tzAsk} prevTz={recentTz} curTz={dev}
+        onPick={(tz) => { setLogTz(tz); setTzAsk(false); }} onClose={() => setTzAsk(false)} />
     </AppShell>
   );
 }
