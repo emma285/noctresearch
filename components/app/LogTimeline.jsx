@@ -2,6 +2,10 @@
 // 수면·루틴 타임라인 (세션 가이드 준비용). 분 단위 · 입면/침대밖/밤중깸 반영 · 일일 너비 고정.
 // 색=루틴 로그 파스텔 칩 / 수면=네이비블루. 그리드 정렬 위해 헤더·메모 높이 고정.
 import { useState } from "react";
+import { tzBadgeLabel, localToHome, cityOf, HOME_TZ } from "../../lib/tz";
+
+// 'YYYY-MM-DD' + 일수 → 'YYYY-MM-DD'
+const isoAdd = (s, n) => { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); };
 
 const T = {
   training: { l: "훈련", c: "#4355B0", bg: "#eef0fb" },
@@ -22,7 +26,7 @@ const dobj = (s) => { const [y, m, d] = s.split("-").map(Number); return new Dat
 const dlabel = (s) => { const d = dobj(s); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}(${DOW[d.getUTCDay()]})`; };
 const fmt = (m) => { m = ((m % 1440) + 1440) % 1440; return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
 
-export default function LogTimeline({ cols = [], sleeps = [], routines = [], targets = [], showTargets = false }) {
+export default function LogTimeline({ cols = [], sleeps = [], routines = [], targets = [], showTargets = false, kstView = false }) {
   const [tip, setTip] = useState(null);
   const idx = (s) => cols.indexOf(s);
   const abs = (d, c) => d * 1440 + c;
@@ -30,14 +34,22 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
   const segs = (a, b) => { const o = []; for (let c = 0; c < cols.length; c++) { const s = colStart(c), e = s + 1440, os = Math.max(a, s), oe = Math.min(b, e); if (oe > os) o.push({ col: c, top: (os - s) / 60 * PXH, h: (oe - os) / 60 * PXH }); } return o; };
 
   const BLOCKS = [];
-  for (const rt of routines) { const di = idx(rt.date); if (di < 0) continue; const a = abs(di, rt.t); const t = T[rt.type] || T.etc; segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), cat: t.l + (rt.d ? " " + rt.d : ""), isStart: i === 0 })); }
+  for (const rt of routines) { const di = idx(rt.date); if (di < 0) continue; const a = abs(di, rt.t); const t = T[rt.type] || T.etc; const foreign = !!(rt.tz && rt.tz !== HOME_TZ); const kstT = foreign ? fmt(localToHome(rt.date, rt.t, rt.tz).min) : null; segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), kstT, foreign, cat: t.l + (rt.d ? " " + rt.d : ""), isStart: i === 0 })); }
   for (const s of sleeps) {
     const D = idx(s.date); if (D < 0) continue;
     const bedDay = s.bed > s.wake ? D - 1 : D;
     const bA = abs(bedDay, s.bed), wA = abs(D, s.wake);
     const sol = SOL[s.sol] || 0, out = OUT[s.out] || 0;
+    // tz: 단일(tz) 또는 이동 시 취침/기상 각각(bedTz/wakeTz). 없으면 홈 간주.
+    const wakeTz = s.wakeTz || s.tz || null, bedTz = s.bedTz || s.tz || null;
+    const bedDateStr = s.bed > s.wake ? isoAdd(s.date, -1) : s.date;
+    const crossing = !!(bedTz && wakeTz && bedTz !== wakeTz);
+    const foreign = !!((bedTz && bedTz !== HOME_TZ) || (wakeTz && wakeTz !== HOME_TZ));
+    const bedKstT = foreign ? fmt(localToHome(bedDateStr, s.bed, bedTz).min) : null;
+    const wakeKstT = foreign ? fmt(localToHome(s.date, s.wake, wakeTz).min) : null;
+    const bedCity = crossing ? cityOf(bedTz) : "", wakeCity = crossing ? cityOf(wakeTz) : "";
     if (sol > 0) segs(bA, bA + sol).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "awake", tip: "누워있음 " + sol + "분", isStart: i === 0 }));
-    segs(bA + sol, wA).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "sleep", bedT: fmt(s.bed), wakeT: fmt(s.wake), sol, out, woke: s.woke, waso: s.waso, isStart: i === 0 }));
+    segs(bA + sol, wA).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "sleep", bedT: fmt(s.bed), wakeT: fmt(s.wake), bedKstT, wakeKstT, foreign, crossing, bedCity, wakeCity, sol, out, woke: s.woke, waso: s.waso, isStart: i === 0 }));
     if (out > 0) segs(wA, wA + out).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "awake", tip: "침대밖 " + out + "분", isStart: i === 0 }));
   }
 
@@ -75,11 +87,15 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
           const sl = sleeps.find((s) => s.date === cd);
           const full = sl ? (sl.feel + (sl.memo ? " — " + sl.memo : "")) : "";
           const tgt = on ? targetByDate[cd] : null;
+          const tzb = sl ? tzBadgeLabel(sl.tz) : (routines.find((r) => r.date === cd && r.tz) ? tzBadgeLabel(routines.find((r) => r.date === cd && r.tz).tz) : "");
           return (
             <div key={cd} style={{ flex: "0 0 118px", width: 118, minWidth: 0, borderRight: ci === cols.length - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
               <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, borderBottom: "1px solid #e6e7eb", background: "#fff" }}>{dlabel(cd)}</div>
               <div onClick={(e) => full && openTip(e, full)} title={full}
                 style={{ height: 64, padding: "6px 7px", borderBottom: "1px solid #e6e7eb", fontSize: 10, lineHeight: 1.45, color: "#3f4453", overflow: "hidden", position: "relative", cursor: full ? "pointer" : "default" }}>
+                {tzb && (
+                  <div style={{ display: "inline-block", fontSize: 8.5, fontWeight: 800, color: "#a8483b", background: "#F9DED8", borderRadius: 4, padding: "0 4px", marginBottom: 3, whiteSpace: "nowrap", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }} title={tzb}>🌐 {tzb}</div>
+                )}
                 {tgt && (
                   <div style={{ fontSize: 9, fontWeight: 800, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {tgt.label && <span style={{ color: "#5A4FA6", background: "rgba(142,155,232,.16)", borderRadius: 4, padding: "1px 4px", marginRight: 4 }}>{tgt.label}</span>}
@@ -101,20 +117,24 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
                 {BLOCKS.filter((b) => b.col === ci).map((b, bi) => {
                   const hh = Math.max(b.h, 6);
                   const base = { position: "absolute", left: 3, right: 3, top: b.top, height: hh, borderRadius: 6, overflow: "hidden", background: b.bg, zIndex: 1 };
+                  // 표시 시각: 한국시간 토글이 켜지고 해외 로그면 KST 환산값. 이동(취침/기상 tz 다름)이면 도시 라벨.
+                  const kv = kstView && b.foreign;
+                  const bt = kv ? (b.bedKstT || b.bedT) : b.bedT, wt = kv ? (b.wakeKstT || b.wakeT) : b.wakeT, rtime = kv ? (b.kstT || b.time) : b.time;
+                  const bc = b.crossing && !kstView ? ` ${b.bedCity}` : "", wc = b.crossing && !kstView ? ` ${b.wakeCity}` : "";
                   if (b.kind === "awake") return <div key={bi} style={{ ...base, background: AWAKE, padding: "1px 6px" }}>{b.h >= 15 && <span style={{ color: "#33405c", fontWeight: 700, fontSize: 9, whiteSpace: "nowrap" }}>{b.tip}</span>}</div>;
                   if (b.kind === "sleep") return (
                     <div key={bi} style={{ ...base, background: ASLEEP, color: "#fff", padding: "3px 6px" }}>
                       {b.isStart && b.h >= 44 ? (
                         <div style={{ fontSize: 9.5, lineHeight: 1.5, fontWeight: 600 }}>
-                          <b style={{ fontWeight: 800, fontSize: 10.5 }}>취침 {b.bedT}</b><br />기상 {b.wakeT}<br />입면 {b.sol}분 · 침대밖 {b.out}분<br />{b.woke ? `밤중깸 ${b.woke}회${b.waso ? ` (${b.waso})` : ""}` : "밤중깸 없음"}
+                          <b style={{ fontWeight: 800, fontSize: 10.5 }}>취침 {bt}{bc}</b><br />기상 {wt}{wc}<br />입면 {b.sol}분 · 침대밖 {b.out}분<br />{b.woke ? `밤중깸 ${b.woke}회${b.waso ? ` (${b.waso})` : ""}` : "밤중깸 없음"}{kv ? <><br /><span style={{ opacity: .75, fontWeight: 700 }}>한국 시간 기준</span></> : null}
                         </div>
-                      ) : (!b.isStart ? <span style={{ color: "#fff", fontWeight: 700, fontSize: 9 }}>기상 {b.wakeT}</span> : null)}
+                      ) : (!b.isStart ? <span style={{ color: "#fff", fontWeight: 700, fontSize: 9 }}>기상 {wt}</span> : null)}
                     </div>
                   );
                   // 루틴
                   return (
                     <div key={bi} style={{ ...base, color: b.fg, padding: b.h >= 16 ? "3px 6px" : "0 6px" }}>
-                      {b.h >= 30 ? (<><span style={{ fontWeight: 800, fontSize: 10.5, fontVariantNumeric: "tabular-nums", display: "block", lineHeight: 1.15 }}>{b.time}</span><span style={{ fontWeight: 600, fontSize: 9.5, display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.cat}</span></>)
+                      {b.h >= 30 ? (<><span style={{ fontWeight: 800, fontSize: 10.5, fontVariantNumeric: "tabular-nums", display: "block", lineHeight: 1.15 }}>{rtime}</span><span style={{ fontWeight: 600, fontSize: 9.5, display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.cat}</span></>)
                         : (<span style={{ fontWeight: 700, fontSize: b.h >= 16 ? 9.5 : 8.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{b.h >= 16 ? b.cat : b.cat.split(" ")[0]}</span>)}
                     </div>
                   );

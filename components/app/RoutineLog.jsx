@@ -3,14 +3,17 @@
 // 블록마다 kind="routine", data={time,type,detail,dur,text} 저장(기존 데이터 모델 동일).
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, X, Trash2 } from "lucide-react";
+import { ChevronLeft, X, Trash2, Clock } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { todayIn, yesterdayIn, nowMinIn, deviceTz, tzRegionLabel, HOME_TZ } from "../../lib/tz";
 import AppShell from "./AppShell";
 import TimeWheel from "./TimeWheel";
+import TzAskModal from "./TzAskModal";
 import { TYPES, ORDER } from "./routineTypes";
 
-const kstToday = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
-const kstYesterday = () => new Date(Date.now() + 9 * 3600 * 1000 - 86400000).toISOString().slice(0, 10);
+// 기기 로컬(모바일 시계) 기준. 해외면 현지 날짜/시각으로 잡힘.
+const kstToday = () => todayIn();
+const kstYesterday = () => yesterdayIn();
 const DOWk = ["일", "월", "화", "수", "목", "금", "토"];
 const dlabel = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? `${+m[2]}/${+m[3]}(${DOWk[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()]})` : ""; };
 function DateSelect({ date, setDate }) {
@@ -26,7 +29,7 @@ function DateSelect({ date, setDate }) {
   );
 }
 const round15 = (m) => (Math.round(m / 15) * 15) % 1440; // 가장 가까운 0/15/30/45분
-const nowMin = () => { const n = new Date(Date.now() + 9 * 3600 * 1000); return round15(n.getUTCHours() * 60 + n.getUTCMinutes()); };
+const nowMin = () => nowMinIn(deviceTz(), 15); // 기기 로컬 현재 시각(15분 반올림)
 const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const hint = (m) => { const h = Math.floor(m / 60), mm = m % 60; const period = h < 5 ? "새벽" : h < 11 ? "아침" : h < 18 ? "오후" : "밤"; let hh = h % 12; if (hh === 0) hh = 12; return `${period} ${hh}시 ${String(mm).padStart(2, "0")}분`; };
 const tmin = (t) => { const [h, m] = String(t || "0:0").split(":").map(Number); return h * 60 + m; };
@@ -44,6 +47,21 @@ export default function RoutineLog({ email, date: initDate }) {
   const [dur, setDur] = useState(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [recentTz, setRecentTz] = useState(null);
+  const [logTz, setLogTz] = useState(null);
+  const [tzAsk, setTzAsk] = useState(false);
+  const dev = deviceTz();
+  const tzChanged = !!(recentTz && recentTz !== dev);
+  const effTz = logTz || (tzChanged ? recentTz : dev);
+  useEffect(() => { if (tzChanged) setTzAsk(true); }, [tzChanged]);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try { const r = await fetch(`/api/log?user=${encodeURIComponent(email)}&latestTz=1`); const j = await r.json(); if (!cancel) setRecentTz(j?.tz || null); } catch {}
+    })();
+    return () => { cancel = true; };
+  }, [email]);
 
   useEffect(() => {
     (async () => {
@@ -71,7 +89,7 @@ export default function RoutineLog({ email, date: initDate }) {
   async function add() {
     const T = TYPES[sheet];
     setBusy(true);
-    const data = { time: fmt(time), type: sheet, detail, dur, text: text || undefined };
+    const data = { time: fmt(time), type: sheet, detail, dur, text: text || undefined, tz: effTz };
     const summary = [T.label, detail, dur, text].filter(Boolean).join(" · ");
     try {
       const r = await fetch("/api/log", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user: email, kind: "routine", date, summary, data }) });
@@ -96,6 +114,16 @@ export default function RoutineLog({ email, date: initDate }) {
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-3 flex items-center gap-3">
         <button onClick={() => router.push("/log")} className="w-9 h-9 -ml-1.5 rounded-lg flex items-center justify-center active:bg-muted"><ChevronLeft className="w-6 h-6" /></button>
         <h1 className="text-[20px] font-bold tracking-[-0.3px]">루틴 기록</h1>
+        {tzChanged ? (
+          <button type="button" onClick={() => setTzAsk(true)}
+            className={`ml-auto inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1 ${effTz !== HOME_TZ ? "text-primary bg-primary/10" : "text-muted-foreground bg-muted"}`}>
+            <Clock className="w-3 h-3" strokeWidth={2.2} />{tzRegionLabel(effTz)} 기준
+          </button>
+        ) : (
+          <span className={`ml-auto inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1 ${effTz !== HOME_TZ ? "text-primary bg-primary/10" : "text-muted-foreground bg-muted"}`}>
+            <Clock className="w-3 h-3" strokeWidth={2.2} />{tzRegionLabel(effTz)} 기준
+          </span>
+        )}
       </div>
 
       <div className="px-4 pb-2"><DateSelect date={date} setDate={setDate} /></div>
@@ -165,6 +193,9 @@ export default function RoutineLog({ email, date: initDate }) {
           </div>
         </div>
       )}
+
+      <TzAskModal open={tzAsk} prevTz={recentTz} curTz={dev}
+        onPick={(tz) => { setLogTz(tz); setTzAsk(false); }} onClose={() => setTzAsk(false)} />
     </AppShell>
   );
 }
