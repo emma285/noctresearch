@@ -6,14 +6,29 @@ import { ChevronRight, Eye, Sparkles } from "lucide-react";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByRef, getSessionsByAthlete } from "../../../../lib/master";
 import { getAthleteEvents } from "../../../../lib/calendar";
-import { getSleepTargets, adherence } from "../../../../lib/targets";
+import { getSleepTargets, adherence, getAppliedProtocolSlugs } from "../../../../lib/targets";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
-import { resolveAssets } from "../../../../lib/athleteAssets";
+import { resolveAssets, reportSlug } from "../../../../lib/athleteAssets";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import CoachShell from "../../../../components/coach/CoachShell";
 import CoachManageForm from "../../../../components/coach/CoachManageForm";
 import CoachScheduleEditor from "../../../../components/coach/CoachScheduleEditor";
 import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
+import ProtocolCompare from "../../../../components/coach/ProtocolCompare";
+
+// 부가자료 HTML에 프로토콜 목표(#protocol-targets)가 있으면 정보 반환
+async function protocolInfo(slug) {
+  if (!/^[a-z0-9-]+$/i.test(slug)) return null;
+  try {
+    const html = await readFile(path.join(process.cwd(), "coach-assets", `${slug}.html`), "utf8");
+    const m = /<script id="protocol-targets"[^>]*>([\s\S]*?)<\/script>/i.exec(html);
+    if (!m) return null;
+    const data = JSON.parse(m[1].trim());
+    return Array.isArray(data.targets) && data.targets.length ? { count: data.targets.length } : null;
+  } catch { return null; }
+}
 
 export const metadata = { title: "선수 상세 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -59,6 +74,14 @@ export default async function CoachClientDetail({ params }) {
   const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
   const targetSummary = adherence(sleepTargets, sleepByDate);
   const assets = resolveAssets(athlete);
+  // 프로토콜 비교 가능한 부가자료(목표 있는 것) + 현재 적용된 것
+  const protocolExtras = [];
+  for (const e of (assets.extras || [])) {
+    const slug = reportSlug(e.url);
+    const info = await protocolInfo(slug);
+    if (info) protocolExtras.push({ slug, label: e.label, targetCount: info.count });
+  }
+  const appliedProtocols = athlete.pageId ? await getAppliedProtocolSlugs(athlete.pageId) : [];
   const pubSet = new Set((athlete.publishedReports || []).map(String));
   const latestSessionId = sessions[0]?.id || "";
   const nextGuideSession = sessions.find((s) => !(s.published || s.hasNote))?.id || ""; // 아직 안 끝난 세션의 가이드 준비
@@ -109,6 +132,10 @@ export default async function CoachClientDetail({ params }) {
               <div className="p-4">
                 <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} targets={sleepTargets} summary={targetSummary} compactHeight={720} />
               </div>
+            </Panel>
+
+            <Panel title="프로토콜 비교 목표" right={<span className="text-[12px] text-[#9298a2] font-semibold">부가자료 → 비교에 적용</span>}>
+              <ProtocolCompare clientId={athlete.pageId} protocols={protocolExtras} applied={appliedProtocols} />
             </Panel>
 
             <CoachScheduleEditor masterPageId={athlete.pageId} events={calEvents} athleteName={athlete.name || email} today={kstToday()} />

@@ -155,5 +155,11 @@ if (gtop) gtop.style.height = maxH + 'px';
 const legendItems = [['수면','수면'],['비행','비행'],['선글라스','선글라스(빛 가리기)'],['빛','햇빛'],['식사','식사'],['훈련','훈련'],['이완','이완·샤워'],['커피','커피(옵션·점선)'],['낮잠','낮잠(옵션·점선)']];
 document.getElementById('legend').innerHTML = legendItems.map(([k,n])=>`<span class="lg"><i style="background:${COLOR[k][0]}"></i>${n}</span>`).join('');
 </script>
+<script id="protocol-targets" type="application/json">
+{"name":"보스턴 시차적응","targets":[
+ {"date":"2026-08-20","bed":"22:30","wake":"07:30","label":"보스턴 적응 D1"},
+ {"date":"2026-08-21","bed":"22:30","wake":"07:30","label":"보스턴 적응 D2"}
+]}
+</script>
 </body>
 </html>
