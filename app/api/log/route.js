@@ -39,7 +39,8 @@ export async function POST(request) {
       try {
         const athlete = await getAthleteByEmail(user);
         const who = athlete?.name || user;
-        await notifyCoaching(`🌙 *슬립로그 도착* — ${who}\n${date}${summary ? `\n${summary}` : ""}`);
+        const memo = (data.memo || "").trim();
+        await notifyCoaching(`🌙 *슬립로그 도착* — ${who}\n${date}${summary ? `\n${summary}` : ""}${memo ? `\n📝 메모: ${memo}` : ""}`);
       } catch { /* 알림 실패가 저장을 막지 않도록 무시 */ }
     }
 
