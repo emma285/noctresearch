@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이지수 · 수면일지 경과 리포트</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#F2F3F6; --fg:#0b0e14; --card:#fff; --border:#e6e7eb;
+    --primary:#4355B0; --sky:#7EC8E3; --lav:#A0B0FF; --coral:#F4978E; --navy:#0D1B2A;
+    --muted:#6b7280;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{overflow-x:hidden}
+  body{background:var(--bg);color:var(--fg);
+    font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
+    letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
+  .wrap{max-width:940px;margin:0 auto;padding:18px 24px calc(80px + env(safe-area-inset-bottom))}
+  .appbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid #E6E7EB;padding:12px 16px}
+  .appbar .back{font-size:15px;font-weight:600;color:#0D1B2A;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+  .appbar .back svg{width:20px;height:20px}
+  .appnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:60;display:flex;background:#fff;border-top:1px solid #E6E7EB;padding:9px 0 max(11px,env(safe-area-inset-bottom))}
+  .appnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#6b7280;text-decoration:none}
+  .appnav a svg{width:22px;height:22px}
+  .appnav a span{font-size:11px;font-weight:500}
+  .appnav a.on{color:#4355B0}
+  .appnav a.on span{font-weight:600}
+  section,.block{margin-bottom:28px}
+  .tabnum{font-variant-numeric:tabular-nums}
+
+  .hero{border-radius:12px;overflow:hidden;color:#fff;background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%)}
+  .hero .pad{padding:30px 32px 0}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--sky)}
+  .hero .titrow{margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .hero h1{font-size:24px;font-weight:800;letter-spacing:-.03em}
+  .hero .pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 13px;white-space:nowrap;
+    background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);color:#c4e7f5}
+  .hero .who{margin-top:11px;font-size:15px;font-weight:700;color:#fff}
+  .hero .who span{font-size:13px;font-weight:400;color:rgba(255,255,255,.65);margin-left:3px}
+  .hero .date{margin-top:5px;font-size:12px;color:rgba(255,255,255,.5)}
+  .kpis{margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.1)}
+  .kpi{padding:16px 20px} .kpi + .kpi{border-left:1px solid rgba(255,255,255,.1)}
+  .kpi .v{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .kpi .v small{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-left:2px}
+  .kpi .k{font-size:12px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.3}
+
+  .impression{border-radius:12px;background:#f5f6fb;border:1px solid #e3e6f4;padding:24px 26px}
+  .impression .lab{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--primary)}
+  .impression p{font-size:15px;line-height:1.75;color:var(--fg);margin-top:11px}
+  .impression p b{font-weight:800}
+
+  .shead .lab{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary)}
+  .shead h2{font-size:18px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
+  .shead .desc{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.6}
+  .shead{margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+  .s-g{color:#1f8a4c} .s-w{color:#b9770e} .s-b{color:#c0554a}
+
+  /* Bar chart (월별) */
+  .chart{padding:22px 22px 16px}
+  .bars{display:flex;align-items:flex-end;gap:12px;height:170px;padding-top:8px}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .bval{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:6px}
+  .bfill{width:100%;max-width:46px;border-radius:7px 7px 3px 3px;transition:height .3s}
+  .bx{font-size:12px;font-weight:700;color:var(--muted);margin-top:9px}
+  .bsub{font-size:10px;color:#aeb4c0;margin-top:1px}
+  .chartnote{margin-top:16px;border-radius:8px;background:#f1f2fb;border:1px solid #dde1f6;padding:14px;font-size:13px;line-height:1.65;color:#3a3f52}
+  .chartnote b{font-weight:800;color:var(--navy)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;color:#4b5563;font-weight:600}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  /* Line-ish awakening (월별 평균 깸) */
+  .metric{padding:20px 22px}
+  .mrow{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+  .mrow:last-child{margin-bottom:0}
+  .mrow .ml{width:42px;flex-shrink:0;font-size:12.5px;font-weight:700;color:var(--navy);text-align:right}
+  .mrow .mtrack{flex:1;height:14px;background:#f0f1f4;border-radius:999px;overflow:hidden}
+  .mrow .mtrack>i{display:block;height:100%;border-radius:999px}
+  .mrow .mv{width:52px;flex-shrink:0;font-size:12px;font-weight:800;text-align:left}
+
+  .interp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ibox{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px}
+  .ibox .ih{font-size:13px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .ibox.good .ih{color:#1f8a4c} .ibox.bad .ih{color:#c0554a}
+  .ibox .ih i{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .ibox.good .ih i{background:#1f8a4c} .ibox.bad .ih i{background:#c0554a}
+  .il{display:flex;gap:9px;align-items:flex-start;padding:10px 0;border-top:1px solid #f0f1f4}
+  .il:first-of-type{border-top:none}
+  .il .ick{flex-shrink:0;margin-top:5px;width:6px;height:6px;border-radius:50%}
+  .ibox.good .ick{background:#8fce9f} .ibox.bad .ick{background:#e0a89c}
+  .il .it{font-size:12.5px;line-height:1.55;color:#4a4f60} .il .it b{color:var(--navy);font-weight:700}
+  .il .it .src{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+
+  .bigstep{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(13,27,42,.05);padding:24px 26px;margin-bottom:14px}
+  .bigstep:last-child{margin-bottom:0}
+  .bigstep .bn{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--primary);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .bigstep .bwhen{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.02em}
+  .bigstep .bt{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--navy);margin-top:5px}
+  .bigstep .bd{font-size:14px;color:#4a4f60;line-height:1.7;margin-top:9px}
+
+  .footlogo{padding-top:20px;display:flex;justify-content:center;align-items:center;gap:7px;color:#aeb4c0;font-weight:800;font-size:12px;letter-spacing:.04em}
+  .footlogo i{width:7px;height:7px;border-radius:50%;background:#7EC8E3}
+  .disc{margin-top:14px;font-size:11px;color:#a7abb2;line-height:1.7;text-align:center}
+
+  @media print{body{background:#fff}}
+  @media(max-width:760px){
+    .wrap{padding:22px 14px}
+    .hero .pad{padding:24px 18px 0}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi{padding:14px 16px} .kpi:nth-child(3),.kpi:nth-child(4){border-top:1px solid rgba(255,255,255,.1)}
+    .kpi:nth-child(odd){border-left:none}
+    .interp{grid-template-columns:1fr}
+    .impression,.chart,.metric,.bigstep{padding-left:16px;padding-right:16px}
+    .bars{gap:7px}
+  }
+</style>
+</head>
+<body>
+<div class="appbar"><a href="/reports" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>리포트</a></div>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero block">
+    <div class="pad">
+      <div class="eyebrow">수면 코칭 · 경과</div>
+      <div class="titrow">
+        <h1>수면일지 경과 리포트</h1>
+        <span class="pill">누적 · 6개월</span>
+      </div>
+      <div class="who">이지수 <span>강사 · 창업자</span></div>
+      <div class="date">직접 남긴 수면일지 99일 기반 · 2026. 3. 4 → 8. 15</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v tabnum">99<small>일</small></div><div class="k">수면일지 기록</div></div>
+      <div class="kpi"><div class="v tabnum">90<small>%</small></div><div class="k">안 깬 날 · 4월</div></div>
+      <div class="kpi"><div class="v tabnum">거의<small> 항상</small></div><div class="k">빠른 입면</div></div>
+      <div class="kpi"><div class="v tabnum">6.4<small>h</small></div><div class="k">평균 총수면</div></div>
+    </div>
+  </div>
+
+  <!-- Overview -->
+  <section class="impression block">
+    <div class="lab">OVERVIEW · 6개월 요약</div>
+    <p>처음 가장 힘드셨던 건 <b>새벽 3~4시에 자꾸 깨는 것</b>이었어요. 직접 남겨주신 99일 일지로 보면, 이 부분이 <b>4월에 거의 사라졌어요</b>(안 깬 날 90%). 입면은 6개월 내내 거의 항상 빠르셨고요 — 잠드는 능력은 원래부터 좋았다는 게 데이터로도 확인돼요. 7~8월에 새벽 각성이 조금 다시 올라온 건 미국 체류와 양압기를 자꾸 건너뛴 시기랑 겹쳐요. 다시 나빠진 게 아니라 그때 컨디션이 잠깐 흔들린 거예요. 지금 <b>남은 하나의 과제는 수면 시간</b>이에요. 6개월 내내 평균 6시간 초반대로, 이걸 늘리는 게 다음 목표예요.</p>
+  </section>
+
+  <!-- 안 깬 날 비율 (월별 bar) -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">AWAKENINGS</div>
+      <h2>새벽 각성 변화</h2>
+      <div class="desc">밤중에 한 번도 깨지 않은 날의 비율을 월별로 봤어요. 높을수록 좋아요. (미국 시차 기간 4/20~5/13은 특수해서 함께 보되 해석에서 감안했어요.)</div>
+    </div>
+    <div class="card chart">
+      <div class="bars">
+        <div class="bcol"><div class="bval">50%</div><div class="bfill" style="height:50%;background:#c9a24a"></div><div class="bx">3월</div><div class="bsub">n=24</div></div>
+        <div class="bcol"><div class="bval">90%</div><div class="bfill" style="height:90%;background:#5bb489"></div><div class="bx">4월</div><div class="bsub">n=20</div></div>
+        <div class="bcol"><div class="bval">64%</div><div class="bfill" style="height:64%;background:#7bbf94"></div><div class="bx">5월</div><div class="bsub">n=14</div></div>
+        <div class="bcol"><div class="bval">59%</div><div class="bfill" style="height:59%;background:#8bbf85"></div><div class="bx">6월</div><div class="bsub">n=17</div></div>
+        <div class="bcol"><div class="bval">36%</div><div class="bfill" style="height:36%;background:#d0a15f"></div><div class="bx">7월</div><div class="bsub">n=11</div></div>
+        <div class="bcol"><div class="bval">38%</div><div class="bfill" style="height:38%;background:#cf9f5c"></div><div class="bx">8월</div><div class="bsub">n=13</div></div>
+      </div>
+      <div class="chartnote"><b>4월에 안 깬 날이 90%까지 올라왔어요.</b> 처음 거의 매일 새벽에 깨던 것에 비하면 큰 변화예요. 7~8월에 다시 조금 내려온 건 미국 체류·양압기 건너뛴 시기와 겹치는 일시적 흔들림이에요. 양압기를 벗으면 나빠지고 끼면 안정된다는 패턴이 일관돼서, 압력만 잘 맞추면 이 부분은 다시 내려올 거예요.</div>
+    </div>
+  </section>
+
+  <!-- 도움된 것 / 안 된 것 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">WHAT WORKED</div>
+      <h2>도움이 된 것 · 안 된 것</h2>
+      <div class="desc">직접 일지에 남겨주신 기록을 바탕으로 나눠봤어요. 지수님껜 대부분 "긴장을 내려놓는 쪽"이 통했어요.</div>
+    </div>
+    <div class="interp">
+      <div class="ibox good">
+        <div class="ih"><i></i>도움됨 · 효과를 본 것</div>
+        <div class="il"><span class="ick"></span><div class="it"><b>자기 전 명상</b> → 입면·안정감 좋아짐<span class="src">4/9 일지 "명상을 했는데 도움이 된 듯"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>밤 작업 멈추고 거실서 예능</b> → 잠들기 전 과각성 ↓<span class="src">7차 메모 · 각성 낮추는 데 도움</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>밤에 코딩 돌려놓기 중단</b> → 아침 조기각성 사라짐<span class="src">7차 메모 · 궁금증에 일찍 깸 → 중지</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>스마트워치·수면앱 내려놓기</b> → 데이터 강박 ↓<span class="src">3차 "워치 풀고 자기" 실천</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>why tree로 생각 정리</b> → 불안·반추 ↓<span class="src">8차 메모 · 긴장·불안 인지</span></div></div>
+      </div>
+      <div class="ibox bad">
+        <div class="ih"><i></i>안 됨 · 효과 없음·중단</div>
+        <div class="il"><span class="ick"></span><div class="it"><b>음주(단독)</b> → 수면 질에 도움 안 됨<span class="src">6/2 일지 "술 먹고 자봤는데 별로"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>양압기 벗고 잠</b> → 머리 띵·개운하지 않음<span class="src">6/12 일지 "벗고 잤더니 머리가 띵"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>압축수면(늦게 자기)</b> → 아예 못 자는 날 발생<span class="src">3차 "늦게 자려다 아예 못 잠"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>알람 없이 기상</b> → 기상 들쭉날쭉<span class="src">3·5차 · 리듬 유지엔 불리</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 남은 과제 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">NEXT</div>
+      <h2>남은 과제 · 다음 목표</h2>
+      <div class="desc">6개월 데이터가 가리키는, 지금 집중할 지점이에요.</div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">1</div>
+      <div class="bx">
+        <div class="bwhen">가장 큰 과제</div>
+        <div class="bt">수면 시간 늘리기 (6시간 → 7시간+)</div>
+        <div class="bd">6개월 내내 평균 총수면이 6시간 초반대로 짧아요. 각성은 잡혔으니, 이제 취침을 앞당기거나 기상을 조금 늦춰 절대 수면량을 늘리는 게 다음 목표예요. 7~8월 늦은 취침(작업 몰입)을 함께 다뤄봐요.</div>
+      </div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">2</div>
+      <div class="bx">
+        <div class="bwhen">유지</div>
+        <div class="bt">양압기 압력 맞추기 · 꾸준히 착용</div>
+        <div class="bd">양압기를 끼면 안정, 벗으면 나빠지는 패턴이 데이터로 일관돼요. 7~8월 새벽 각성 반등도 착용을 건너뛴 시기와 겹쳐요. 압력을 전문의와 맞추고 꾸준히 쓰는 게 각성 재발을 막는 열쇠예요.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footlogo"><i></i>NOCT RESEARCH · 김소정 IPHI 인증 국제수면코치</div>
+  <div class="disc">이 리포트는 직접 남겨주신 수면일지 기록을 요약·분석한 자료로, 의학적 진단을 대체하지 않아요. 미착용·여행·낮잠처럼 기록이 정확하지 않은 날은 감안해서 봤어요.</div>
+
+</div>
+<nav class="appnav">
+  <a href="/portal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+  <a href="/log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+  <a href="/reports" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+  <a href="/me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
+</nav>
+</body>
+</html>

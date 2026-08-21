@@ -56,10 +56,13 @@ function Lbl({ children }) {
   return <div className="mt-4 mb-1.5"><span className="text-[13px] font-bold text-navy">{children}</span></div>;
 }
 
-export default function SessionNoteForm({ session }) {
+export default function SessionNoteForm({ session, extras = [] }) {
   const d0 = session.detail || {};
+  const slugOf = (url) => (String(url).split("?")[0].split("/").pop() || "").replace(/\.html?$/i, "");
   const [tab, setTab] = useState("detail"); // detail | public
   const [detail, setDetail] = useState(() => Object.fromEntries(SECTIONS.map((s) => [s.k, d0[s.k] || ""])));
+  const [attachments, setAttachments] = useState(Array.isArray(d0.attachments) ? d0.attachments : []);
+  const toggleAttach = (slug) => setAttachments((a) => (a.includes(slug) ? a.filter((x) => x !== slug) : [...a, slug]));
   const [summary, setSummary] = useState(session.summary || "");
   const [actions, setActions] = useState((session.actions || []).join("\n"));
   const [comment, setComment] = useState(session.comment || "");
@@ -119,7 +122,7 @@ export default function SessionNoteForm({ session }) {
     try {
       const r = await fetch("/api/coach/session-note", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: session.id, detail, summary, actions: actions.split("\n"), comment, published }),
+        body: JSON.stringify({ id: session.id, detail: { ...detail, attachments }, summary, actions: actions.split("\n"), comment, published }),
       });
       const j = await r.json();
       if (j.success) { setSaved(true); setTimeout(() => setSaved(false), 2000); }
@@ -197,6 +200,26 @@ export default function SessionNoteForm({ session }) {
             <TA value={actions} onChange={setActions} rows={4} ph={"매일 같은 시각에 일어나기\n자기 전 90분 카페인 마무리"} />
             <Lbl>③ 코치 한마디</Lbl>
             <TA value={comment} onChange={setComment} rows={3} ph="응원·당부 한마디…" />
+
+            {extras.length > 0 ? (
+              <>
+                <Lbl>④ 선수에게 보낼 자료</Lbl>
+                <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+                  {extras.map((e) => {
+                    const slug = slugOf(e.url);
+                    const on = attachments.includes(slug);
+                    return (
+                      <button key={slug} type="button" onClick={() => toggleAttach(slug)} className="w-full flex items-center gap-3 p-3.5 text-left active:bg-muted/40">
+                        <span className={cn("w-5 h-5 rounded-md border flex items-center justify-center shrink-0 text-white text-[13px] font-black", on ? "bg-primary border-primary" : "border-[#c3cbe8]")}>{on ? "✓" : ""}</span>
+                        <span className="min-w-0"><span className="block text-[14px] font-bold text-navy truncate">{e.label}</span>{e.desc ? <span className="block text-[12px] text-muted-foreground truncate">{e.desc}</span> : null}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[12px] text-muted-foreground mt-1.5">선택한 자료가 이 세션 노트 + 선수 리포트 탭에 링크로 떠요.</p>
+              </>
+            ) : null}
+
             <div className="flex items-center justify-between bg-card border border-border rounded-xl p-3.5 mt-4">
               <div><div className="text-[14px] font-semibold text-foreground">선수에게 공개</div><div className="text-[12px] text-muted-foreground mt-0.5">켜면 선수 앱 지난 세션에 노출</div></div>
               <button type="button" onClick={() => setPublished((v) => !v)} className={cn("w-[46px] h-[27px] rounded-full relative transition-colors shrink-0", published ? "bg-accent" : "bg-[#d3d7df]")}>

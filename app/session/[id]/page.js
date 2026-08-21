@@ -6,6 +6,9 @@ import { ChevronLeft } from "lucide-react";
 import AppShell, { AppBody } from "../../../components/app/AppShell";
 import { Surface, SectionHeader } from "../../../components/app/primitives";
 import { getSessionById, markSessionSeen } from "../../../lib/master";
+import { resolveAssets, extrasBySlugs, reportSlug } from "../../../lib/athleteAssets";
+import { db, schema } from "../../../lib/db";
+import { eq } from "drizzle-orm";
 import { isCoachEmail } from "../../../lib/coach";
 
 export const metadata = { title: "코칭 노트 | NOCT" };
@@ -18,6 +21,15 @@ export default async function SessionNotePage({ params }) {
   // 선수 본인이 공개된 노트를 열면 '봤음' 기록 → 홈 NEW 해제 (코치 프리뷰는 제외)
   if (s?.published && !isCoachEmail(user?.emailAddresses?.[0]?.emailAddress)) {
     await markSessionSeen(s.id);
+  }
+
+  // 이 세션에 첨부된 부가자료(공개된 세션만) → 선수에게 카드로 노출
+  let attachExtras = [];
+  if (s?.published && s.attachments?.length) {
+    try {
+      const c = (await db.select({ email: schema.clients.email, name: schema.clients.name }).from(schema.clients).where(eq(schema.clients.id, s.clientId)).limit(1))[0];
+      attachExtras = extrasBySlugs(resolveAssets({ name: c?.name, email: c?.email }).extras, s.attachments);
+    } catch (e) { console.error("session attachments load failed:", e?.message); }
   }
 
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s?.date || "");
@@ -70,6 +82,24 @@ export default async function SessionNotePage({ params }) {
             ) : null}
           </>
         )}
+
+        {attachExtras.length ? (
+          <>
+            <SectionHeader title="함께 볼 자료" />
+            <Surface>
+              {attachExtras.map((e) => (
+                <a key={e.url} href={`/asset/${reportSlug(e.url)}`} className="flex items-center gap-3 p-4 first:border-t-0 border-t border-border active:bg-muted/40">
+                  <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-[18px] shrink-0">📄</span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[15px] font-bold text-navy truncate">{e.label}</span>
+                    {e.desc ? <span className="block text-[12.5px] text-muted-foreground truncate">{e.desc}</span> : null}
+                  </span>
+                  <span className="text-[13px] font-bold text-primary shrink-0">열기 →</span>
+                </a>
+              ))}
+            </Surface>
+          </>
+        ) : null}
       </AppBody>
     </AppShell>
   );

@@ -7,7 +7,7 @@ import { cn } from "../../lib/utils";
 import SessionGuideForm from "./SessionGuideForm";
 import SessionNoteForm from "./SessionNoteForm";
 
-export default function SessionWorkspace({ session, timeline, targets = [], targetSummary = null, dateLabel, clientName = "선수", clientPageId = "", initialTab = "guide" }) {
+export default function SessionWorkspace({ session, timeline, targets = [], targetSummary = null, dateLabel, clientName = "선수", clientPageId = "", extras = [], initialTab = "guide" }) {
   const [tab, setTab] = useState(initialTab === "note" ? "note" : "guide");
   const n = session.n || 1;
   // 노트 있음/공개됨 = 세션 종료 → 가이드 작성 비활성화(읽기전용)
@@ -37,7 +37,7 @@ export default function SessionWorkspace({ session, timeline, targets = [], targ
 
       {tab === "guide"
         ? <SessionGuideForm session={session} timeline={timeline} targets={targets} targetSummary={targetSummary} readOnly={sessionDone} hasNote={!!(session.detail && session.detail.chief)} onViewNote={() => setTab("note")} />
-        : <div className="bg-white border border-[#e6e7eb] rounded-xl overflow-hidden max-w-[720px]"><SessionNoteForm session={session} /></div>}
+        : <div className="bg-white border border-[#e6e7eb] rounded-xl overflow-hidden max-w-[720px]"><SessionNoteForm session={session} extras={extras} /></div>}
     </div>
   );
 }

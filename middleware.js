@@ -4,7 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 // 로그인 필요한 경로 (선수 개인 포털 + 코치 배정 + 리포트 + 사전설문(/athlete)은 로그인 후 포탈 CTA로만 진입)
-const isProtectedRoute = createRouteMatcher(["/portal(.*)", "/coach(.*)", "/prep(.*)", "/report/view(.*)", "/me(.*)", "/log(.*)", "/reports(.*)", "/session(.*)", "/schedule(.*)", "/athlete(.*)"]);
+const isProtectedRoute = createRouteMatcher(["/portal(.*)", "/coach(.*)", "/prep(.*)", "/report/view(.*)", "/me(.*)", "/log(.*)", "/reports(.*)", "/session(.*)", "/schedule(.*)", "/athlete(.*)", "/asset(.*)"]);
 
 export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) {

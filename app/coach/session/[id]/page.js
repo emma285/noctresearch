@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getSessionById } from "../../../../lib/master";
+import { resolveAssets } from "../../../../lib/athleteAssets";
 import { getSleepTargets, adherence } from "../../../../lib/targets";
 import { db, schema } from "../../../../lib/db";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
@@ -53,9 +54,12 @@ export default async function CoachSessionNotePage({ params, searchParams }) {
     }
   } catch (e) { console.error("session page load failed:", e?.message); }
 
+  // 이 선수의 부가자료(세션에 첨부해 선수에게 보낼 수 있는 목록)
+  const extras = resolveAssets({ name: clientName, email: clientEmail }).extras || [];
+
   return (
     <CoachShell active="sessions" coachName={coachName}>
-      <SessionWorkspace session={session} timeline={timeline} targets={sleepTargets} targetSummary={targetSummary} dateLabel={fmtDate(session.date)} clientName={clientName} clientPageId={session.clientId} initialTab={searchParams?.tab === "note" ? "note" : "guide"} />
+      <SessionWorkspace session={session} timeline={timeline} targets={sleepTargets} targetSummary={targetSummary} dateLabel={fmtDate(session.date)} clientName={clientName} clientPageId={session.clientId} extras={extras} initialTab={searchParams?.tab === "note" ? "note" : "guide"} />
     </CoachShell>
   );
 }
