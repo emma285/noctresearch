@@ -28,15 +28,36 @@ const fmt = (m) => { m = ((m % 1440) + 1440) % 1440; return `${String(Math.floor
 
 export default function LogTimeline({ cols = [], sleeps = [], routines = [], targets = [], showTargets = false, kstView = false }) {
   const [tip, setTip] = useState(null);
-  const idx = (s) => cols.indexOf(s);
+  // 이동일(로그 tz가 섞인 날) 자동 분리 — 날짜별 등장 tz 수집 → 2개 이상이면 tz별 컬럼으로 쪼갬(서울 먼저).
+  const homeTz = (tz) => tz || HOME_TZ;
+  const sleepTzOf = (s) => homeTz(s.wakeTz || s.tz);
+  const routineTzOf = (r) => homeTz(r.tz);
+  const dateTzs = {};
+  const addTz = (date, tz) => { if (!cols.includes(date)) return; (dateTzs[date] = dateTzs[date] || new Set()).add(tz); };
+  for (const s of sleeps) addTz(s.date, sleepTzOf(s));
+  for (const r of routines) addTz(r.date, routineTzOf(r));
+  const splitDates = new Set(Object.keys(dateTzs).filter((d) => dateTzs[d].size > 1));
+  const COLUMNS = [];
+  for (const date of cols) {
+    if (splitDates.has(date)) {
+      const tzs = [...dateTzs[date]].sort((a, b) => (a === HOME_TZ ? -1 : b === HOME_TZ ? 1 : a < b ? -1 : 1));
+      for (const tz of tzs) COLUMNS.push({ key: `${date}|${tz}`, date, tzRaw: tz, split: true });
+    } else {
+      COLUMNS.push({ key: date, date, tzRaw: dateTzs[date] ? [...dateTzs[date]][0] : HOME_TZ, split: false });
+    }
+  }
+  const NC = COLUMNS.length;
+  const colKeyOf = (date, tz) => (splitDates.has(date) ? `${date}|${tz}` : date);
+  const colIdx = (key) => COLUMNS.findIndex((c) => c.key === key);
+  const targetColIdx = (date) => { let D = colIdx(colKeyOf(date, HOME_TZ)); if (D < 0) D = COLUMNS.findIndex((c) => c.date === date); return D; };
   const abs = (d, c) => d * 1440 + c;
   const colStart = (c) => c * 1440 + 360;
-  const segs = (a, b) => { const o = []; for (let c = 0; c < cols.length; c++) { const s = colStart(c), e = s + 1440, os = Math.max(a, s), oe = Math.min(b, e); if (oe > os) o.push({ col: c, top: (os - s) / 60 * PXH, h: (oe - os) / 60 * PXH }); } return o; };
+  const segs = (a, b) => { const o = []; for (let c = 0; c < NC; c++) { const s = colStart(c), e = s + 1440, os = Math.max(a, s), oe = Math.min(b, e); if (oe > os) o.push({ col: c, top: (os - s) / 60 * PXH, h: (oe - os) / 60 * PXH }); } return o; };
 
   const BLOCKS = [];
-  for (const rt of routines) { const di = idx(rt.date); if (di < 0) continue; const a = abs(di, rt.t); const t = T[rt.type] || T.etc; const foreign = !!(rt.tz && rt.tz !== HOME_TZ); const kstT = foreign ? fmt(localToHome(rt.date, rt.t, rt.tz).min) : null; segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), kstT, foreign, cat: t.l + (rt.d ? " " + rt.d : ""), isStart: i === 0 })); }
+  for (const rt of routines) { const di = colIdx(colKeyOf(rt.date, routineTzOf(rt))); if (di < 0) continue; const a = abs(di, rt.t); const t = T[rt.type] || T.etc; const foreign = !!(rt.tz && rt.tz !== HOME_TZ); const kstT = foreign ? fmt(localToHome(rt.date, rt.t, rt.tz).min) : null; segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), kstT, foreign, cat: t.l + (rt.d ? " " + rt.d : ""), isStart: i === 0 })); }
   for (const s of sleeps) {
-    const D = idx(s.date); if (D < 0) continue;
+    const D = colIdx(colKeyOf(s.date, sleepTzOf(s))); if (D < 0) continue;
     const bedDay = s.bed > s.wake ? D - 1 : D;
     const bA = abs(bedDay, s.bed), wA = abs(D, s.wake);
     const sol = SOL[s.sol] || 0, out = OUT[s.out] || 0;
@@ -55,11 +76,10 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
 
   // 목표(프로토콜) 오버레이 — 실제 수면과 동일한 seg 로직으로 유령 막대 생성.
   const on = showTargets && targets.length > 0;
-  const targetByDate = {}; if (on) for (const t of targets) targetByDate[t.date] = t;
-  const sleepByDate = {}; for (const s of sleeps) sleepByDate[s.date] = s;
+  const targetByColKey = {}; if (on) for (const t of targets) { const D = targetColIdx(t.date); if (D >= 0) targetByColKey[COLUMNS[D].key] = t; }
   const TARGET_BLOCKS = [];
   if (on) for (const t of targets) {
-    const D = idx(t.date); if (D < 0 || typeof t.bed !== "number" || typeof t.wake !== "number") continue;
+    const D = targetColIdx(t.date); if (D < 0 || typeof t.bed !== "number" || typeof t.wake !== "number") continue;
     const bedDay = t.bed > t.wake ? D - 1 : D;
     segs(abs(bedDay, t.bed), abs(D, t.wake)).forEach((sg, i) => TARGET_BLOCKS.push({ ...sg, isStart: i === 0 }));
   }
@@ -83,13 +103,14 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
           </div>
         </div>
         {/* 컬럼들 */}
-        {cols.map((cd, ci) => {
-          const sl = sleeps.find((s) => s.date === cd);
+        {COLUMNS.map((col, ci) => {
+          const cd = col.date;
+          const sl = sleeps.find((s) => colKeyOf(s.date, sleepTzOf(s)) === col.key);
           const full = sl ? (sl.feel + (sl.memo ? " — " + sl.memo : "")) : "";
-          const tgt = on ? targetByDate[cd] : null;
-          const tzb = sl ? tzBadgeLabel(sl.tz) : (routines.find((r) => r.date === cd && r.tz) ? tzBadgeLabel(routines.find((r) => r.date === cd && r.tz).tz) : "");
+          const tgt = on ? targetByColKey[col.key] : null;
+          const tzb = col.split ? (col.tzRaw === HOME_TZ ? "서울 KST" : tzBadgeLabel(col.tzRaw)) : (col.tzRaw !== HOME_TZ ? tzBadgeLabel(col.tzRaw) : "");
           return (
-            <div key={cd} style={{ flex: "0 0 118px", width: 118, minWidth: 0, borderRight: ci === cols.length - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
+            <div key={col.key} style={{ flex: "0 0 118px", width: 118, minWidth: 0, borderRight: ci === NC - 1 ? "none" : "1px solid #eef0f2", position: "relative" }}>
               <div style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, borderBottom: "1px solid #e6e7eb", background: "#fff" }}>{dlabel(cd)}</div>
               <div onClick={(e) => full && openTip(e, full)} title={full}
                 style={{ height: 64, padding: "6px 7px", borderBottom: "1px solid #e6e7eb", fontSize: 10, lineHeight: 1.45, color: "#3f4453", overflow: "hidden", position: "relative", cursor: full ? "pointer" : "default" }}>
