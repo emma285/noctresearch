@@ -2,12 +2,13 @@
 // [id] = 마스터 pageId(UUID). 이메일 대신 불투명 id로 라우팅(URL에 PII 노출 안 함).
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { ChevronRight, Eye, Sparkles } from "lucide-react";
+import { ChevronRight, Eye, Sparkles, Paperclip } from "lucide-react";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByRef, getSessionsByAthlete } from "../../../../lib/master";
 import { getAthleteEvents } from "../../../../lib/calendar";
 import { getSleepTargets, adherence, getAppliedProtocolSlugs } from "../../../../lib/targets";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
+import { getAttachments } from "../../../../lib/attachments";
 import { resolveAssets, reportSlug } from "../../../../lib/athleteAssets";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -34,6 +35,9 @@ export const metadata = { title: "선수 상세 | NOCT" };
 export const dynamic = "force-dynamic";
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 const md = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? `${+m[2]}월 ${+m[3]}일 (${DOW[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()]})` : ""; };
+const kstDT = (d) => { if (!d) return ""; try { return new Date(d).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
+const fileProxy = (u) => `/api/coach/file?u=${encodeURIComponent(u)}`;
+const UPKIND = { prep: { t: "코칭 준비자료", c: "bg-[#e8f1fe] text-[#2563c9]" }, garmin: { t: "가민 데이터", c: "bg-[#eaf7ef] text-[#1f8a4c]" } };
 
 function Panel({ title, right, children }) {
   return (
@@ -70,6 +74,7 @@ export default async function CoachClientDetail({ params }) {
   const endDate = maxTargetDate > today ? maxTargetDate : today;
   const numDays = 7 + Math.max(0, dayDiff(endDate, today));
   const timeline = await getLogTimeline(email, endDate, numDays);
+  const uploads = await getAttachments(email);
   // 프로토콜 목표 vs 실제 순응도(실제 로그 있는 날 기준)
   const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
   const targetSummary = adherence(sleepTargets, sleepByDate);
@@ -132,6 +137,36 @@ export default async function CoachClientDetail({ params }) {
               <div className="p-4">
                 <LogTimelinePanel cols={timeline.cols} sleeps={timeline.sleeps} routines={timeline.routines} targets={sleepTargets} summary={targetSummary} compactHeight={720} />
               </div>
+            </Panel>
+
+            <Panel title="선수가 올린 자료" right={<span className="text-[12px] text-[#9298a2] font-semibold">{uploads.length}개</span>}>
+              {uploads.length === 0 ? (
+                <div className="p-4 text-[13px] text-muted-foreground">아직 선수가 올린 자료가 없어요. (코칭 준비자료·첨부 제출 시 여기에 쌓여요)</div>
+              ) : uploads.map((u) => {
+                const k = UPKIND[u.kind] || { t: u.kind, c: "bg-[#eef0f3] text-[#6b7280]" };
+                return (
+                  <div key={u.id} className="px-4 py-3.5 border-t border-[#e7e9ed] first:border-t-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${k.c}`}>{k.t}</span>
+                      <span className="text-[12px] text-[#9298a2] font-semibold">{kstDT(u.createdAt)}</span>
+                    </div>
+                    {u.items?.length ? (
+                      <ul className="text-[13px] text-[#2a3340] leading-relaxed mb-1.5 space-y-0.5">
+                        {u.items.map((it, i) => (<li key={i}>· {it.type ? `[${it.type}] ` : ""}{it.text}</li>))}
+                      </ul>
+                    ) : null}
+                    {u.files?.length ? (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {u.files.map((f, i) => (
+                          <a key={i} href={fileProxy(f.url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary bg-[#eef0fb] rounded-lg px-2.5 py-1.5 max-w-full">
+                            <Paperclip className="w-3.5 h-3.5 flex-none" /><span className="truncate">{f.name || "첨부"}</span>
+                          </a>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </Panel>
 
             <Panel title="프로토콜 비교 목표" right={<span className="text-[12px] text-[#9298a2] font-semibold">부가자료 → 비교에 적용</span>}>
