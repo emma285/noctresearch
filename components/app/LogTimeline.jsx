@@ -55,7 +55,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
   const segs = (a, b) => { const o = []; for (let c = 0; c < NC; c++) { const s = colStart(c), e = s + 1440, os = Math.max(a, s), oe = Math.min(b, e); if (oe > os) o.push({ col: c, top: (os - s) / 60 * PXH, h: (oe - os) / 60 * PXH }); } return o; };
 
   const BLOCKS = [];
-  for (const rt of routines) { const di = colIdx(colKeyOf(rt.date, routineTzOf(rt))); if (di < 0) continue; const a = abs(di, rt.t); const t = T[rt.type] || T.etc; const foreign = !!(rt.tz && rt.tz !== HOME_TZ); const kstT = foreign ? fmt(localToHome(rt.date, rt.t, rt.tz).min) : null; segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), kstT, foreign, cat: t.l + (rt.d ? " " + rt.d : ""), isStart: i === 0 })); }
+  for (const rt of routines) { const di = colIdx(colKeyOf(rt.date, routineTzOf(rt))); if (di < 0) continue; const a = abs(di, rt.t); const t = T[rt.type] || T.etc; const foreign = !!(rt.tz && rt.tz !== HOME_TZ); const kstT = foreign ? fmt(localToHome(rt.date, rt.t, rt.tz).min) : null; segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), kstT, foreign, cat: (rt.type === "etc" && rt.text) ? (t.l + " · " + rt.text) : (t.l + (rt.d ? " " + rt.d : "") + (rt.text ? " · " + rt.text : "")), isStart: i === 0 })); }
   for (const s of sleeps) {
     const D = colIdx(colKeyOf(s.date, sleepTzOf(s))); if (D < 0) continue;
     const bedDay = s.bed > s.wake ? D - 1 : D;
@@ -154,7 +154,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
                   );
                   // 루틴
                   return (
-                    <div key={bi} style={{ ...base, color: b.fg, padding: b.h >= 16 ? "3px 6px" : "0 6px" }}>
+                    <div key={bi} title={b.cat} style={{ ...base, color: b.fg, padding: b.h >= 16 ? "3px 6px" : "0 6px" }}>
                       {b.h >= 30 ? (<><span style={{ fontWeight: 800, fontSize: 10.5, fontVariantNumeric: "tabular-nums", display: "block", lineHeight: 1.15 }}>{rtime}</span><span style={{ fontWeight: 600, fontSize: 9.5, display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.cat}</span></>)
                         : (<span style={{ fontWeight: 700, fontSize: b.h >= 16 ? 9.5 : 8.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{b.h >= 16 ? b.cat : b.cat.split(" ")[0]}</span>)}
                     </div>
