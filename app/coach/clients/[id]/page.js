@@ -89,7 +89,8 @@ export default async function CoachClientDetail({ params }) {
   const appliedProtocols = athlete.pageId ? await getAppliedProtocolSlugs(athlete.pageId) : [];
   const pubSet = new Set((athlete.publishedReports || []).map(String));
   const latestSessionId = sessions[0]?.id || "";
-  const nextGuideSession = sessions.find((s) => !(s.published || s.hasNote))?.id || ""; // 아직 안 끝난 세션의 가이드 준비
+  // 최고 회차가 아직 안 끝났을 때만 '다음 세션 가이드 준비' 대상. (중간에 미공개로 남은 과거 세션으로 새지 않게)
+  const nextGuideSession = sessions[0] && !(sessions[0].published || sessions[0].hasNote) ? sessions[0].id : "";
   const chips = [athlete.sport, athlete.tier, athlete.program].filter(Boolean).join(" · ");
 
   return (
