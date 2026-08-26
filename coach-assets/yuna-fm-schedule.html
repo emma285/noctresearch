@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>윤이나 · 보스턴 FM 2026 · 프로암~R2 수면 타임테이블</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+*{box-sizing:border-box}
+body{font-family:'Pretendard',system-ui,sans-serif;background:#F4F6F8;color:#0D1B2A;margin:0;padding:32px 20px 56px}
+.wrap{max-width:900px;margin:0 auto}
+.flag{display:inline-block;font-size:11px;font-weight:800;color:#8a5a00;background:#fbf3e6;border:1px solid #f0dcae;border-radius:999px;padding:3px 10px;margin-bottom:12px}
+h1{font-size:23px;font-weight:800;margin:0 0 4px}
+.sub{color:#5B6773;font-size:13.5px;line-height:1.6;margin:0 0 16px}
+.sub b{color:#20506A}
+.legend{display:flex;flex-wrap:wrap;gap:13px;margin:0 0 14px;font-size:12.5px;color:#37434F}
+.lg{display:flex;align-items:center;gap:6px}
+.lg i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+.cal{display:grid;grid-template-columns:54px repeat(3,1fr);gap:0;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden}
+.gut{position:relative;border-right:1px solid #EEF1F4}
+.gut .gtop{height:120px;border-bottom:1px solid #EEF1F4}
+.gutgrid{position:relative}
+.hr{position:absolute;left:0;right:6px;transform:translateY(-50%);text-align:right;font-size:10.5px;color:#9aa6b2;font-weight:600}
+.col{border-right:1px solid #EEF1F4}.col:last-child{border-right:none}
+.ch{min-height:120px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
+.cd{font-size:15px;font-weight:800}.cd span{font-size:11px;color:#9aa6b2;margin-left:2px}
+.ct{font-size:10.5px;font-weight:800;color:#20506A;background:#e8f2f8;border-radius:5px;padding:1px 7px;display:inline-block;margin:2px 0 4px}
+.ct.turn{color:#C13E80;background:rgba(236,107,168,.14)}
+.cn{font-size:10.5px;line-height:1.45;color:#7a8794}.cn b{color:#37434F}
+.grid{position:relative;background:repeating-linear-gradient(#F5F7F9 0 1px,transparent 1px 50px)}
+.ev{position:absolute;left:6px;right:6px;z-index:1;border-radius:9px;padding:5px 8px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+.ev .top{display:flex;gap:5px;align-items:baseline;flex-wrap:wrap}
+.ev .tl{font-size:11px;font-weight:800;line-height:1.25}
+.ev .nm{font-size:11px;font-weight:800;line-height:1.25}
+.ev.sleep .nm{font-size:12px}
+.ev .sub{display:block;font-size:9.5px;font-weight:500;line-height:1.35;margin-top:2px;opacity:.82}
+.ev.sleep .sub{opacity:1;font-size:10px;font-weight:600;color:#e4ebf2}
+.note{background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:16px 18px;margin-top:16px}
+.note h2{font-size:14px;font-weight:800;margin:0 0 8px;color:#20506A}
+.note ul{margin:0;padding-left:18px}
+.note li{font-size:12.5px;line-height:1.65;color:#37434F;margin-bottom:3px}
+.note li b{color:#0D1B2A}
+.warn{color:#a8483b}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="flag">보스턴 FM 챔피언십 실전 일정</span>
+  <h1>프로암 ~ R2 수면 타임테이블 <span style="font-size:13px;font-weight:600;color:#9298a2;margin-left:6px">현지시각 · 8/26(수)~28(금)</span></h1>
+  <p class="sub">프로암·R1이 <b>연속 새벽 티오프</b>, R2가 <b>늦은 오후</b>예요. 그래서 8/26~27은 <b>새벽 모드(일찍 취침)</b>, R1 저녁부터는 <b>버티기</b>로 오후 리듬에 옮겨 R2에 안착시키는 흐름이에요. 기상=티오프 3시간 전 · 도착·식사=2.5시간 전 기준 (티오프·만찬 빼고 15분 단위).</p>
+  <div class="legend" id="legend"></div>
+  <div class="cal" id="cal"></div>
+  <div class="note" style="border-color:#f0dcae;background:#fffdf7">
+    <h2 style="color:#8a5a00">프로암 행사 식사 (러프 가이드 · 만찬 19시대)</h2>
+    <ul>
+      <li><b>가볍고 소화 잘 되는 쪽으로.</b> 다음날 새벽 라운드라, 단백질(생선·살코기) + 채소 위주로, 밥·빵 탄수는 적당히만.</li>
+      <li><b>기름진 것·매운 것·짠 것은 과하지 않게.</b> 늦은 시간 과식은 역류·야간각성으로 이어져요.</li>
+      <li><b>디저트 뷔페는 맛보기 정도.</b> 늦은 당 폭탄은 잠을 밀어내요. 20시 넘어선 많이 안 먹고 물 위주로.</li>
+      <li class="warn"><b>술·카페인은 패스.</b> 새벽 기상이랑 수면 질에 바로 영향 줘요.</li>
+    </ul>
+  </div>
+  <div class="note" style="border-color:#f0dcae;background:#fffdf7">
+    <h2 style="color:#8a5a00">프로암 취침 루틴 (행사 후 · 21:30~22:00)</h2>
+    <ul>
+      <li><b>1. 감정 기록.</b> 경기 앞두고 드는 생각이랑 지금 감정만 간단히 적어요. 머릿속에서 한 번 꺼내두면 누웠을 때 덜 맴돌아요.</li>
+      <li><b>2. 목·어깨 스트레칭.</b> 딱 목이랑 어깨만 가볍게 풀어줘요. 뭉친 데 느슨해지는 정도면 충분해요.</li>
+      <li><b>3. 깊은 호흡 10회.</b> 깊게 들이마시고 천천히 내쉬기를 딱 열 번. 몸에 "이제 잘 시간"이라는 신호를 줘요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const PXH = 50, AX0 = 3, AX1 = 27, H = (AX1 - AX0) * PXH;   // 03:00 시작 → 03:00(24h). 프로암 기상 04:00 담기
+const h = t => (t >= AX0 ? t : t + 24) - AX0;
+const hhmm = t => { t = ((t % 24) + 24) % 24; let hh = Math.floor(t), mm = Math.round((t - hh) * 60); if (mm === 60) { hh = (hh + 1) % 24; mm = 0; } return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); };
+const COLOR = {
+  수면:['#26374A','#e4ebf2'], 식사:['#E4F2E8','#2E7D46'], 커피:['#F6E7CE','#8a5a00'],
+  낮잠:['#DCEEF6','#1f5b78'], 빛:['#FBF1CE','#8a6d00'], 이완:['#E7EAEE','#3a4652'],
+  준비:['#EEF0FB','#4355B0'], 대기:['#EEF0F2','#6b7280'], 경기:['#F9DED8','#a8483b'],
+  연습:['#DEEEF0','#1f6f82'], 마사지:['#E8E4F3','#5A4FA6'],
+};
+// [start, end, type, 시각라벨, 이름(' · ' 뒤는 보조설명 두번째줄), dashed]
+// 티오프·만찬 외 모든 시간은 15분 단위. 짧은 블록은 한 줄, 최소 높이 34px.
+const DAYS = [
+  { date:'프로암', dow:'수 8/26', tag:'오전 7:00 · 새벽 모드',
+    note:'새벽 4시 기상 + 종일 일정 + 저녁 공식 행사(21:30 종료). 끝나고 버퍼존 30분만 짧게 갖고 22시 취침 → 약 7시간 확보.',
+    cards:[
+      [3.0,4.0,'수면','','기상 04:00 · 이전 밤 7~8시간 목표',false],
+      [4.0,7.0,'준비','04:00','도착·식사·워밍업 · 기상 4:00·아침빛 → 티오프 2.5h 전',false],
+      [7.0,10.0,'경기','07:00','프로암 라운드',false],
+      [10.0,12.0,'연습','10:00','연습',false],
+      [12.0,13.0,'식사','12:00','식사',false],
+      [13.0,14.0,'마사지','13:00','마사지·회복 (카페인 컷)',false],
+      [14.25,14.5,'낮잠','14:15','짧은 낮잠 20분(선택)',true],
+      [15.0,16.0,'대기','15:00','자유·가벼운 휴식',false],
+      [16.0,16.5,'준비','16:00','행사 준비·이동',false],
+      [16.5,21.5,'식사','16:30','프로암 만찬 행사 · 픽업 16:30 → 21:30 종료',false],
+      [21.5,22.0,'이완','21:30','버퍼존 · 감정기록·스트레칭·호흡 10회',false],
+      [22.0,27.0,'수면','22:00','취침 22:00 · 약 7시간 → 05:00 기상',false],
+    ]},
+  { date:'R1', dow:'목 8/27', tag:'오전 8:06 · 강점(오전조)',
+    note:'5시 기상 오전 라운드. 라운드 후 연습·마사지(원래 루틴)까지 하면 자연스럽게 안 뻗고 버티기가 돼요. 저녁부터 취침 밀어 R2 오후로 리듬 이동.',
+    cards:[
+      [3.0,5.0,'수면','','기상 05:00 · 약 7시간 (22:00 취침)',false],
+      [5.0,8.1,'준비','05:00','도착·식사·워밍업 · 도착 5:30·아침빛·카페인 → 티오프 2.5h 전',false],
+      [8.1,10.5,'경기','08:06','전반',false],
+      [10.5,12.75,'경기','','후반',false],
+      [13.0,13.75,'식사','13:00','라운드 후 식사',false],
+      [13.75,15.75,'연습','13:45','연습 1.5~2h',false],
+      [16.0,17.0,'마사지','16:00','마사지 1h',false],
+      [17.25,17.5,'낮잠','17:15','짧은 낮잠 20분(선택)',true],
+      [19.0,19.75,'식사','19:00','저녁',false],
+      [19.75,22.0,'대기','19:45','가볍게 깨어있기(버티기) · 산책·활동·눕지않기·조명 적당히',false],
+      [22.0,23.0,'이완','22:00','버퍼존 · 조명↓·미지근샤워·감정기록·호흡',false],
+      [23.0,27.0,'수면','23:00','취침 23:00 · 총 8시간 → 07:00 기상 · 버티기',false],
+    ]},
+  { date:'R2', dow:'금 8/28', tag:'오후 1:16 · 버티기·백나인', turn:true,
+    note:'오전조 다음의 오후조. 기상은 최대한 늦게, 티오프까지 대기를 액티브하게 관리해요. 라운드 후 연습·마사지가 밤으로 밀리면(KPMG R2처럼) 붕괴 위험 → R3 티타임 나오면 앞당기거나 줄여서 설계.',
+    cards:[
+      [3.0,7.0,'수면','','기상 07:00 · 총 8시간 (23:00 취침) · 최대한 늦게',false],
+      [7.0,8.0,'식사','07:00','아침 · 가볍게 · 아침빛',false],
+      [8.0,9.0,'대기','08:00','대기 · 산책·가벼운 활동 (눕지 않기)',false],
+      [9.0,9.25,'낮잠','09:00','짧은 낮잠 20분(선택)',true],
+      [10.0,10.75,'준비','10:00','이동 준비',false],
+      [10.75,13.27,'준비','10:45','도착·식사·워밍업 · 티오프 2.5h 전',false],
+      [13.27,15.75,'경기','13:16','전반',false],
+      [15.75,17.75,'경기','','후반',false],
+      [17.75,27.0,'대기','17:45','라운드 후 미정 · 연습·마사지·저녁·버퍼존·취침 (R3 티타임 나오면 설계)',true],
+    ]},
+];
+
+function evHtml(c){
+  const [s,e,t,tl,nm,dash] = c;
+  const top = h(s)*PXH + 1, hgt = Math.max((h(e)-h(s))*PXH - 2, 40);
+  const [bg,fg] = COLOR[t];
+  const border = dash ? ';border:2px dashed #b98a3e' : ';border:1px solid rgba(0,0,0,.05)';
+  const si = nm.indexOf(' · ');
+  const main = si < 0 ? nm : nm.slice(0, si);
+  const sub = si < 0 ? '' : nm.slice(si + 3);
+  const subh = sub ? `<span class="sub">${sub}</span>` : '';
+  if (t === '수면'){
+    const align = s < 12 ? 'flex-end' : 'flex-start';
+    return `<div class="ev sleep" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg};justify-content:${align}"><span class="nm">${main}</span>${subh}</div>`;
+  }
+  const tlh = tl ? `<span class="tl" style="color:${fg}">${tl}</span>` : '';
+  return `<div class="ev" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg}${border}"><div class="top">${tlh}<span class="nm">${main}</span></div>${subh}</div>`;
+}
+
+let gutter = '';
+for (let i=0; i<=AX1-AX0; i++) gutter += `<div class="hr" style="top:${i*PXH}px">${hhmm(AX0+i)}</div>`;
+let html = `<div class="gut"><div class="gtop"></div><div class="gutgrid" style="height:${H}px">${gutter}</div></div>`;
+for (const d of DAYS){
+  const cards = d.cards.map(evHtml).join('');
+  html += `<div class="col"><div class="ch"><div class="cd">${d.date} <span>(${d.dow})</span></div><div class="cn">${d.note}</div></div><div class="grid" style="height:${H}px">${cards}</div></div>`;
+}
+document.getElementById('cal').innerHTML = html;
+
+const chs = [...document.querySelectorAll('.ch')];
+const maxH = Math.max(120, ...chs.map((c) => c.offsetHeight));
+chs.forEach((c) => (c.style.height = maxH + 'px'));
+const gtop = document.querySelector('.gtop'); if (gtop) gtop.style.height = maxH + 'px';
+
+const legendItems = [['수면','수면'],['경기','라운드'],['준비','준비·워밍업'],['연습','연습'],['마사지','마사지'],['대기','대기'],['식사','식사·만찬'],['낮잠','낮잠'],['이완','버퍼존·이완'],['빛','햇빛']];
+document.getElementById('legend').innerHTML = legendItems.map(([k,n])=>`<span class="lg"><i style="background:${COLOR[k][0]}"></i>${n}</span>`).join('');
+</script>
+</body>
+</html>
