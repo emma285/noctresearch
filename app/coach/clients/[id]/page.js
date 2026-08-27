@@ -18,6 +18,7 @@ import CoachScheduleEditor from "../../../../components/coach/CoachScheduleEdito
 import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
 import ProtocolCompare from "../../../../components/coach/ProtocolCompare";
+import AddSessionForm from "../../../../components/coach/AddSessionForm";
 
 // 부가자료 HTML에 프로토콜 목표(#protocol-targets)가 있으면 정보 반환
 async function protocolInfo(slug) {
@@ -91,6 +92,7 @@ export default async function CoachClientDetail({ params }) {
   const latestSessionId = sessions[0]?.id || "";
   // 최고 회차가 아직 안 끝났을 때만 '다음 세션 가이드 준비' 대상. (중간에 미공개로 남은 과거 세션으로 새지 않게)
   const nextGuideSession = sessions[0] && !(sessions[0].published || sessions[0].hasNote) ? sessions[0].id : "";
+  const suggestN = sessions.length ? (Math.max(...sessions.map((s) => s.n || 0)) + 0.5) : 1; // 회차 추가 기본값(최고 회차 +0.5)
   const chips = [athlete.sport, athlete.tier, athlete.program].filter(Boolean).join(" · ");
 
   return (
@@ -132,6 +134,7 @@ export default async function CoachClientDetail({ params }) {
                   </div>
                 );
               })}
+              {athlete.pageId ? <AddSessionForm clientId={athlete.pageId} defaultN={suggestN} /> : null}
             </Panel>
 
             <Panel title="수면 · 루틴 로그" right={<span className="text-[12px] text-[#9298a2] font-semibold">최근 7일{endDate > today ? " + 예정" : ""} · 우측 스크롤</span>}>
