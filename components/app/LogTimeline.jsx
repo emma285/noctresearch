@@ -131,7 +131,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
               <div style={{ position: "relative", height: H }}>
                 {hourLabels.map(({ r }) => <div key={r} style={{ position: "absolute", left: 0, right: 0, top: r * PXH, borderTop: "1px solid #f3f4f6" }} />)}
                 {on && TARGET_BLOCKS.filter((b) => b.col === ci).map((b, ti) => (
-                  <div key={"t" + ti} style={{ position: "absolute", left: 3, right: 3, top: b.top, height: Math.max(b.h, 8), borderRadius: 6, border: "2px dashed #EC6BA8", background: "rgba(236,107,168,.12)", boxSizing: "border-box", zIndex: 0, pointerEvents: "none" }}>
+                  <div key={"t" + ti} style={{ position: "absolute", left: 1, right: 1, top: b.top, height: Math.max(b.h, 8), borderRadius: 7, border: "2px dashed #EC6BA8", background: "transparent", boxSizing: "border-box", zIndex: 3, pointerEvents: "none" }}>
                     {b.isStart && b.h > 26 ? <span style={{ position: "absolute", top: 1, left: 4, fontSize: 8, fontWeight: 800, color: "#C13E80", background: "rgba(255,255,255,.8)", borderRadius: 3, padding: "0 3px" }}>목표</span> : null}
                   </div>
                 ))}
