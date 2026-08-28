@@ -10,6 +10,7 @@ import { getSleepTargets, adherence, getAppliedProtocolSlugs } from "../../../..
 import { getLogTimeline, kstToday } from "../../../../lib/log";
 import { getAttachments } from "../../../../lib/attachments";
 import { resolveAssets, reportSlug } from "../../../../lib/athleteAssets";
+import { extractProtocolTargets } from "../../../../lib/protocolExtract";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import CoachShell from "../../../../components/coach/CoachShell";
@@ -25,10 +26,9 @@ async function protocolInfo(slug) {
   if (!/^[a-z0-9-]+$/i.test(slug)) return null;
   try {
     const html = await readFile(path.join(process.cwd(), "coach-assets", `${slug}.html`), "utf8");
-    const m = /<script id="protocol-targets"[^>]*>([\s\S]*?)<\/script>/i.exec(html);
-    if (!m) return null;
-    const data = JSON.parse(m[1].trim());
-    return Array.isArray(data.targets) && data.targets.length ? { count: data.targets.length } : null;
+    // 명시 블록이 없어도 타임테이블에서 목표(취침/기상)를 자동 추출한다.
+    const { targets, source } = extractProtocolTargets(html, { nowISO: kstToday() });
+    return targets.length ? { count: targets.length, source } : null;
   } catch { return null; }
 }
 

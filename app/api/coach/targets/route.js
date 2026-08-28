@@ -7,6 +7,8 @@ import path from "node:path";
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "../../../../lib/db";
 import { isCoachEmail } from "../../../../lib/coach";
+import { extractProtocolTargets } from "../../../../lib/protocolExtract";
+import { kstToday } from "../../../../lib/log";
 
 const { sleepTargets } = schema;
 export const runtime = "nodejs";
@@ -21,14 +23,13 @@ async function requireCoach() {
 }
 const hhmmToMin = (s) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || "").trim()); return m ? (+m[1] % 24) * 60 + +m[2] : null; };
 
-// 부가자료 HTML에서 #protocol-targets JSON 추출 (없으면 null)
+// 부가자료 HTML → 프로토콜 목표. 명시 블록(#protocol-targets)이 없으면 타임테이블에서 자동 추출.
 async function readProtocolTargets(slug) {
   if (!/^[a-z0-9-]+$/i.test(slug)) return null;
   let html;
   try { html = await readFile(path.join(process.cwd(), "coach-assets", `${slug}.html`), "utf8"); } catch { return null; }
-  const m = /<script id="protocol-targets"[^>]*>([\s\S]*?)<\/script>/i.exec(html);
-  if (!m) return null;
-  try { return JSON.parse(m[1].trim()); } catch { return null; }
+  const data = extractProtocolTargets(html, { nowISO: kstToday() });
+  return data.targets.length ? data : null;
 }
 
 // POST { clientId, slug } → 그 프로토콜 목표를 sleep_targets에 반영(같은 slug 기존분 교체)
