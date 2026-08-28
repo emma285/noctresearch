@@ -163,5 +163,12 @@ const gtop = document.querySelector('.gtop'); if (gtop) gtop.style.height = maxH
 const legendItems = [['수면','수면'],['경기','라운드'],['준비','준비·워밍업'],['연습','연습'],['마사지','마사지'],['대기','대기'],['식사','식사·만찬'],['낮잠','낮잠'],['이완','버퍼존·이완'],['빛','햇빛']];
 document.getElementById('legend').innerHTML = legendItems.map(([k,n])=>`<span class="lg"><i style="background:${COLOR[k][0]}"></i>${n}</span>`).join('');
 </script>
+<!-- 프로토콜 비교 목표: date=기상일 기준(로그와 정렬). 타임테이블 실제 값만, R2 밤(취침 미정)은 제외. -->
+<script id="protocol-targets" type="application/json">
+{"name":"보스턴 FM 프로암~R2","targets":[
+ {"date":"2026-08-27","bed":"22:00","wake":"05:00","label":"프로암 밤 → R1 오전"},
+ {"date":"2026-08-28","bed":"23:00","wake":"07:00","label":"R1 밤 → R2 오전"}
+]}
+</script>
 </body>
 </html>
