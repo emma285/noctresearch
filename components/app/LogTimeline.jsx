@@ -1,7 +1,7 @@
 "use client";
 // 수면·루틴 타임라인 (세션 가이드 준비용). 분 단위 · 입면/침대밖/밤중깸 반영 · 일일 너비 고정.
 // 색=루틴 로그 파스텔 칩 / 수면=네이비블루. 그리드 정렬 위해 헤더·메모 높이 고정.
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { tzBadgeLabel, localToHome, cityOf, HOME_TZ } from "../../lib/tz";
 
 // 'YYYY-MM-DD' + 일수 → 'YYYY-MM-DD'
@@ -28,6 +28,9 @@ const fmt = (m) => { m = ((m % 1440) + 1440) % 1440; return `${String(Math.floor
 
 export default function LogTimeline({ cols = [], sleeps = [], routines = [], targets = [], showTargets = false, kstView = false }) {
   const [tip, setTip] = useState(null);
+  // 긴 기간이면 열자마자 최신(오른쪽 끝)이 보이게 스크롤 — 과거는 왼쪽으로 스크롤해서 확인.
+  const scrollRef = useRef(null);
+  useEffect(() => { const el = scrollRef.current; if (el) el.scrollLeft = el.scrollWidth; }, [cols.length]);
   // 이동일(로그 tz가 섞인 날) 자동 분리 — 날짜별 등장 tz 수집 → 2개 이상이면 tz별 컬럼으로 쪼갬(서울 먼저).
   const homeTz = (tz) => tz || HOME_TZ;
   const sleepTzOf = (s) => homeTz(s.wakeTz || s.tz);
@@ -91,9 +94,9 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
 
   return (
     <div onClick={() => setTip(null)}>
-      <div style={{ display: "flex", border: "1px solid #e6e7eb", borderRadius: 12, overflowX: "auto", overflowY: "hidden", background: "#fff" }}>
+      <div ref={scrollRef} style={{ display: "flex", border: "1px solid #e6e7eb", borderRadius: 12, overflowX: "auto", overflowY: "hidden", background: "#fff" }}>
         {/* 축 */}
-        <div style={{ width: 50, flexShrink: 0, borderRight: "1px solid #eef0f2", position: "sticky", left: 0, background: "#fff", zIndex: 2 }}>
+        <div style={{ width: 50, flexShrink: 0, borderRight: "1px solid #eef0f2", position: "sticky", left: 0, background: "#fff", zIndex: 5 }}>
           <div style={{ height: 32, borderBottom: "1px solid #e6e7eb", background: "#fff" }} />
           <div style={{ height: 64, borderBottom: "1px solid #e6e7eb" }} />
           <div style={{ position: "relative", height: H }}>

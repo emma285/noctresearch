@@ -7,7 +7,7 @@ import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByRef, getSessionsByAthlete } from "../../../../lib/master";
 import { getAthleteEvents } from "../../../../lib/calendar";
 import { getSleepTargets, adherence, getAppliedProtocolSlugs } from "../../../../lib/targets";
-import { getLogTimeline, kstToday } from "../../../../lib/log";
+import { getLogTimeline, getFirstLogDate, kstToday } from "../../../../lib/log";
 import { getAttachments } from "../../../../lib/attachments";
 import { resolveAssets, reportSlug } from "../../../../lib/athleteAssets";
 import { extractProtocolTargets } from "../../../../lib/protocolExtract";
@@ -68,12 +68,17 @@ export default async function CoachClientDetail({ params }) {
     athlete.pageId ? getAthleteEvents(athlete.pageId) : [],
     athlete.pageId ? getSleepTargets(athlete.pageId) : [],
   ]);
-  // 타임라인 기간: 최근 7일 + 프로토콜 미래 목표일까지(있으면) → 우측 스크롤로 예정 확인
+  // 타임라인 기간: 첫 기록(또는 첫 목표)부터 오늘(+미래 목표일)까지 전체 → 좌우 스크롤로 다 보임.
   const today = kstToday();
   const dayDiff = (a, b) => Math.round((Date.parse(a) - Date.parse(b)) / 86400000);
+  const firstLog = athlete.pageId ? await getFirstLogDate(email) : null;
   const maxTargetDate = sleepTargets.reduce((m, t) => (t.date > m ? t.date : m), today);
+  const minTargetDate = sleepTargets.reduce((m, t) => (!m || t.date < m ? t.date : m), null);
   const endDate = maxTargetDate > today ? maxTargetDate : today;
-  const numDays = 7 + Math.max(0, dayDiff(endDate, today));
+  // 시작일 = 첫 로그 vs 첫 목표 중 이른 것. 아무것도 없으면 오늘 기준(최근 7일).
+  const startCands = [firstLog, minTargetDate].filter(Boolean);
+  const spanStart = startCands.length ? startCands.reduce((a, b) => (a < b ? a : b)) : today;
+  const numDays = Math.max(7, dayDiff(endDate, spanStart) + 1); // +1: 오프셋 칸 여유(첫 실제 컬럼 확보)
   const timeline = await getLogTimeline(email, endDate, numDays);
   const uploads = await getAttachments(email);
   // 프로토콜 목표 vs 실제 순응도(실제 로그 있는 날 기준)
