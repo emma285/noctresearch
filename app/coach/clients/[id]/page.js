@@ -115,8 +115,8 @@ export default async function CoachClientDetail({ params }) {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-[18px] items-start">
-          {/* 좌: 세션 + 로그 */}
-          <div className="flex flex-col gap-[18px]">
+          {/* 좌: 세션 + 로그 (min-w-0: 넓은 타임라인이 트랙을 밀어내지 않고 내부 스크롤되게) */}
+          <div className="flex flex-col gap-[18px] min-w-0">
             <Panel title="세션" right={nextGuideSession ? <Link href={`/coach/session/${nextGuideSession}`} className="inline-flex items-center gap-1.5 text-[12px] font-bold text-white bg-primary rounded-lg px-2.5 py-1.5"><Sparkles className="w-3.5 h-3.5" />다음 세션 가이드 준비</Link> : null}>
               {sessions.length === 0 ? (
                 <div className="py-10 text-center text-[13px] text-muted-foreground">아직 세션이 없어요.</div>
