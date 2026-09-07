@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이지수 · 여름 경과 리포트</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#F2F3F6; --fg:#0b0e14; --card:#fff; --border:#e6e7eb;
+    --primary:#4355B0; --sky:#7EC8E3; --lav:#A0B0FF; --coral:#F4978E; --navy:#0D1B2A;
+    --muted:#6b7280;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{overflow-x:hidden}
+  body{background:var(--bg);color:var(--fg);
+    font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
+    letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.5}
+  .wrap{max-width:940px;margin:0 auto;padding:18px 24px calc(80px + env(safe-area-inset-bottom))}
+  .appbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid #E6E7EB;padding:12px 16px}
+  .appbar .back{font-size:15px;font-weight:600;color:#0D1B2A;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+  .appbar .back svg{width:20px;height:20px}
+  .appnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:60;display:flex;background:#fff;border-top:1px solid #E6E7EB;padding:9px 0 max(11px,env(safe-area-inset-bottom))}
+  .appnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#6b7280;text-decoration:none}
+  .appnav a svg{width:22px;height:22px}
+  .appnav a span{font-size:11px;font-weight:500}
+  .appnav a.on{color:#4355B0}
+  .appnav a.on span{font-weight:600}
+  section,.block{margin-bottom:28px}
+  .tabnum{font-variant-numeric:tabular-nums}
+
+  .hero{border-radius:12px;overflow:hidden;color:#fff;background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%)}
+  .hero .pad{padding:30px 32px 0}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--sky)}
+  .hero .titrow{margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .hero h1{font-size:24px;font-weight:800;letter-spacing:-.03em}
+  .hero .pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 13px;white-space:nowrap;
+    background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);color:#c4e7f5}
+  .hero .who{margin-top:11px;font-size:15px;font-weight:700;color:#fff}
+  .hero .who span{font-size:13px;font-weight:400;color:rgba(255,255,255,.65);margin-left:3px}
+  .hero .date{margin-top:5px;font-size:12px;color:rgba(255,255,255,.5)}
+  .kpis{margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.1)}
+  .kpi{padding:16px 20px} .kpi + .kpi{border-left:1px solid rgba(255,255,255,.1)}
+  .kpi .v{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .kpi .v small{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-left:2px}
+  .kpi .k{font-size:12px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.3}
+
+  .impression{border-radius:12px;background:#f5f6fb;border:1px solid #e3e6f4;padding:24px 26px}
+  .impression .lab{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--primary)}
+  .impression p{font-size:15px;line-height:1.75;color:var(--fg);margin-top:11px}
+  .impression p b{font-weight:800}
+
+  .shead .lab{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary)}
+  .shead h2{font-size:18px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
+  .shead .desc{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.6}
+  .shead{margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+  .s-g{color:#1f8a4c} .s-w{color:#b9770e} .s-b{color:#c0554a}
+
+  /* Tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .tile{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 15px}
+  .tile .tv{font-size:19px;font-weight:800;letter-spacing:-.03em;line-height:1.15} .tile .tv small{font-size:11px;font-weight:700}
+  .tile .tn{font-size:12px;color:var(--navy);margin-top:7px;font-weight:700}
+  .tile .tb{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+  /* Bar chart (월별) */
+  .chart{padding:22px 22px 16px}
+  .bars{display:flex;align-items:flex-end;gap:14px;height:160px;padding-top:8px;position:relative}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;z-index:2}
+  .bval{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:6px}
+  .bfill{width:100%;max-width:52px;border-radius:7px 7px 3px 3px}
+  .bx{font-size:12.5px;font-weight:700;color:var(--muted);margin-top:9px}
+  .bsub{font-size:10px;color:#aeb4c0;margin-top:1px}
+  .bref{position:absolute;left:0;right:0;border-top:1px dashed #b7bdcc;z-index:1}
+  .bref span{position:absolute;right:0;top:-8px;font-size:10px;color:#9aa0aa;font-weight:700;background:#fff;padding:0 5px}
+  .chartnote{margin-top:16px;border-radius:8px;background:#f1f2fb;border:1px solid #dde1f6;padding:14px;font-size:13px;line-height:1.65;color:#3a3f52}
+  .chartnote b{font-weight:800;color:var(--navy)}
+
+  /* Line chart (미국 취침 시각) */
+  .linewrap{padding:18px 8px 10px;overflow-x:auto}
+  .linewrap svg{display:block}
+  .llegend{display:flex;gap:16px;flex-wrap:wrap;margin:12px 14px 0;font-size:11.5px;color:#4b5563;font-weight:600}
+  .llegend span{display:inline-flex;align-items:center;gap:6px}
+  .llegend i{width:11px;height:11px;border-radius:3px}
+
+  .interp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ibox{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px}
+  .ibox .ih{font-size:13px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .ibox.good .ih{color:#1f8a4c} .ibox.bad .ih{color:#c0554a}
+  .ibox .ih i{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .ibox.good .ih i{background:#1f8a4c} .ibox.bad .ih i{background:#c0554a}
+  .il{display:flex;gap:9px;align-items:flex-start;padding:10px 0;border-top:1px solid #f0f1f4}
+  .il:first-of-type{border-top:none}
+  .il .ick{flex-shrink:0;margin-top:5px;width:6px;height:6px;border-radius:50%}
+  .ibox.good .ick{background:#8fce9f} .ibox.bad .ick{background:#e0a89c}
+  .il .it{font-size:12.5px;line-height:1.55;color:#4a4f60} .il .it b{color:var(--navy);font-weight:700}
+  .il .it .src{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+
+  /* Safety / watch list card */
+  .watch{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 20px 14px}
+  .watch .wl{display:flex;gap:11px;align-items:flex-start;padding:13px 0;border-top:1px solid #f0f1f4}
+  .watch .wl:first-of-type{border-top:none}
+  .watch .wl .wd{flex-shrink:0;margin-top:6px;width:7px;height:7px;border-radius:50%;background:#c9a24a}
+  .watch .wl .wt{font-size:13px;line-height:1.6;color:#4a4f60} .watch .wl .wt b{color:var(--navy);font-weight:700}
+  .watch .wl .wt .src{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+
+  .bigstep{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(13,27,42,.05);padding:24px 26px;margin-bottom:14px}
+  .bigstep:last-child{margin-bottom:0}
+  .bigstep .bn{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--primary);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .bigstep .bwhen{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.02em}
+  .bigstep .bt{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--navy);margin-top:5px}
+  .bigstep .bd{font-size:14px;color:#4a4f60;line-height:1.7;margin-top:9px}
+
+  .footlogo{padding-top:20px;display:flex;justify-content:center;align-items:center;gap:7px;color:#aeb4c0;font-weight:800;font-size:12px;letter-spacing:.04em}
+  .footlogo i{width:7px;height:7px;border-radius:50%;background:#7EC8E3}
+  .disc{margin-top:14px;font-size:11px;color:#a7abb2;line-height:1.7;text-align:center}
+
+  @media print{body{background:#fff}}
+  @media(max-width:760px){
+    .wrap{padding:22px 14px}
+    .hero .pad{padding:24px 18px 0}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi{padding:14px 16px} .kpi:nth-child(3),.kpi:nth-child(4){border-top:1px solid rgba(255,255,255,.1)}
+    .kpi:nth-child(odd){border-left:none}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .interp{grid-template-columns:1fr}
+    .impression,.chart,.bigstep{padding-left:16px;padding-right:16px}
+  }
+</style>
+</head>
+<body>
+<div class="appbar"><a href="/reports" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>리포트</a></div>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero block">
+    <div class="pad">
+      <div class="eyebrow">수면 코칭 · 경과 리포트</div>
+      <div class="titrow">
+        <h1>여름 경과 리포트</h1>
+        <span class="pill">6–9월 · 미국 출장기</span>
+      </div>
+      <div class="who">이지수</div>
+      <div class="date">직접 남긴 일지 + 코칭 세션 기반 · 2026. 6. 18 → 9. 7 (지난 4개월차 리포트 이후)</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v tabnum">약 3<small>개월</small></div><div class="k">이어온 기간</div></div>
+      <div class="kpi"><div class="v tabnum">5<small>회</small></div><div class="k">이번 구간 세션</div></div>
+      <div class="kpi"><div class="v tabnum">0.4<small>회</small></div><div class="k">9월 밤중 각성<br>계속 안정적</div></div>
+      <div class="kpi"><div class="v tabnum">0.76<small>h</small></div><div class="k">9월 취침 변동폭<br>귀국 후 최저</div></div>
+    </div>
+  </div>
+
+  <!-- Overview (BLUF) -->
+  <section class="impression block">
+    <div class="lab">OVERVIEW · 한눈 요약</div>
+    <p>지난 리포트에서 <b>"각성은 잡혔고, 이제 남은 건 취침 시각"</b>이라고 정리했었죠. 6월 중순부터 9월까지는 <b>미국 출장</b>이 끼면서 조금 더 복합적인 시기였어요.<br><br>
+    좋았던 건, <b>눕자마자 잠드는 힘과 밤중 각성</b>이 계속 안정적이라는 거예요. 특히 <b>양압기를 자기 1~2시간 전에 미리 세팅</b>해두는 방법을 찾아서 효과를 보셨어요. 다만 <b>총수면은 여전히 6시간 안팎</b>이라 권장 7시간엔 아직 못 미쳐요. 지난 리포트에 이어 남은 과제예요.<br><br>
+    반대로 <b>취침 시각</b>은 미국에 계신 동안 밤 10시부터 새벽 3시까지 크게 출렁였어요. 시차가 계속 영향을 줬고, 8월 변동폭은 1.38시간까지 커졌다가 <b>귀국 후 9월에 0.76시간으로 안정</b>되기 시작했어요.<br><br>
+    이번에 새로 살펴볼 건, <b>"자는 게 몸에 오히려 안 좋은 느낌"</b>과 잠자리에 대한 부담, 그리고 혈액수치·혈압·야간 움직임 같은 몸 신호예요. 여기는 검사로 하나씩 확인해가는 중이에요.</p>
+  </section>
+
+  <!-- 요약 지표 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">SUMMARY</div>
+      <h2>이번 구간 요약 지표</h2>
+      <div class="desc">직접 남겨주신 일지 기반이에요. 9월은 아직 5일치라 흐름으로만 봐주세요.</div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="tv s-w">약 6.5<small> h</small></div><div class="tn">대체로 총수면</div><div class="tb">권장 7시간엔 아직 못 미쳐요 (남은 과제)</div></div>
+      <div class="tile"><div class="tv s-g">0.76<small> h</small></div><div class="tn">9월 취침 변동폭</div><div class="tb">지난 1순위 과제, 귀국 후 최저치로</div></div>
+      <div class="tile"><div class="tv s-g">0.40<small> 회</small></div><div class="tn">9월 밤중 각성</div><div class="tb">계속 안정적, 거의 안 깨요</div></div>
+      <div class="tile"><div class="tv s-w">1.38<small> h</small></div><div class="tn">8월 취침 변동폭</div><div class="tb">미국 체류 중 다시 커짐 (시차 영향)</div></div>
+    </div>
+  </section>
+
+  <!-- 취침 시각: 지난 1순위 과제 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">BEDTIME</div>
+      <h2>취침 시각, 그 뒤 · 지난 1순위 과제</h2>
+      <div class="desc">매일 몇 시에 누웠는지가 얼마나 들쭉날쭉한지(변동폭)를 월별로 봤어요. 막대가 낮을수록 일정한 거예요(좋아요).</div>
+    </div>
+    <div class="card chart">
+      <div class="bars">
+        <div class="bref" style="bottom:80%"><span>지난 과제선 ±1.2h</span></div>
+        <div class="bcol"><div class="bval">±1.2<small style="font-size:10px">h</small></div><div class="bfill" style="height:80%;background:#9aa7d6"></div><div class="bx">지난 리포트</div><div class="bsub">~6월</div></div>
+        <div class="bcol"><div class="bval">1.06<small style="font-size:10px">h</small></div><div class="bfill" style="height:71%;background:#5bb489"></div><div class="bx">7월</div><div class="bsub">n=10</div></div>
+        <div class="bcol"><div class="bval">1.38<small style="font-size:10px">h</small></div><div class="bfill" style="height:92%;background:#cf9f5c"></div><div class="bx">8월</div><div class="bsub">n=22 · 미국</div></div>
+        <div class="bcol"><div class="bval">0.76<small style="font-size:10px">h</small></div><div class="bfill" style="height:51%;background:#5bb489"></div><div class="bx">9월</div><div class="bsub">n=5 · 귀국</div></div>
+      </div>
+      <div class="chartnote">지난 리포트의 1순위 과제가 바로 이 <b>취침 시각</b>이었어요. 7월엔 1.06시간으로 한 번 좋아졌다가, <b>미국 체류 중(8월) 1.38시간으로 다시 커졌어요.</b> 시차와 학기 준비 마감, 양압기 이탈이 겹친 시기예요. <b>귀국 후 9월엔 0.76시간</b>으로 이번 구간 중 가장 일정해졌어요. (9월은 아직 5일치라 더 지켜봐야 해요.)</div>
+    </div>
+  </section>
+
+  <!-- 미국 체류 취침 시각 흔들림 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">JET LAG</div>
+      <h2>미국 체류 중 취침 시각 흔들림</h2>
+      <div class="desc">7월 31일 미국 도착 후, 밤마다 누운 시각(현지 기준)이에요. 위로 갈수록 늦게 주무신 거예요. 시차 적응이 한 번에 되진 않고 계속 출렁였어요.</div>
+    </div>
+    <div class="card linewrap">
+      <svg width="880" height="230" viewBox="0 0 880 230" role="img" aria-label="미국 체류 중 밤별 취침 시각">
+        <!-- gridlines -->
+        <line x1="34" y1="20" x2="864" y2="20" stroke="#eceef3"/>
+        <line x1="34" y1="100" x2="864" y2="100" stroke="#eceef3"/>
+        <line x1="34" y1="180" x2="864" y2="180" stroke="#eceef3"/>
+        <text x="4" y="24" font-size="10" fill="#9aa0aa" font-weight="700">새벽 3시</text>
+        <text x="4" y="104" font-size="10" fill="#9aa0aa" font-weight="700">자정</text>
+        <text x="4" y="184" font-size="10" fill="#9aa0aa" font-weight="700">밤 9시</text>
+        <!-- polyline -->
+        <polyline fill="none" stroke="#7EC8E3" stroke-width="2.5" stroke-linejoin="round"
+          points="40,153 84,153 128,87 172,47 216,20 260,127 304,100 348,73 392,140 436,127 480,113 524,73 568,113 612,60 656,120 700,140 744,73 788,140 832,107"/>
+        <!-- points -->
+        <g fill="#4355B0">
+          <circle cx="40" cy="153" r="3.5"/><circle cx="84" cy="153" r="3.5"/><circle cx="128" cy="87" r="3.5"/>
+          <circle cx="172" cy="47" r="3.5"/><circle cx="216" cy="20" r="4.5" fill="#c0554a"/><circle cx="260" cy="127" r="3.5"/>
+          <circle cx="304" cy="100" r="3.5"/><circle cx="348" cy="73" r="3.5"/><circle cx="392" cy="140" r="3.5"/>
+          <circle cx="436" cy="127" r="3.5"/><circle cx="480" cy="113" r="3.5"/><circle cx="524" cy="73" r="3.5"/>
+          <circle cx="568" cy="113" r="3.5"/><circle cx="612" cy="60" r="3.5"/><circle cx="656" cy="120" r="3.5"/>
+          <circle cx="700" cy="140" r="3.5"/><circle cx="744" cy="73" r="3.5"/><circle cx="788" cy="140" r="3.5"/>
+          <circle cx="832" cy="107" r="3.5"/>
+        </g>
+        <!-- 8/5 peak label -->
+        <text x="216" y="14" font-size="10" fill="#c0554a" font-weight="800" text-anchor="middle">새벽 3시</text>
+        <!-- x labels -->
+        <g font-size="9" fill="#aeb4c0" font-weight="600" text-anchor="middle">
+          <text x="40" y="205">8/1</text><text x="128" y="205">8/3</text><text x="216" y="205">8/5</text>
+          <text x="304" y="205">8/7</text><text x="392" y="205">8/9</text><text x="480" y="205">8/11</text>
+          <text x="568" y="205">8/13</text><text x="656" y="205">8/19</text><text x="744" y="205">8/22</text><text x="832" y="205">8/24</text>
+        </g>
+      </svg>
+      <div class="llegend"><span><i style="background:#4355B0"></i>밤별 취침 시각</span><span><i style="background:#c0554a"></i>가장 늦어진 날(8/5 새벽 3시)</span></div>
+    </div>
+    <div class="chartnote" style="margin-top:12px">본인도 세션에서 <b>"시차도 있고, 취침 시각 기준으로 흔들림이 꽤 있다"</b>고 하셨어요(15차). 도착 3일째 잠깐 정상 시각으로 잤다가 <b>4~5일째 다시 새벽 2~3시로 밀렸고</b>, 이후에도 밤 10시~새벽 1시 사이를 오갔어요. 완전한 시차 적응이라기보다, <b>흔들리면서도 무너지지 않고 버틴 구간</b>이에요. 귀국 뒤 9월엔 취침이 밤 9~11시로 다시 당겨졌어요.</div>
+  </section>
+
+  <!-- 총수면 추이 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">TOTAL SLEEP</div>
+      <h2>총수면 추이 · 아직 7시간엔 못 미침</h2>
+      <div class="desc">하룻밤 총수면 시간이에요. 밤마다 차이가 커서 평균 대신 중앙값으로 봤어요. 점선이 권장 7시간이에요.</div>
+    </div>
+    <div class="card chart">
+      <div class="bars">
+        <div class="bref" style="bottom:87.5%"><span>목표 7h</span></div>
+        <div class="bcol"><div class="bval">6.3<small style="font-size:10px">h</small></div><div class="bfill" style="height:79%;background:#9fb0c9"></div><div class="bx">지난 리포트</div><div class="bsub">~6월</div></div>
+        <div class="bcol"><div class="bval">6.9<small style="font-size:10px">h</small></div><div class="bfill" style="height:86%;background:#8aa8c6"></div><div class="bx">7월</div><div class="bsub">n=10</div></div>
+        <div class="bcol"><div class="bval">6.6<small style="font-size:10px">h</small></div><div class="bfill" style="height:82%;background:#9fb0c9"></div><div class="bx">8월</div><div class="bsub">n=22</div></div>
+        <div class="bcol"><div class="bval">6.0<small style="font-size:10px">h</small></div><div class="bfill" style="height:75%;background:#c9a45f"></div><div class="bx">9월</div><div class="bsub">n=5</div></div>
+      </div>
+      <div class="chartnote"><b>총수면은 이번 구간에도 대체로 6~7시간</b>이라, 권장 7시간엔 아직 조금 못 미쳐요. 지난 리포트(6.3시간)에 이어 <b>남은 과제로 이어져요.</b> 밤마다 편차가 커서 중앙값으로 봤어요. 예를 들어 9월엔 침대에 10시간 있던 날도 있었지만, 대부분은 6시간이었어요. 취침 시각이 일정해지고 조금 앞당겨질수록 이 숫자가 안정적으로 늘어요.</div>
+    </div>
+  </section>
+
+  <!-- 밤중 각성 추이 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">AWAKENINGS</div>
+      <h2>밤중 각성 추이</h2>
+      <div class="desc">하룻밤에 평균 몇 번 깼는지예요. 막대가 낮을수록 덜 깬 거예요(좋아요).</div>
+    </div>
+    <div class="card chart">
+      <div class="bars">
+        <div class="bcol"><div class="bval">0.64<small style="font-size:10px">회</small></div><div class="bfill" style="height:71%;background:#a9b3d8"></div><div class="bx">지난 6월</div><div class="bsub">~6월</div></div>
+        <div class="bcol"><div class="bval">0.90<small style="font-size:10px">회</small></div><div class="bfill" style="height:100%;background:#cf9f5c"></div><div class="bx">7월</div><div class="bsub">n=10</div></div>
+        <div class="bcol"><div class="bval">0.55<small style="font-size:10px">회</small></div><div class="bfill" style="height:61%;background:#5bb489"></div><div class="bx">8월</div><div class="bsub">n=22</div></div>
+        <div class="bcol"><div class="bval">0.40<small style="font-size:10px">회</small></div><div class="bfill" style="height:44%;background:#5bb489"></div><div class="bx">9월</div><div class="bsub">n=5</div></div>
+      </div>
+      <div class="chartnote">7월에 잠깐 0.9회로 올라온 뒤 <b>8~9월엔 다시 0.4~0.55회로 내려왔어요.</b> 지난 리포트에서 거의 사라졌던 새벽 각성이 큰 흐름에선 계속 잘 유지되고 있어요.</div>
+    </div>
+  </section>
+
+  <!-- 실제 루틴 기록 (신규) -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">ROUTINES · 신규</div>
+      <h2>실제 루틴 기록</h2>
+      <div class="desc">8월부터 앱에 직접 남겨주신 낮·저녁 루틴 기록이에요(8/12~9/3, 약 3주). 지난 리포트 땐 세션 대화로만 봤는데, 이제 실제 기록이 쌓이기 시작했어요.</div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="tv s-g">8<small> 회</small></div><div class="tn">아침 러닝</div><div class="tb">기상 후 30분 러닝, 오전 루틴 규칙적</div></div>
+      <div class="tile"><div class="tv">27<small> 회</small></div><div class="tn">식사 기록</div><div class="tb">식사 시각을 꾸준히 남기심</div></div>
+      <div class="tile"><div class="tv s-w">5<small> 회</small></div><div class="tn">음주</div><div class="tb">주 2회 수준(사회적 자리·혼자 각 1회)</div></div>
+      <div class="tile"><div class="tv">4<small> 회</small></div><div class="tn">낮잠</div><div class="tb">낮잠은 드물게</div></div>
+    </div>
+    <div class="chartnote" style="margin-top:12px"><b>오전 러닝과 식사 기록이 꾸준한 게 눈에 띄어요.</b> 아침 루틴이 일정하면 밤 리듬도 따라오기 쉬워요. 다만 <b>생각이 많은 날 술로 잠들려는 시도</b>가 몇 번 있었는데, 이건 수면 질을 오히려 떨어뜨려서 함께 다뤄가고 있어요(16차).</div>
+  </section>
+
+  <!-- 이번 구간 세션에서 다룬 것 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">WHAT WORKED</div>
+      <h2>이번 구간, 도움이 된 것 · 안 된 것</h2>
+      <div class="desc">7~8월 세션(14·15·16차)에서 함께 시도한 것들을 나눠봤어요.</div>
+    </div>
+    <div class="interp">
+      <div class="ibox good">
+        <div class="ih"><i></i>도움됨 · 효과를 본 것</div>
+        <div class="il"><span class="ick"></span><div class="it"><b>양압기 미리 세팅(자기 1~2시간 전)</b> → 세팅해두고 졸릴 때 자니 착용 유지·수면 나아짐<span class="src">16차 "셋업 해놓고 졸음 오는 활동하다 자니 확실히 나았다"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>가족과 같은 방 취침</b> → 안정감, 재우다 같이 잠들기도<span class="src">16차 · 딸과 동침이 실질적 긍정 요인</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>기상 후 30분 러닝</b> → 아침 루틴 규칙적<span class="src">16차 · 앱 루틴 기록에서도 확인</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>잘 잔 기억 떠올리기</b> → 잠에 대한 부정적 예측 완화<span class="src">14차 · 세션에서 함께 시작</span></div></div>
+      </div>
+      <div class="ibox bad">
+        <div class="ih"><i></i>안 됨 · 주의할 것</div>
+        <div class="il"><span class="ick"></span><div class="it"><b>양압기 자다가 벗기</b> → 산소포화도 저하로 중단은 어려움<span class="src">15차 · 미착용 시 SpO2 저하 확인</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>생각 많을 때 술로 잠들기</b> → 수면 질 저하<span class="src">16차 · 반복되면 따로 다루기로</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>저녁 루틴을 의지로만</b> → 잘 지켜지지 않음<span class="src">15차 "저녁 루틴이 의지로는 안 된다"</span></div></div>
+        <div class="il"><span class="ick"></span><div class="it"><b>마감·고민에 취침 미루기</b> → 새벽 1~2시로 밀림<span class="src">16차 · 튀는 날의 공통 원인</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 새로 살펴볼 것 (안전) -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">TO CHECK</div>
+      <h2>새로 살펴볼 것 · 몸 신호</h2>
+      <div class="desc">이번 구간에 새로 나온 몸 신호예요. 진단이 아니라, 검사로 하나씩 확인해가는 항목이에요.</div>
+    </div>
+    <div class="watch">
+      <div class="wl"><span class="wd"></span><div class="wt"><b>기상 후 혈압이 올라가 있는 느낌</b> · 몸이 무겁고, 운동·샤워 후 다소 완화<span class="src">14차</span></div></div>
+      <div class="wl"><span class="wd"></span><div class="wt"><b>혈액수치(혈색소·적혈구·헤마토크릿) 하강 추세</b> → 원인 확인 위해 추가 혈액검사 예정<span class="src">14차 · 귀국 후 병원 일정</span></div></div>
+      <div class="wl"><span class="wd"></span><div class="wt"><b>야간에 움직임·뒤척임이 많음</b>(영상으로 확인) → 수면다원검사 재예약 예정, 양압기 튜닝과 함께 야간 움직임도 확인<span class="src">14차</span></div></div>
+      <div class="wl"><span class="wd"></span><div class="wt"><b>양압기</b> · 벗으면 편하게 느껴져도 산소포화도가 떨어져 중단은 어려워요. 압력을 전문의와 맞추고 꾸준히 쓰는 게 핵심<span class="src">15·16차</span></div></div>
+    </div>
+  </section>
+
+  <!-- 심리·신념 -->
+  <section class="impression block" style="background:#fbf8f4;border-color:#efe4d6">
+    <div class="lab" style="color:#b9770e">MINDSET</div>
+    <p>이번 구간엔 <b>"누워 있는 게 힘들고, 잠자리에 드는 게 조금 두렵다"</b>는 마음, 그리고 <b>"자는 게 오히려 몸에 안 좋은 것 같다"</b>는 느낌을 나눠주셨어요. 이건 잠을 억지로 늘리는 것보다 먼저 다뤄야 하는 부분이에요. 그래서 <b>잘 잤던 날·개운했던 기억을 의도적으로 떠올리는 연습</b>을 세션에서 함께 시작했어요. 데이터를 스스로 모으고 분석하는 힘, 그리고 강의·사람들과의 시간에서 에너지를 얻는 강점은 이 과정에서 큰 자산이에요.</p>
+  </section>
+
+  <!-- 남은 과제 -->
+  <section class="block">
+    <div class="shead">
+      <div class="lab">NEXT</div>
+      <h2>남은 과제 · 다음 목표</h2>
+      <div class="desc">귀국 후 이 구간 데이터가 가리키는, 지금 집중할 지점이에요.</div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">1</div>
+      <div>
+        <div class="bwhen">1순위 · 귀국 후</div>
+        <div class="bt">리듬 다시 정착 · 기상 시각부터 고정</div>
+        <div class="bd">취침을 앞당기는 건 원래 어렵고, 기상·식사 시각을 먼저 고정하는 게 쉬워요. 아침 기상과 러닝·식사를 일정하게 두면 취침도 자연스럽게 따라와요. 9월에 이미 밤 9~11시로 당겨지고 있어요. 그러면 아직 6시간 안팎인 총수면도 7시간 쪽으로 늘어요.</div>
+      </div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">2</div>
+      <div>
+        <div class="bwhen">유지</div>
+        <div class="bt">양압기 사전 셋업 습관화</div>
+        <div class="bd">자기 1~2시간 전(저녁 9시경) 미리 세팅해두고 다른 활동을 하다 졸릴 때 눕는 방법이 이번에 효과를 봤어요. 이 흐름을 매일의 습관으로 굳히는 게 목표예요.</div>
+      </div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">3</div>
+      <div>
+        <div class="bwhen">확인</div>
+        <div class="bt">검사 마무리 · 수면다원검사 · 혈액검사</div>
+        <div class="bd">야간 움직임·양압기 압력·혈액수치는 코칭 밖 의료 영역이에요. 귀국 후 예약된 수면다원검사와 혈액검사를 마쳐서 몸 신호의 원인을 확인하는 게 중요해요.</div>
+      </div>
+    </div>
+    <div class="bigstep">
+      <div class="bn">4</div>
+      <div>
+        <div class="bwhen">연습</div>
+        <div class="bt">저녁 저각성 루틴 한 가지</div>
+        <div class="bd">의지로 루틴을 지키기보다, 지루하고 수동적인 활동 한 가지(책 읽기, 마감 없는 단순 작업 등)를 정해두는 게 잘 맞아요. 자기 전 과각성을 낮춰 취침 시각을 앞당기는 데 도움이 돼요.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footlogo"><i></i>NOCT RESEARCH · 김소정 IPHI 인증 국제수면코치</div>
+  <div class="disc">이 리포트는 직접 남겨주신 수면일지와 코칭 세션 기록을 요약·분석한 자료로, 의학적 진단을 대체하지 않아요. 총수면은 취침~기상 시각 기준 추정이고, 밤마다 편차가 커서 중앙값으로 봤어요. 여행·시차처럼 기록의 시각 기준이 섞일 수 있는 날은 흐름으로만 봐주세요. 9월은 아직 표본이 적어(5일) 참고용이에요.</div>
+
+</div>
+<nav class="appnav">
+  <a href="/portal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+  <a href="/log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+  <a href="/reports" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+  <a href="/me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
+</nav>
+</body>
+</html>
