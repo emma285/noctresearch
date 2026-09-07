@@ -2,7 +2,7 @@
 // 수면·루틴 로그 — 컴팩트 미리보기(좌우 스크롤) + [전체화면] 팝업.
 // 프로토콜(목표) 있으면 "프로토콜 비교" 토글 노출 → 목표(점선) 오버레이 + 순응도 요약.
 import { useState } from "react";
-import { Maximize2, X, Target, Globe } from "lucide-react";
+import { Maximize2, X, Target, Globe, ChevronsDownUp } from "lucide-react";
 import LogTimeline from "../app/LogTimeline";
 import { HOME_TZ } from "../../lib/tz";
 
@@ -19,6 +19,7 @@ function fmtDelta(m) {
 
 export default function LogTimelinePanel({ cols = [], sleeps = [], routines = [], targets = [], summary = null, compactHeight = 300 }) {
   const [open, setOpen] = useState(false);
+  const [compact, setCompact] = useState(true); // 인라인 세로 압축(24px/h) ↔ 원본(40px/h)
   const hasTargets = targets.length > 0;
   const [cmp, setCmp] = useState(true); // 프로토콜 비교 (목표 있으면 기본 ON)
   const [kst, setKst] = useState(false); // 한국 시간 환산 보기 (해외 로그 있을 때만)
@@ -34,9 +35,17 @@ export default function LogTimelinePanel({ cols = [], sleeps = [], routines = []
 
   return (
     <div>
-      {(hasTargets || hasForeign) && (
+      {(
         <div className="flex items-center justify-between gap-3 mb-2.5 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
+            {/* 압축/원본 토글 (항상) */}
+            <button type="button" onClick={() => setCompact((v) => !v)}
+              className={`inline-flex items-center gap-2 text-[12px] font-extrabold rounded-full pl-3 pr-1.5 py-1.5 border transition-colors ${compact ? "text-[#2a7fa5] bg-[#e8f5fb] border-[#cfe6f2]" : "text-[#8a90a0] bg-white border-[#e6e7eb]"}`}>
+              <ChevronsDownUp className="w-3.5 h-3.5" />{compact ? "압축" : "원본"}
+              <span className={`relative w-8 h-[18px] rounded-full transition-colors ${compact ? "bg-[#3aa7cf]" : "bg-[#cfd3dc]"}`}>
+                <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${compact ? "left-[15px]" : "left-0.5"}`} />
+              </span>
+            </button>
             {hasTargets && (
               <button type="button" onClick={() => setCmp((v) => !v)}
                 className={`inline-flex items-center gap-2 text-[12px] font-extrabold rounded-full pl-3 pr-1.5 py-1.5 border transition-colors ${cmp ? "text-[#5A4FA6] bg-[#8E9BE8]/[0.12] border-[#d8ddf5]" : "text-[#8a90a0] bg-white border-[#e6e7eb]"}`}>
@@ -68,7 +77,7 @@ export default function LogTimelinePanel({ cols = [], sleeps = [], routines = []
 
       <div className="relative">
         <div style={{ maxHeight: compactHeight, overflow: "auto" }} className="rounded-xl">
-          {grid(24)}
+          {grid(compact ? 24 : 40)}
         </div>
         <button type="button" onClick={() => setOpen(true)}
           className="absolute top-2 right-2 z-10 inline-flex items-center gap-1.5 text-[11.5px] font-bold text-primary bg-white border border-[#dbe0f4] rounded-lg px-2.5 py-1.5 shadow-sm active:opacity-90">

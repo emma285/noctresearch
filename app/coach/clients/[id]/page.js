@@ -197,7 +197,11 @@ export default async function CoachClientDetail({ params }) {
                 <div className="p-4 text-[13px] text-muted-foreground">아직 등록된 리포트가 없어요.</div>
               ) : assets.reports.map((r) => (
                 <div key={r.slug} className="flex items-center gap-3 px-4 py-3.5 border-t border-[#e7e9ed] first:border-t-0">
-                  <div className="flex-1 min-w-0"><div className="text-[14px] font-semibold text-[#1b2a3f] truncate">{r.label}</div>{(r.badge || r.date) ? <div className="text-[12px] text-[#9298a2] mt-0.5">{[r.badge, r.date].filter(Boolean).join(" · ")}</div> : null}</div>
+                  <Link href={`/report/view/${r.slug}`} target="_blank" className="flex-1 min-w-0 group">
+                    <div className="text-[14px] font-semibold text-[#1b2a3f] truncate group-hover:text-primary flex items-center gap-1.5">{r.label}<Eye className="w-3.5 h-3.5 text-[#9298a2] group-hover:text-primary flex-none" /></div>
+                    {(r.badge || r.date) ? <div className="text-[12px] text-[#9298a2] mt-0.5">{[r.badge, r.date].filter(Boolean).join(" · ")}</div> : null}
+                    <div className="text-[11px] text-primary font-bold mt-1">클릭해서 코치 미리보기 →</div>
+                  </Link>
                   <ReportPublishToggle email={athlete.email} uid={athlete.clerkUserId} slug={r.slug} initialOn={pubSet.has(r.slug)} />
                 </div>
               ))}
