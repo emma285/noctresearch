@@ -29,7 +29,8 @@ export default function LogTimelinePanel({ cols = [], sleeps = [], routines = []
   if (!has) return <div className="rounded-xl border border-border bg-muted/30 py-10 text-center text-[13px] text-muted-foreground">최근 수면·루틴 기록이 없어요.</div>;
 
   const wA = fmtDelta(summary?.wakeAvg), bA = fmtDelta(summary?.bedAvg);
-  const grid = () => <LogTimeline cols={cols} sleeps={sleeps} routines={routines} targets={targets} showTargets={cmp && hasTargets} kstView={kst} />;
+  // pxh: 인라인 미리보기는 압축(24px/h → 하루 전체가 한 화면에), 전체화면은 원래 크기(40).
+  const grid = (pxh = 40) => <LogTimeline cols={cols} sleeps={sleeps} routines={routines} targets={targets} showTargets={cmp && hasTargets} kstView={kst} pxh={pxh} />;
 
   return (
     <div>
@@ -67,7 +68,7 @@ export default function LogTimelinePanel({ cols = [], sleeps = [], routines = []
 
       <div className="relative">
         <div style={{ maxHeight: compactHeight, overflow: "auto" }} className="rounded-xl">
-          {grid()}
+          {grid(24)}
         </div>
         <button type="button" onClick={() => setOpen(true)}
           className="absolute top-2 right-2 z-10 inline-flex items-center gap-1.5 text-[11.5px] font-bold text-primary bg-white border border-[#dbe0f4] rounded-lg px-2.5 py-1.5 shadow-sm active:opacity-90">
@@ -84,7 +85,7 @@ export default function LogTimelinePanel({ cols = [], sleeps = [], routines = []
               <button type="button" onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center active:bg-muted/70"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-4 md:p-5" style={{ maxHeight: "80vh", overflow: "auto" }}>
-              {grid()}
+              {grid(40)}
             </div>
           </div>
         </div>

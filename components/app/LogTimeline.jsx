@@ -20,14 +20,16 @@ const SOL = { "바로 잠들어요": 4, "15분 이내": 12, "30분쯤": 30, "1�
 const OUT = { "바로 나왔어요": 0, "10분 이내": 8, "30분쯤": 30, "1시간쯤": 60, "1시간 이상": 90 };
 const LEGEND = [["수면", "#2a4a78"], ["누워있음/깬 채", "#c2cbd8"], ["훈련", "#4355B0"], ["카페인", "#B9770E"], ["낮잠", "#3aa7cf"], ["식사", "#1F8A4C"], ["술", "#F4978E"], ["기타", "#6b7280"]];
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
-const PXH = 40, H = 24 * PXH;
 
 const dobj = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); };
 const dlabel = (s) => { const d = dobj(s); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}(${DOW[d.getUTCDay()]})`; };
 const fmt = (m) => { m = ((m % 1440) + 1440) % 1440; return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
 
-export default function LogTimeline({ cols = [], sleeps = [], routines = [], targets = [], showTargets = false, kstView = false }) {
+export default function LogTimeline({ cols = [], sleeps = [], routines = [], targets = [], showTargets = false, kstView = false, pxh = 40 }) {
   const [tip, setTip] = useState(null);
+  // 시간축 픽셀/시간. 작게 주면(예: 24) 하루 24시간이 세로로 압축돼 한 화면에 들어옴.
+  const PXH = pxh, H = 24 * PXH;
+  const labelStep = PXH < 30 ? 2 : 1; // 압축 시 시각 라벨은 2시간 간격으로만(겹침 방지)
   // 긴 기간이면 열자마자 최신(오른쪽 끝)이 보이게 스크롤 — 과거는 왼쪽으로 스크롤해서 확인.
   const scrollRef = useRef(null);
   useEffect(() => { const el = scrollRef.current; if (el) el.scrollLeft = el.scrollWidth; }, [cols.length]);
@@ -100,7 +102,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
           <div style={{ height: 32, borderBottom: "1px solid #e6e7eb", background: "#fff" }} />
           <div style={{ height: 64, borderBottom: "1px solid #e6e7eb" }} />
           <div style={{ position: "relative", height: H }}>
-            {hourLabels.map(({ r, h }) => (
+            {hourLabels.filter(({ r }) => r % labelStep === 0).map(({ r, h }) => (
               <div key={r} style={{ position: "absolute", top: r * PXH, right: 6, fontSize: 10, color: "#aeb4c0", fontWeight: 600, transform: "translateY(-50%)", fontVariantNumeric: "tabular-nums" }}>{String(h).padStart(2, "0")}:00</div>
             ))}
           </div>
