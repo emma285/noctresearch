@@ -7,6 +7,10 @@ import Link from "next/link";
 import { upload } from "@vercel/blob/client";
 import { ChevronLeft, Eye, Mic, Lock, Sparkles } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { compressAudio } from "../../lib/audioCompress";
+
+// 이 크기 넘으면 업로드 전 브라우저에서 자동 압축(모노 16k 32k mp3).
+const COMPRESS_OVER = 40 * 1024 * 1024;
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -71,6 +75,7 @@ export default function SessionNoteForm({ session, extras = [] }) {
   const [audioName, setAudioName] = useState(session.audioUrl ? decodeURIComponent(session.audioUrl.split("/").pop().split("?")[0]) : "");
   const [dragOver, setDragOver] = useState(false);
   const [upPct, setUpPct] = useState(null);
+  const [compPct, setCompPct] = useState(null); // 브라우저 압축 진행률(0~99), null이면 압축 안 함
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const fileRef = useRef(null);
@@ -97,9 +102,21 @@ export default function SessionNoteForm({ session, extras = [] }) {
     if (!file) return;
     if (!/audio\//.test(file.type) && !/\.(m4a|mp3|wav|aac|ogg)$/i.test(file.name)) { alert("오디오 파일만 올릴 수 있어요."); return; }
     setAudioName(file.name);
+    // 크면 브라우저에서 먼저 압축 → 업로드 크기 줄임. 압축 실패해도 원본으로 업로드(한도 상향돼서 OK).
+    let toUpload = file;
+    if (file.size > COMPRESS_OVER) {
+      setCompPct(0);
+      try {
+        toUpload = await compressAudio(file, setCompPct);
+      } catch (err) {
+        console.warn("오디오 압축 실패, 원본 업로드로 폴백:", err?.message);
+        toUpload = file;
+      }
+      setCompPct(null);
+    }
     setUpPct(0);
     try {
-      const b = await upload(file.name, file, {
+      const b = await upload(toUpload.name, toUpload, {
         access: "private",
         handleUploadUrl: "/api/upload",
         onUploadProgress: (ev) => setUpPct(Math.min(99, Math.round(ev?.percentage ?? 0))),
@@ -145,18 +162,23 @@ export default function SessionNoteForm({ session, extras = [] }) {
             <button type="button" onClick={() => fileRef.current?.click()} className="text-[12.5px] font-bold text-primary shrink-0">다시 업로드</button>
           </div>
         ) : (
-          <button type="button" onClick={() => fileRef.current?.click()}
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={compPct !== null || upPct !== null}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
             className={cn("w-full flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-7 px-4 transition-colors", dragOver ? "border-primary bg-primary/5" : "border-border bg-card")}>
             <span className="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center"><Mic className="w-5 h-5" /></span>
-            {upPct !== null ? (
+            {compPct !== null ? (
+              <>
+                <div className="text-[13px] font-semibold text-primary">압축 중… {compPct}%</div>
+                <div className="text-[12px] text-muted-foreground">큰 파일이라 자동 압축하고 있어요</div>
+              </>
+            ) : upPct !== null ? (
               <div className="text-[13px] font-semibold text-primary">업로드 중… {upPct}%</div>
             ) : (
               <>
                 <div className="text-[14px] font-semibold text-foreground">세션 녹음을 끌어다 놓거나 눌러서 업로드</div>
-                <div className="text-[12px] text-muted-foreground">m4a · mp3 · wav</div>
+                <div className="text-[12px] text-muted-foreground">m4a · mp3 · wav · 큰 파일은 자동 압축</div>
               </>
             )}
           </button>

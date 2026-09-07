@@ -9,12 +9,15 @@ export async function POST(request) {
     const jsonResponse = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async (pathname, clientPayload) => ({
-        // 타입 제한 없이 이미지 전부 허용 (빈/특이 content-type로 거부되는 것 방지)
-        maximumSizeInBytes: 50 * 1024 * 1024, // 장당 50MB
-        addRandomSuffix: true, // 파일명 충돌 방지 (접근 보호는 private 스토어가 담당)
-        tokenPayload: clientPayload ?? null,
-      }),
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        // 오디오(긴 세션 녹음, 2시간 100MB+)는 크게 허용. 그 외(가민 이미지 등)는 50MB.
+        const isAudio = /\.(m4a|mp3|wav|aac|ogg|flac|webm)$/i.test(pathname || "");
+        return {
+          maximumSizeInBytes: isAudio ? 600 * 1024 * 1024 : 50 * 1024 * 1024,
+          addRandomSuffix: true, // 파일명 충돌 방지 (접근 보호는 private 스토어가 담당)
+          tokenPayload: clientPayload ?? null,
+        };
+      },
       onUploadCompleted: async ({ blob }) => {
         // 완료 콜백은 배포 환경에서만 발화(공개 URL 필요). 알림은 클라이언트가 /api/notify로 별도 처리.
         console.log("garmin blob uploaded:", blob.pathname);

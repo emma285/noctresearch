@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^5.7.6",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@neondatabase/serverless": "^1.1.0",
     "@notionhq/client": "^2.2.14",
     "@vercel/blob": "^2.6.1",

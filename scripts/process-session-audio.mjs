@@ -95,8 +95,9 @@ async function fetchAndCompress(url, id) {
   writeFileSync(raw, Buffer.from(await res.arrayBuffer()));
   execFileSync("ffmpeg", ["-y", "-i", raw, "-ac", "1", "-ar", "16000", "-b:a", "32k", mp3], { stdio: "ignore" });
   unlinkSync(raw);
+  // transcribe()가 10분 단위로 쪼개 전사하므로(각 조각 ~2.4MB) 전체 크기 제한 없음 — 긴 세션(2h+)도 OK.
   const mb = statSync(mp3).size / 1024 / 1024;
-  if (mb > 24.5) throw new Error(`압축 후에도 ${mb.toFixed(1)}MB (25MB 초과) — 분할 필요`);
+  log(`  압축본 ${mb.toFixed(1)}MB (10분 단위 분할 전사)`);
   return mp3;
 }
 
