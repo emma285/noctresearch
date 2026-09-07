@@ -20,6 +20,7 @@ import ReportPublishToggle from "../../../../components/coach/ReportPublishToggl
 import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
 import ProtocolCompare from "../../../../components/coach/ProtocolCompare";
 import AddSessionForm from "../../../../components/coach/AddSessionForm";
+import SessionDateEditor from "../../../../components/coach/SessionDateEditor";
 
 // 부가자료 HTML에 프로토콜 목표(#protocol-targets)가 있으면 정보 반환
 async function protocolInfo(slug) {
@@ -34,8 +35,6 @@ async function protocolInfo(slug) {
 
 export const metadata = { title: "선수 상세 | NOCT" };
 export const dynamic = "force-dynamic";
-const DOW = ["일", "월", "화", "수", "목", "금", "토"];
-const md = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? `${+m[2]}월 ${+m[3]}일 (${DOW[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()]})` : ""; };
 const kstDT = (d) => { if (!d) return ""; try { return new Date(d).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
 const fileProxy = (u) => `/api/coach/file?u=${encodeURIComponent(u)}`;
 const UPKIND = { prep: { t: "코칭 준비자료", c: "bg-[#e8f1fe] text-[#2563c9]" }, garmin: { t: "가민 데이터", c: "bg-[#eaf7ef] text-[#1f8a4c]" } };
@@ -128,7 +127,7 @@ export default async function CoachClientDetail({ params }) {
                     <span className="w-9 h-9 rounded-lg bg-[#eef0fb] text-primary text-[12px] font-extrabold flex items-center justify-center flex-none">{s.n ?? "-"}회</span>
                     <div className="flex-1 min-w-0">
                       <div className="text-[14px] font-bold text-[#1b2a3f] flex items-center gap-2">{s.n ? `${s.n}회차 코칭 세션` : (s.title || "코칭 세션")}<span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${status.c}`}>{status.t}</span></div>
-                      <div className="text-[12.5px] text-[#9298a2] mt-0.5">{md(s.date) || "날짜 미정"}</div>
+                      <SessionDateEditor sessionId={s.id} initialISO={s.date} />
                     </div>
                     {!done
                       ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">가이드 작성</Link>

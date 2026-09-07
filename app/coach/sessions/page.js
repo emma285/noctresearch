@@ -4,17 +4,10 @@ import Link from "next/link";
 import { isCoachEmail } from "../../../lib/coach";
 import { getAllSessionsForCoach } from "../../../lib/master";
 import CoachShell from "../../../components/coach/CoachShell";
+import SessionDateEditor from "../../../components/coach/SessionDateEditor";
 
 export const metadata = { title: "세션 | NOCT" };
 export const dynamic = "force-dynamic";
-const DOW = ["일", "월", "화", "수", "목", "금", "토"];
-function fmt(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || "");
-  if (!m) return "날짜 미정";
-  const dow = DOW[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()];
-  const hm = (m[4] === "00" && m[5] === "00") ? "" : ` ${m[4]}:${m[5]}`;
-  return `${+m[2]}월 ${+m[3]}일 (${dow})${hm}`;
-}
 function statusOf(s) {
   if (s.published) return { t: "공개됨", c: "bg-[#e7f4ec] text-[#1f8a4c]" };
   if (s.hasNote) return { t: "노트 검토중", c: "bg-[#eef0fb] text-primary" };
@@ -38,7 +31,7 @@ function Group({ title, items }) {
               <span className="w-9 h-9 rounded-lg bg-[#eef0fb] text-primary text-[12px] font-extrabold flex items-center justify-center flex-none">{s.n ?? "-"}회</span>
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] font-bold text-[#1b2a3f] flex items-center gap-2 flex-wrap">{s.name} · {s.n}회차<span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${st.c}`}>{st.t}</span></div>
-                <div className="text-[12.5px] text-[#9298a2] mt-0.5">{fmt(s.date)}</div>
+                <SessionDateEditor sessionId={s.id} initialISO={s.date} />
               </div>
               {!done
                 ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">가이드 작성</Link>
