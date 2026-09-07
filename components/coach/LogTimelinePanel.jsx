@@ -91,10 +91,19 @@ export default function LogTimelinePanel({ cols = [], sleeps = [], routines = []
           <div className="w-full max-w-[1120px] bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <h4 className="text-[15px] font-extrabold text-[#1b2a3f]">수면·루틴 로그{cmp && hasTargets ? " · 프로토콜 비교" : ""}</h4>
-              <button type="button" onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center active:bg-muted/70"><X className="w-4 h-4" /></button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setCompact((v) => !v)}
+                  className={`inline-flex items-center gap-2 text-[12px] font-extrabold rounded-full pl-3 pr-1.5 py-1.5 border transition-colors ${compact ? "text-[#2a7fa5] bg-[#e8f5fb] border-[#cfe6f2]" : "text-[#8a90a0] bg-white border-[#e6e7eb]"}`}>
+                  <ChevronsDownUp className="w-3.5 h-3.5" />{compact ? "압축" : "원본"}
+                  <span className={`relative w-8 h-[18px] rounded-full transition-colors ${compact ? "bg-[#3aa7cf]" : "bg-[#cfd3dc]"}`}>
+                    <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${compact ? "left-[15px]" : "left-0.5"}`} />
+                  </span>
+                </button>
+                <button type="button" onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center active:bg-muted/70"><X className="w-4 h-4" /></button>
+              </div>
             </div>
             <div className="p-4 md:p-5" style={{ maxHeight: "80vh", overflow: "auto" }}>
-              {grid(40)}
+              {grid(compact ? 24 : 40)}
             </div>
           </div>
         </div>
