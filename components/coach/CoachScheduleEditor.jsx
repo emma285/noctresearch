@@ -2,7 +2,7 @@
 // 코치 · 특정 선수 일정 편집 — 선수 캘린더(CalendarMonth) 재사용 + 코치용 추가/수정 폼(인라인).
 // 코치는 모든 종류(프로토콜·경기·이동·훈련·과제·기타)를 넣고 "선수 공개" 토글까지 제어.
 // 세션(kind:session)은 자동 생성이라 읽기 전용. POST/PATCH/DELETE → /api/calendar (masterPageId로 코치 경로).
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import CalendarMonth from "../app/CalendarMonth";
@@ -24,6 +24,15 @@ export default function CoachScheduleEditor({ masterPageId, events = [], athlete
   const [selected, setSelected] = useState(today);
   const [form, setForm] = useState(null);
   const [busy, setBusy] = useState(false);
+  const formRef = useRef(null);
+  const wasOpen = useRef(false);
+
+  // 폼은 캘린더/일정목록 아래에 인라인으로 뜬다 → 열릴 때만 그 위치로 스크롤(안 뜬 것처럼 보이던 문제).
+  useEffect(() => {
+    const isOpen = !!form;
+    if (isOpen && !wasOpen.current) formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    wasOpen.current = isOpen;
+  }, [form]);
 
   const prev = () => { if (month === 1) { setYear(year - 1); setMonth(12); } else setMonth(month - 1); };
   const next = () => { if (month === 12) { setYear(year + 1); setMonth(1); } else setMonth(month + 1); };
@@ -109,7 +118,7 @@ export default function CoachScheduleEditor({ masterPageId, events = [], athlete
       )}
 
       {form && (
-        <div className="mt-4 rounded-2xl border border-[#dfe2ea] bg-[#f7f8fa] p-4">
+        <div ref={formRef} className="mt-4 rounded-2xl border border-[#dfe2ea] bg-[#f7f8fa] p-4 scroll-mt-6">
           <div className="flex items-center justify-between mb-3">
             <div className="text-[13.5px] font-extrabold text-navy">{form.id ? "일정 수정" : "새 일정"}</div>
             <button onClick={() => setForm(null)} className="text-[12.5px] font-semibold text-[#9298a2]">닫기</button>
