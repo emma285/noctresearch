@@ -1,0 +1,101 @@
+{
+  "report": "jisoo-summer (6/18~8/31, 엔진 렌더)",
+  "generatedAt": "2026-09-08",
+  "period": { "start": "2026-06-18", "end": "2026-08-31" },
+  "client_email": "yijisoo@gmail.com",
+  "claims": [
+    {
+      "id": "median-tst",
+      "text": "총수면 중앙값 6시간 30분",
+      "type": "fact",
+      "expect": { "field": "tstHours", "agg": "median", "op": "~", "value": 6.5, "tol": 0.2 }
+    },
+    {
+      "id": "anomaly-8-31-jetlag",
+      "text": "1시간 넘게 깬 날은 8/31 하루뿐이고, 술이 아니라 시차예요.",
+      "type": "fact",
+      "kind": "anomaly_cause",
+      "anomaly": { "bucket": "1시간 이상" },
+      "cause": { "alcohol": false },
+      "evidenceDates": ["2026-08-31"]
+    },
+    {
+      "id": "jetlag-831-memo",
+      "text": "8/31이 오래 깬 건 그날 메모의 '시차 적응' 때문",
+      "type": "fact",
+      "verify": { "kind": "memo", "dates": ["2026-08-31"], "keywords": ["시차"] }
+    },
+    {
+      "id": "heat-july",
+      "text": "7월 초 설친 밤은 더위 (7/2·7/6)",
+      "type": "fact",
+      "verify": { "kind": "memo", "dates": ["2026-07-02", "2026-07-06"], "keywords": ["덥", "더워", "더위"] }
+    },
+    {
+      "id": "late-psych",
+      "text": "늦게 잔 날은 감정·일·늦은 통화 (8/5·8/12·8/22)",
+      "type": "interpretation",
+      "verify": { "kind": "memo", "dates": ["2026-08-05", "2026-08-12", "2026-08-22"], "keywords": ["감정", "통화", "고민", "일"] }
+    },
+    {
+      "id": "cpap-off-days",
+      "text": "8월 양압기 미착용 잦음 (8/8·8/9·8/11·8/13)",
+      "type": "fact",
+      "verify": { "kind": "field", "field": "cpap", "dates": ["2026-08-08", "2026-08-09", "2026-08-11", "2026-08-13"], "oneOf": ["none", "removed"] }
+    },
+    {
+      "id": "alcohol-nights-calm",
+      "text": "술 마신 날은 모두 수면 중 각성 없음",
+      "type": "fact",
+      "verify": { "kind": "field", "field": "awakeBucket", "dates": ["2026-07-07", "2026-08-08", "2026-08-11", "2026-08-12", "2026-08-21", "2026-08-22"], "equals": "안깸" }
+    },
+    {
+      "id": "preset-16",
+      "text": "양압기 취침 2시간 전 사전 세팅이 효과 (16차)",
+      "type": "interpretation",
+      "verify": { "kind": "session", "session": 16, "keywords": ["세팅"] }
+    },
+    {
+      "id": "med-14",
+      "text": "14차 수면의학과 리뷰: 수면다원검사·하지불안·양압기 재튜닝·혈액검사",
+      "type": "fact",
+      "verify": { "kind": "session", "session": 14, "keywords": ["수면다원", "하지불안", "혈액"] }
+    },
+    {
+      "id": "pressure-15",
+      "text": "양압기 압력 조정 논의 (15차)",
+      "type": "fact",
+      "verify": { "kind": "session", "session": 15, "keywords": ["압력"] }
+    },
+    {
+      "id": "alcohol-session-16",
+      "text": "술로 잠 청하는 것 코칭에서 다룸 (16차)",
+      "type": "interpretation",
+      "verify": { "kind": "session", "session": 16, "keywords": ["술"] }
+    },
+    {
+      "id": "plan-advance-16",
+      "text": "다음 목표: 취침 30분~1시간 앞당기기 (16차 액션)",
+      "type": "interpretation",
+      "verify": { "kind": "session", "session": 16, "keywords": ["앞당"] }
+    },
+    {
+      "id": "plan-lowarousal-15",
+      "text": "다음 목표: 잠들기 전 저각성 활동 (15차 액션)",
+      "type": "interpretation",
+      "verify": { "kind": "session", "session": 15, "keywords": ["저각성"] }
+    },
+    {
+      "id": "plan-log-15",
+      "text": "다음 목표: 기상 직후 수면 로그 기록 (15차 액션)",
+      "type": "interpretation",
+      "verify": { "kind": "session", "session": 15, "keywords": ["로그"] }
+    },
+    {
+      "id": "nap-jetlag",
+      "text": "귀국 시차 구간 낮잠 (8/30·8/31)",
+      "type": "fact",
+      "verify": { "kind": "field", "field": "nap", "dates": ["2026-08-30", "2026-08-31"], "present": true }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "client": "demo", "source": "fixture", "capturedAt": "2026-09-08",
+  "period": { "start": "2026-08-20", "end": "2026-08-24" },
+  "nights": [
+    { "date": "2026-08-20", "location": "US", "awakeBucket": "1시간 이상", "alcohol": false, "cpap": "worn", "memo": "시차 적응 중, 새벽에 오래 깸." },
+    { "date": "2026-08-21", "location": "US", "awakeBucket": "10분 이하", "alcohol": true,  "cpap": "removed", "memo": "맥주. 양압기 벗음. 근데 잘 잠." },
+    { "date": "2026-08-22", "location": "US", "awakeBucket": "1시간 이상", "alcohol": false, "cpap": "worn", "memo": "학회 마감, 각성 상태로 오래 뒤척임." }
+  ]
+}

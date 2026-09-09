@@ -1,0 +1,13 @@
+{
+  "report": "demo", "generatedAt": "2026-09-08",
+  "period": { "start": "2026-08-20", "end": "2026-08-24" },
+  "claims": [
+    {
+      "id": "bad-cause", "text": "1시간+ 특이일은 술·양압기 이탈 탓",
+      "type": "fact", "kind": "anomaly_cause",
+      "anomaly": { "bucket": "1시간 이상" },
+      "cause": { "or_alcohol": true, "or_cpap": "removed" },
+      "evidenceDates": ["2026-08-20", "2026-08-22"]
+    }
+  ]
+}

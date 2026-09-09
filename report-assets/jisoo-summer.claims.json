@@ -1,0 +1,22 @@
+{
+  "report": "jisoo-summer (6/18~8/31 재작성)",
+  "generatedAt": "2026-09-08",
+  "period": { "start": "2026-06-18", "end": "2026-08-31" },
+  "claims": [
+    {
+      "id": "anomaly-8-31-jetlag",
+      "text": "1시간 넘게 깬 날은 8/31 하루뿐이고, 술이 아니라 시차예요.",
+      "type": "fact",
+      "kind": "anomaly_cause",
+      "anomaly": { "bucket": "1시간 이상" },
+      "cause": { "alcohol": false },
+      "evidenceDates": ["2026-08-31"]
+    },
+    { "id": "avg-tst", "text": "평균 총수면 6.5시간",
+      "type": "fact", "expect": { "field": "tstHours", "agg": "mean", "op": "<", "value": 7 } },
+    { "id": "alcohol-not-cause", "text": "술 마신 밤은 모두 밤중 각성 없음/10분 이내 → 오래 깬 원인 아님",
+      "type": "interpretation" },
+    { "id": "cpap-preset", "text": "양압기 사전 세팅이 착용 유지에 효과 (16차·8/10·8/19)",
+      "type": "interpretation" }
+  ]
+}

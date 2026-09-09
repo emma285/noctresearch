@@ -1,0 +1,320 @@
+# -*- coding: utf-8 -*-
+"""jisoo-summer.snapshot.json → jisoo-summer.html 생성 (숫자·차트 전부 스냅샷에서 계산).
+재실행: python3 report-assets/build-jisoo-summer.py"""
+import json, statistics as st, os
+BASE=os.path.dirname(os.path.abspath(__file__))
+snap=json.load(open(os.path.join(BASE,"jisoo-summer.snapshot.json")))
+N=snap["nights"]
+
+def cont(b):  # 취침 연속화(자정=0, 저녁=음수)
+    return b if b<720 else b-1440
+def hhmm(m):
+    m=int(round(m))%1440; return f"{m//60}:{m%60:02d}"
+KR1=[n for n in N if n["date"]<="2026-07-31"]
+US =[n for n in N if "2026-08-01"<=n["date"]<="2026-08-26"]
+KR2=[n for n in N if n["date"]>="2026-08-28"]
+SEGS=[("국내",KR1,"6/18~7/31","#4355B0"),("미국",US,"8/1~8/26","#c9803a"),("귀국",KR2,"8/28~8/31","#3f8f6b")]
+
+def sd_bed(rows): return st.pstdev([cont(n["bedMin"]) for n in rows])
+def med_tst(rows): return st.median([n["tstHours"] for n in rows])
+def pct_lt6(rows): return sum(n["tstHours"]<6 for n in rows)/len(rows)*100
+def pct_wake0(rows): return sum(n["wakeCount"]==0 for n in rows)/len(rows)*100
+def med_bed(rows): return st.median([cont(n["bedMin"]) for n in rows])
+def med_wake(rows): return st.median([n["wakeMin"] for n in rows])
+
+allTst=[n["tstHours"] for n in N]
+avgTst=round(st.mean(allTst),1)
+sol_ok=sum((n["sol"] in ("바로 잠들어요","15분 이내")) for n in N)
+solPct=round(sol_ok/len(N)*100)
+alc=[n for n in N if n["alcohol"]]
+anom=[n for n in N if n["awakeBucket"]=="1시간 이상"]
+cpapOff=[n for n in N if n["cpap"] in ("removed","none")]
+
+# ── 차트 헬퍼 ──
+def barsSD():
+    mx=max(sd_bed(r) for _,r,_,_ in SEGS)
+    out=[]
+    for name,r,lbl,col in SEGS:
+        v=sd_bed(r); h=round(v/mx*100)
+        out.append(f'<div class="bcol"><div class="bval">{v:.0f}<small style="font-size:11px">분</small></div>'
+                   f'<div class="bfill" style="height:{h}%;background:{col}"></div>'
+                   f'<div class="bx">{name}</div><div class="bsub">{lbl} · {len(r)}박</div></div>')
+    return "".join(out)
+def barsTST():
+    mx=max(med_tst(r) for _,r,_,_ in SEGS)
+    out=[]
+    for name,r,lbl,col in SEGS:
+        v=med_tst(r); h=round(v/mx*100)
+        out.append(f'<div class="bcol"><div class="bval">{v:.2f}<small style="font-size:11px">h</small></div>'
+                   f'<div class="bfill" style="height:{h}%;background:{col}"></div>'
+                   f'<div class="bx">{name}</div><div class="bsub">{lbl}</div></div>')
+    return "".join(out)
+def tilesWake():
+    out=[]
+    for name,r,lbl,col in SEGS:
+        out.append(f'<div class="tile"><div class="tv">{pct_wake0(r):.0f}<small>%</small></div>'
+                   f'<div class="tn">{name} · 밤중각성 0회</div><div class="tb">{lbl} · {len(r)}박</div></div>')
+    out.append(f'<div class="tile"><div class="tv s-w">{len(anom)}<small>일</small></div>'
+               f'<div class="tn">1시간+ 깬 날</div><div class="tb">전 구간 통틀어</div></div>')
+    return "".join(out)
+def tilesLt6():
+    out=[]
+    for name,r,lbl,col in SEGS:
+        cls="s-b" if pct_lt6(r)>=50 else ("s-w" if pct_lt6(r)>=20 else "")
+        out.append(f'<div class="tile"><div class="tv {cls}">{pct_lt6(r):.0f}<small>%</small></div>'
+                   f'<div class="tn">{name} · 6시간 미만</div><div class="tb">{lbl}</div></div>')
+    return "".join(out)
+def bedScatter():
+    W,H=880,180; padL,padR,padT,padB=44,14,16,30; plotH=H-padT-padB
+    vals=[cont(n["bedMin"]) for n in N]
+    lo,hi=min(vals)-20,max(vals)+20
+    def Y(v): return padT+(v-lo)/(hi-lo)*plotH  # 값 클수록(늦을수록) 아래
+    def X(i): return padL+i/(len(N)-1)*(W-padL-padR)
+    seg_of=lambda n: "US" if "2026-08-01"<=n["date"]<="2026-08-26" else ("KR2" if n["date"]>="2026-08-28" else "KR1")
+    colmap={"KR1":"#4355B0","US":"#c9803a","KR2":"#3f8f6b"}
+    # 미국 밴드
+    us_idx=[i for i,n in enumerate(N) if seg_of(n)=="US"]
+    band=""
+    if us_idx:
+        x1=X(us_idx[0])-6; x2=X(us_idx[-1])+6
+        band=f'<rect x="{x1:.0f}" y="{padT}" width="{x2-x1:.0f}" height="{plotH}" fill="#c9803a" opacity="0.07"/>'
+        band+=f'<text x="{(x1+x2)/2:.0f}" y="{padT+11}" fill="#c9803a" font-size="10" font-weight="800" text-anchor="middle">미국 체류</text>'
+    # 자정선
+    y0=Y(0)
+    grid=f'<line x1="{padL}" y1="{y0:.0f}" x2="{W-padR}" y2="{y0:.0f}" stroke="#cfd4de" stroke-dasharray="3 3"/><text x="{padL-6}" y="{y0+3:.0f}" fill="#9aa0aa" font-size="9" text-anchor="end">자정</text>'
+    dots="".join(f'<circle cx="{X(i):.0f}" cy="{Y(cont(n["bedMin"])):.0f}" r="3.4" fill="{colmap[seg_of(n)]}"/>' for i,n in enumerate(N))
+    axis=f'<text x="{padL-6}" y="{Y(lo+15)+3:.0f}" fill="#9aa0aa" font-size="9" text-anchor="end">일찍</text><text x="{padL-6}" y="{Y(hi-15)+3:.0f}" fill="#9aa0aa" font-size="9" text-anchor="end">늦게</text>'
+    return f'<svg viewBox="0 0 {W} {H}" width="100%" preserveAspectRatio="xMidYMid meet">{band}{grid}{axis}{dots}</svg>'
+
+alcRows="".join(
+    f'<div class="il"><span class="ick"></span><div class="it"><b>{n["date"][5:].replace("-","/")}</b> '
+    f'{"밤중 각성 없음" if n["awakeBucket"]=="안깸" else "각성 "+n["awakeBucket"]} · 총수면 {n["tstHours"]:.1f}h</div></div>'
+    for n in alc)
+
+HTML=f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이지수 · 3차 수면 리포트</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{{--bg:#F2F3F6;--fg:#0b0e14;--card:#fff;--border:#e6e7eb;--primary:#4355B0;--sky:#7EC8E3;--lav:#A0B0FF;--coral:#F4978E;--navy:#0D1B2A;--muted:#6b7280;}}
+  *{{margin:0;padding:0;box-sizing:border-box}}
+  html{{overflow-x:hidden}}
+  body{{background:var(--bg);color:var(--fg);font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;line-height:1.5}}
+  .wrap{{max-width:940px;margin:0 auto;padding:18px 24px calc(80px + env(safe-area-inset-bottom))}}
+  .appbar{{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #E6E7EB;padding:12px 16px}}
+  .appbar .back{{font-size:15px;font-weight:600;color:#0D1B2A;text-decoration:none;display:inline-flex;align-items:center;gap:4px}}
+  .appbar .back svg{{width:20px;height:20px}}
+  .appnav{{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:60;display:flex;background:#fff;border-top:1px solid #E6E7EB;padding:9px 0 max(11px,env(safe-area-inset-bottom))}}
+  .appnav a{{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#6b7280;text-decoration:none}}
+  .appnav a svg{{width:22px;height:22px}} .appnav a span{{font-size:11px;font-weight:500}}
+  .appnav a.on{{color:#4355B0}} .appnav a.on span{{font-weight:600}}
+  section,.block{{margin-bottom:28px}}
+  .tabnum{{font-variant-numeric:tabular-nums}}
+  .hero{{border-radius:12px;overflow:hidden;color:#fff;background:linear-gradient(135deg,#0D1B2A 0%,#22356d 100%)}}
+  .hero .pad{{padding:30px 32px 0}}
+  .hero .eyebrow{{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--sky)}}
+  .hero .titrow{{margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}}
+  .hero h1{{font-size:24px;font-weight:800;letter-spacing:-.03em}}
+  .hero .pill{{font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 13px;white-space:nowrap;background:rgba(126,200,227,.14);border:1px solid rgba(126,200,227,.4);color:#c4e7f5}}
+  .hero .who{{margin-top:11px;font-size:15px;font-weight:700;color:#fff}}
+  .hero .who span{{font-size:13px;font-weight:400;color:rgba(255,255,255,.65);margin-left:3px}}
+  .hero .date{{margin-top:5px;font-size:12px;color:rgba(255,255,255,.5)}}
+  .kpis{{margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.1)}}
+  .kpi{{padding:16px 20px}} .kpi + .kpi{{border-left:1px solid rgba(255,255,255,.1)}}
+  .kpi .v{{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1}}
+  .kpi .v small{{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-left:2px}}
+  .kpi .k{{font-size:12px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.3}}
+  .impression{{border-radius:12px;background:#f5f6fb;border:1px solid #e3e6f4;padding:24px 26px}}
+  .impression .lab{{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--primary)}}
+  .impression p{{font-size:15px;line-height:1.75;color:var(--fg);margin-top:11px}} .impression p b{{font-weight:800}}
+  .shead .lab{{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary)}}
+  .shead h2{{font-size:18px;font-weight:800;letter-spacing:-.03em;margin-top:4px}}
+  .shead .desc{{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.6}} .shead{{margin-bottom:16px}}
+  .shead .htop{{display:flex;align-items:center;gap:9px;margin-top:4px;flex-wrap:wrap}}
+  .badge{{font-size:11px;font-weight:800;border-radius:999px;padding:3px 11px;letter-spacing:0}}
+  .badge.g{{color:#1f8a4c;background:#e7f4ec}} .badge.w{{color:#b9770e;background:#fbf3e6}} .badge.o{{color:#4355B0;background:#eef0fb}}
+  .card{{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(13,27,42,.05)}}
+  .s-g{{color:#1f8a4c}} .s-w{{color:#b9770e}} .s-b{{color:#c0554a}}
+  .tiles{{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}}
+  .tile{{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 15px}}
+  .tile .tv{{font-size:19px;font-weight:800;letter-spacing:-.03em;line-height:1.15}} .tile .tv small{{font-size:11px;font-weight:700}}
+  .tile .tn{{font-size:12px;color:var(--navy);margin-top:7px;font-weight:700}}
+  .tile .tb{{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}}
+  .chart{{padding:22px 22px 16px}}
+  .bars{{display:flex;align-items:flex-end;gap:14px;height:160px;padding-top:8px;position:relative}}
+  .bcol{{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;z-index:2}}
+  .bval{{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px}}
+  .bfill{{width:100%;max-width:64px;border-radius:7px 7px 3px 3px}}
+  .bx{{font-size:12.5px;font-weight:700;color:var(--navy);margin-top:9px}}
+  .bsub{{font-size:10px;color:#aeb4c0;margin-top:1px}}
+  .chartnote{{margin-top:16px;border-radius:8px;background:#f1f2fb;border:1px solid #dde1f6;padding:14px;font-size:13px;line-height:1.65;color:#3a3f52}}
+  .chartnote b{{font-weight:800;color:var(--navy)}}
+  .callout{{margin-top:14px;border-radius:8px;background:#fbf3e6;border:1px solid #efe0c4;padding:14px 16px;font-size:13px;line-height:1.65;color:#5a4a2a}}
+  .callout b{{font-weight:800;color:#8a6412}}
+  .scatterwrap{{padding:14px 10px 6px}}
+  .llegend{{display:flex;gap:16px;flex-wrap:wrap;margin:10px 14px 0;font-size:11.5px;color:#4b5563;font-weight:600}}
+  .llegend span{{display:inline-flex;align-items:center;gap:6px}} .llegend i{{width:11px;height:11px;border-radius:3px}}
+  .interp{{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
+  .ibox{{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px}}
+  .ibox .ih{{font-size:13px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:7px}}
+  .ibox.good .ih{{color:#1f8a4c}} .ibox.bad .ih{{color:#c0554a}}
+  .ibox .ih i{{width:8px;height:8px;border-radius:50%;flex-shrink:0}}
+  .ibox.good .ih i{{background:#1f8a4c}} .ibox.bad .ih i{{background:#c0554a}}
+  .il{{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px solid #f0f1f4}}
+  .il:first-of-type{{border-top:none}}
+  .il .ick{{flex-shrink:0;margin-top:6px;width:6px;height:6px;border-radius:50%;background:#8fa0d8}}
+  .il .it{{font-size:12.5px;line-height:1.55;color:#4a4f60}} .il .it b{{color:var(--navy);font-weight:700}}
+  .il .it .src{{display:block;font-size:11px;color:var(--muted);margin-top:3px}}
+  .watch{{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 20px 14px}}
+  .watch .wl{{display:flex;gap:11px;align-items:flex-start;padding:13px 0;border-top:1px solid #f0f1f4}}
+  .watch .wl:first-of-type{{border-top:none}}
+  .watch .wl .wd{{flex-shrink:0;margin-top:6px;width:7px;height:7px;border-radius:50%;background:#c9a24a}}
+  .watch .wl .wt{{font-size:13px;line-height:1.6;color:#4a4f60}} .watch .wl .wt b{{color:var(--navy);font-weight:700}}
+  .watch .wl .wt .src{{display:block;font-size:11px;color:var(--muted);margin-top:3px}}
+  .bigstep{{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(13,27,42,.05);padding:24px 26px;margin-bottom:14px}}
+  .bigstep:last-child{{margin-bottom:0}}
+  .bigstep .bn{{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--primary);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}}
+  .bigstep .bwhen{{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.02em}}
+  .bigstep .bt{{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--navy);margin-top:5px}}
+  .bigstep .bd{{font-size:14px;color:#4a4f60;line-height:1.7;margin-top:9px}}
+  .footlogo{{padding-top:20px;display:flex;justify-content:center;align-items:center;gap:7px;color:#aeb4c0;font-weight:800;font-size:12px;letter-spacing:.04em}}
+  .footlogo i{{width:7px;height:7px;border-radius:50%;background:#7EC8E3}}
+  .disc{{margin-top:14px;font-size:11px;color:#a7abb2;line-height:1.7;text-align:center}}
+  @media print{{body{{background:#fff}}}}
+  @media(max-width:760px){{
+    .wrap{{padding:22px 14px}} .hero .pad{{padding:24px 18px 0}}
+    .kpis{{grid-template-columns:repeat(2,1fr)}}
+    .kpi{{padding:14px 16px}} .kpi:nth-child(3),.kpi:nth-child(4){{border-top:1px solid rgba(255,255,255,.1)}}
+    .kpi:nth-child(odd){{border-left:none}}
+    .tiles{{grid-template-columns:repeat(2,1fr)}} .interp{{grid-template-columns:1fr}}
+    .impression,.chart,.bigstep{{padding-left:16px;padding-right:16px}}
+  }}
+</style>
+</head>
+<body>
+<div class="appbar"><a href="/reports" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>리포트</a></div>
+<div class="wrap">
+
+  <div class="hero block">
+    <div class="pad">
+      <div class="eyebrow">수면 코칭 경과 리포트</div>
+      <div class="titrow"><h1>3차 리포트</h1><span class="pill">2026.6.18 – 8.31</span></div>
+      <div class="who">이지수 님</div>
+      <div class="date">기록 {len(N)}박 · 상담 16회차 기준</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v tabnum">{len(N)}<small>박</small></div><div class="k">이번 구간 기록</div></div>
+      <div class="kpi"><div class="v tabnum">{avgTst}<small>h</small></div><div class="k">평균 총수면</div></div>
+      <div class="kpi"><div class="v tabnum">{solPct}<small>%</small></div><div class="k">입면 15분 이내</div></div>
+      <div class="kpi"><div class="v tabnum">{pct_wake0(N):.0f}<small>%</small></div><div class="k">밤중 각성 0회</div></div>
+    </div>
+  </div>
+
+  <section class="impression block">
+    <div class="lab">종합 소견</div>
+    <p style="font-size:15.5px;line-height:1.6;color:var(--fg);margin-top:11px;font-weight:600">6월 중순부터 8월까지, <b>밤중 각성과 입면은 계속 안정적</b>이었어요. 이번 구간의 변화는 두 가지예요. <b>미국 체류 중 취침 시각이 가장 크게 흔들렸고</b>, <b>귀국 직후엔 시차로 총수면이 확 짧아졌어요.</b></p>
+    <div style="margin-top:15px;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="flex:none;font-size:12px;font-weight:800;color:#1f8a4c;background:#e7f4ec;border-radius:6px;padding:4px 9px;min-width:66px;text-align:center">좋아진 것</span><span style="font-size:14px;line-height:1.55;color:#3a3f52">밤중 각성 거의 없음 유지(각성 0회 {pct_wake0(N):.0f}%) · 입면 대부분 15분 안쪽 · 양압기 사전 세팅으로 착용 문제 개선(16차)</span></div>
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="flex:none;font-size:12px;font-weight:800;color:#b9770e;background:#fbf3e6;border-radius:6px;padding:4px 9px;min-width:66px;text-align:center">흔들린 것</span><span style="font-size:14px;line-height:1.55;color:#3a3f52">미국 체류 중 취침이 밤 10시~새벽 3시로 출렁였어요 · 귀국 후 총수면이 5시간대로 짧아졌어요(시차)</span></div>
+    </div>
+  </section>
+
+  <!-- 1. 취침 시각 -->
+  <section class="block">
+    <div class="shead"><div class="lab">수면 리듬</div>
+      <div class="htop"><h2>취침 시각 규칙성</h2><span class="badge w">주의</span></div>
+      <div class="desc">밤마다 취침 시각이 흔들린 폭이에요(표준편차, 클수록 불규칙). 미국 체류 중 편차가 가장 컸어요.</div></div>
+    <div class="card chart"><div class="bars">{barsSD()}</div>
+      <div class="chartnote">국내에선 자정 전후로 비교적 모여 있다가, <b>미국 체류 중 폭이 가장 커졌어요</b>(밤 10시~새벽 3시). 귀국 후엔 다시 좁아지는 중이에요. 지난 리포트에 이어 <b>취침 시각을 앞당기고 고르게 만드는 게 이 구간에서도 1순위 과제</b>예요.</div>
+    </div>
+    <div class="card scatterwrap" style="margin-top:12px">{bedScatter()}
+      <div class="llegend"><span><i style="background:#4355B0"></i>국내</span><span><i style="background:#c9803a"></i>미국</span><span><i style="background:#3f8f6b"></i>귀국</span><span style="color:#9aa0aa">점 하나 = 하룻밤 취침 시각</span></div>
+    </div>
+  </section>
+
+  <!-- 2. 밤중 각성 -->
+  <section class="block">
+    <div class="shead"><div class="lab">수면 연속성</div>
+      <div class="htop"><h2>밤중 각성</h2><span class="badge g">양호</span></div>
+      <div class="desc">밤에 깬 횟수와 깨어 있던 시간이에요. 이 구간 내내 안정적이었어요.</div></div>
+    <div class="tiles">{tilesWake()}</div>
+    <div class="callout">6/18~8/31 통틀어 <b>1시간 넘게 깬 날은 8/31 하루뿐</b>이고, 그날 메모는 <b>"아직 시차 적응 중"</b>이었어요. 술이나 양압기가 아니라 <b>귀국 시차</b>로 오래 깬 날이에요. 나머지 밤은 대부분 안 깨거나 10분 안쪽이었어요.</div>
+  </section>
+
+  <!-- 3. 총수면 -->
+  <section class="block">
+    <div class="shead"><div class="lab">수면 시간</div>
+      <div class="htop"><h2>총 수면 시간</h2><span class="badge w">주의</span></div>
+      <div class="desc">취침~기상 시각 기준 추정이에요. 밤마다 편차가 커서 중앙값으로 봤어요. 귀국 직후 짧아졌어요.</div></div>
+    <div class="card chart"><div class="bars">{barsTST()}</div></div>
+    <div class="tiles" style="margin-top:12px">{tilesLt6()}</div>
+    <div class="chartnote" style="margin-top:12px">국내·미국 땐 <b>총수면 6.5시간 안팎</b>을 지켰는데, <b>귀국 직후 3박에서 5시간대로 확 짧아졌어요.</b> 시차로 새벽에 일찍 깨고 다시 못 든 영향이에요(8/30 기상 3시, 8/31도 얕게). 아직 귀국 표본이 3박이라 흐름으로만 봐주세요.</div>
+  </section>
+
+  <!-- 4. 술·양압기 -->
+  <section class="block">
+    <div class="shead"><div class="lab">생활 요인</div>
+      <div class="htop"><h2>음주와 양압기</h2><span class="badge o">관찰</span></div>
+      <div class="desc">둘 다 밤중에 오래 깨는 것의 원인은 아니었어요. 다만 따로 챙길 부분이라 정리해요.</div></div>
+    <div class="interp">
+      <div class="ibox good"><div class="ih"><i></i>술 마신 밤 ({len(alc)}번)</div>
+        {alcRows}
+        <div class="il"><span class="ick" style="background:#8fce9f"></span><div class="it"><b>모두 밤중 각성 없음 또는 10분 이내</b>였어요. 술이 이 구간 "오래 깬 날"의 원인은 아니에요. 다만 술로 잠들려는 시도는 수면의 질을 낮춰서 따로 다뤄가고 있어요.<span class="src">16차 세션</span></div></div>
+      </div>
+      <div class="ibox bad"><div class="ih"><i></i>양압기</div>
+        <div class="il"><span class="ick" style="background:#e0a89c"></span><div class="it"><b>이탈(안 씀·벗음)한 밤 {len(cpapOff)}번도 밤중 각성은 짧았어요.</b> 하지만 미착용 시 산소포화도 저하는 별개 문제라, 착용 유지가 중요해요.<span class="src">15·16차 · 미착용 시 SpO2 저하 확인</span></div></div>
+        <div class="il"><span class="ick" style="background:#e0a89c"></span><div class="it"><b>자기 1~2시간 전 미리 세팅</b>이 이번에 효과를 봤어요. 세팅해두고 졸릴 때 자니 착용이 유지됐어요.<span class="src">16차 "셋업 해놓고 졸음 오는 활동하다 자니 확실히 나았다" · 8/10·8/19</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 의료 확인 -->
+  <section class="block">
+    <div class="shead"><div class="lab">의료 연계</div>
+      <div class="htop"><h2>전문의와 확인할 것</h2><span class="badge o">확인</span></div>
+      <div class="desc">코칭 영역 밖이라 전문의와 함께 봐야 할 부분이에요.</div></div>
+    <div class="watch">
+      <div class="wl"><span class="wd"></span><div class="wt"><b>야간 움직임·뒤척임</b>(영상으로 확인) → 수면다원검사 재예약 예정, 양압기 튜닝과 함께 확인<span class="src">14차</span></div></div>
+      <div class="wl"><span class="wd"></span><div class="wt"><b>양압기 압력·순응</b> · 벗으면 편하게 느껴져도 산소포화도가 떨어져 중단은 어려워요. 압력을 전문의와 맞추고 꾸준히 쓰는 게 중요해요<span class="src">15·16차</span></div></div>
+    </div>
+  </section>
+
+  <!-- 남은 과제 -->
+  <section class="block">
+    <div class="shead"><div class="lab">실행 계획</div>
+      <div class="htop"><h2>다음 목표</h2></div>
+      <div class="desc">귀국 후 지금 집중하면 좋은 것들이에요. 이 구간 데이터가 가리키는 방향이에요.</div></div>
+    <div class="bigstep"><div class="bn">1</div><div>
+      <div class="bwhen">1순위 · 귀국 후</div><div class="bt">리듬 다시 정착 · 기상 시각부터 고정</div>
+      <div class="bd">취침을 앞당기는 건 원래 어렵고, 기상·식사 시각을 먼저 고정하는 게 쉬워요. 아침 기상과 러닝·식사를 일정하게 두면 취침도 자연스럽게 따라와요. 그러면 귀국 후 5시간대로 짧아진 총수면도 6~7시간 쪽으로 늘어요.</div></div></div>
+    <div class="bigstep"><div class="bn">2</div><div>
+      <div class="bwhen">유지</div><div class="bt">양압기 사전 셋업 습관화</div>
+      <div class="bd">자기 1~2시간 전(저녁 9시경) 미리 세팅해두고 다른 활동을 하다 졸릴 때 눕는 방법이 이번에 효과를 봤어요. 이 흐름을 매일 습관으로 굳히는 게 목표예요.</div></div></div>
+    <div class="bigstep"><div class="bn">3</div><div>
+      <div class="bwhen">확인</div><div class="bt">검사 마무리 · 수면다원검사 · 혈액검사</div>
+      <div class="bd">야간 움직임·양압기 압력·혈액수치는 코칭 밖 의료 영역이에요. 예약된 수면다원검사와 혈액검사를 마쳐서 몸 신호가 왜 생기는지 확인하는 게 중요해요.</div></div></div>
+    <div class="bigstep"><div class="bn">4</div><div>
+      <div class="bwhen">연습</div><div class="bt">저녁 저각성 루틴 한 가지</div>
+      <div class="bd">의지로 루틴을 지키기보다, 지루하고 수동적인 활동 한 가지(책 읽기, 마감 없는 단순 작업 등)를 정해두는 게 잘 맞아요. 자기 전에 너무 말똥해지는 걸 낮춰서 취침을 앞당기는 데 도움이 돼요.</div></div></div>
+  </section>
+
+  <div class="footlogo"><i></i>NOCT RESEARCH · 김소정 IPHI 인증 국제수면코치</div>
+  <div class="disc">이 리포트는 직접 남겨주신 수면일지와 코칭 세션 기록을 요약·분석한 자료로, 의학적 진단을 대체하지 않아요. 총수면은 취침~기상 시각 기준 추정이고, 밤마다 편차가 커서 중앙값으로 봤어요. 여행·시차처럼 기록의 시각 기준이 섞일 수 있는 날은 흐름으로만 봐주세요. 구조화된 저녁 루틴(음주 등) 기록은 8/12부터라 그 전은 수면일지 메모 기준이에요. 귀국 구간은 표본이 3박이라 참고용이에요.</div>
+
+</div>
+<nav class="appnav">
+  <a href="/portal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></a>
+  <a href="/log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg><span>기록</span></a>
+  <a href="/reports" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h8"/></svg><span>리포트</span></a>
+  <a href="/me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>내정보</span></a>
+</nav>
+</body>
+</html>"""
+open(os.path.join(BASE,"jisoo-summer.html"),"w").write(HTML)
+print("생성 완료. 구간별 요약:")
+for name,r,lbl,col in SEGS:
+    print(f"  {name}({lbl},{len(r)}박): 취침SD {sd_bed(r):.0f}분 · TST중앙 {med_tst(r):.2f}h · 6h미만 {pct_lt6(r):.0f}% · 각성0회 {pct_wake0(r):.0f}%")
+print(f"  전체 {len(N)}박: 평균TST {avgTst}h · 입면15분내 {solPct}% · 각성0회 {pct_wake0(N):.0f}% · 술밤 {len(alc)} · 1시간+각성 {len(anom)} · 양압기이탈 {len(cpapOff)}")
