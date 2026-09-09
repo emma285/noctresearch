@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>윤이나 · West Palm Beach 이동 전 시차 프리 프로토콜</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+*{box-sizing:border-box}
+body{font-family:'Pretendard',system-ui,sans-serif;background:#F4F6F8;color:#0D1B2A;margin:0;padding:32px 20px 56px}
+.wrap{max-width:960px;margin:0 auto}
+.flag{display:inline-block;font-size:11px;font-weight:800;color:#8a5a00;background:#fbf3e6;border:1px solid #f0dcae;border-radius:999px;padding:3px 10px;margin-bottom:12px}
+h1{font-size:23px;font-weight:800;margin:0 0 10px}
+.ov{margin:0 0 16px;padding-left:18px;color:#37434F;font-size:13px;line-height:1.75}
+.ov li{margin-bottom:4px}
+.ov b{color:#20506A}
+.legend{display:flex;flex-wrap:wrap;gap:13px;margin:0 0 14px;font-size:12.5px;color:#37434F}
+.lg{display:flex;align-items:center;gap:6px}
+.lg i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+.calwrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid #E3E8EC;border-radius:14px;background:#fff;max-height:80vh}
+.cal{display:grid;grid-template-columns:54px repeat(5,150px);gap:0;background:#fff;width:max-content;min-width:100%}
+.gut{position:sticky;left:0;z-index:3;border-right:1px solid #EEF1F4;background:#fff}
+.gut .gtop{position:sticky;top:0;z-index:4;height:104px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
+.gutgrid{position:relative}
+.hr{position:absolute;left:0;right:6px;transform:translateY(-50%);text-align:right;font-size:10.5px;color:#9aa6b2;font-weight:600}
+.col{border-right:1px solid #EEF1F4}.col:last-child{border-right:none}
+.ch{position:sticky;top:0;z-index:2;min-height:104px;padding:9px 11px;border-bottom:1px solid #EEF1F4;background:#FAFBFC}
+.cd{font-size:15px;font-weight:800}.cd span{font-size:11px;color:#9aa6b2;margin-left:2px}
+.tz{display:inline-block;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:5px;margin:3px 0 2px}
+.tz.kst{color:#20506A;background:#e8f2f8}
+.tz.shift{color:#a8483b;background:#F9DED8}
+.ct{font-size:10.5px;font-weight:800;color:#20506A;background:#e8f2f8;border-radius:5px;padding:1px 7px;display:inline-block;margin:2px 0 4px}
+.ct.turn{color:#C13E80;background:rgba(236,107,168,.14)}
+.cn{font-size:10.5px;line-height:1.45;color:#7a8794}.cn b{color:#37434F}
+.grid{position:relative;background:repeating-linear-gradient(#F5F7F9 0 1px,transparent 1px 42px)}
+.band{position:absolute;left:0;right:0;z-index:0;background:rgba(180,140,0,.10);border-top:1px dashed rgba(180,140,0,.45);border-bottom:1px dashed rgba(180,140,0,.45)}
+.band.eve{background:rgba(90,79,166,.10);border-top:1px dashed rgba(90,79,166,.45);border-bottom:1px dashed rgba(90,79,166,.45)}
+.band span{position:absolute;top:3px;left:5px;right:5px;font-size:9px;font-weight:800;color:#8a6d00;background:rgba(255,255,255,.75);padding:1px 4px;border-radius:4px;line-height:1.25}
+.band.eve span{color:#5A4FA6}
+.ev{position:absolute;left:6px;right:6px;z-index:1;border-radius:9px;padding:5px 8px;overflow:visible;display:flex;flex-direction:column;justify-content:center;box-shadow:0 1px 2px rgba(13,27,42,.05)}
+.ev .tl{font-size:11px;font-weight:800;line-height:1.2}
+.ev .nm{font-size:11px;font-weight:800;line-height:1.25;margin-top:1px}
+.ev.sleep .nm{font-size:12px}
+.ev .sub{display:block;font-size:9.5px;font-weight:500;line-height:1.35;margin-top:2px;opacity:.82}
+.ev.sleep .sub{opacity:1;font-size:10px;font-weight:600;color:#e4ebf2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="flag">West Palm Beach 이동 전 · 시차 프리시프트</span>
+  <h1>취침·기상 프로토콜 <span style="font-size:13px;font-weight:600;color:#9298a2;margin-left:6px">서울 시각 · 9/9(수) 오늘밤~9/13(일)</span></h1>
+  <ul class="ov">
+    <li>WPB(동부시간)는 서울보다 <b>13시간 느려요</b> → 몸을 <b>뒤로 미는 방향(지연)</b>으로 맞춰가요</li>
+    <li><b>9/9~11</b>: 대회(프로암 9/5) 직후라 <b>회복·안정 먼저</b></li>
+    <li><b>9/12~13</b>: 취침을 하루 <b>30~45분씩 뒤로</b></li>
+    <li>조기각성 몸이라 다 안 밀려도 괜찮아요</li>
+    <li>티오프 나오면 <b>경기일 전략</b>을 얹을게요</li>
+  </ul>
+  <div class="legend" id="legend"></div>
+  <div class="calwrap"><div class="cal" id="cal"></div></div>
+</div>
+
+<script>
+const PXH = 42, PAD = 14, AX0 = 5, AX1 = 30, H = (AX1 - AX0) * PXH + PAD * 2;   // 05:00 → 익일 06:00, 상하 여백
+const h6 = t => (t >= AX0 ? t : t + 24) - AX0;
+const hhmm = t => { t = t % 24; let hh = Math.floor(t), mm = Math.round((t - hh) * 60); if (mm === 60) { hh = (hh + 1) % 24; mm = 0; } return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); };
+const COLOR = {
+  수면:['#26374A','#e4ebf2'], 식사:['#E4F2E8','#2E7D46'], 커피:['#F6E7CE','#8a5a00'],
+  낮잠:['#DCEEF6','#1f5b78'], 이완:['#E7EAEE','#3a4652'], 훈련:['#EEF0FB','#4355B0'],
+};
+// [start, end, type, 시각라벨, 이름(' · ' 뒤는 보조설명), dashed]
+const DAYS = [
+  { date:'9/9', dow:'수 · 오늘밤', tz:{t:'서울 KST', cls:'kst'}, tag:'회복·안정 시작',
+    note:'대회 빚부터 갚아요. 평소 리듬 유지하되 억지로 일찍 안 재워요. 오늘은 밤 취침부터 적용.',
+    bands:[[7.75,8.5,'☀️ 야외 아침 햇빛 (리듬 고정)']], cards:[
+      [5.0,6.25,'수면','','기상 06:15 · 최근 리듬',false],
+      [7.0,7.75,'식사','07:00','식사',false],
+      [9.0,10.0,'커피','09:00','커피 ½~1잔 · 오후엔 컷',true],
+      [14.0,16.0,'훈련','','훈련 · 시각 미정 1.5~2h',true],
+      [18.5,19.25,'식사','18:30','저녁',false],
+      [21.5,22.5,'이완','21:30','버퍼존 · 조명↓·미지근샤워·호흡',false],
+      [22.5,30.0,'수면','22:30','취침 22:30 · 약 7h45 → 06:15 기상',false],
+    ]},
+  { date:'9/10', dow:'목', tz:{t:'서울 KST', cls:'kst'}, tag:'회복 유지',
+    note:'전날과 같은 리듬으로 안정. 부족하면 이른 오후 짧은 낮잠 한 번만.',
+    bands:[[7.75,8.5,'☀️ 야외 아침 햇빛 (리듬 고정)']], cards:[
+      [5.0,6.25,'수면','','기상 06:15',false],
+      [7.0,7.75,'식사','07:00','식사',false],
+      [9.0,10.0,'커피','09:00','커피 ½잔 · 오후 컷',true],
+      [13.0,13.75,'낮잠','','낮잠 20분 (옵션)',true],
+      [14.0,16.0,'훈련','','훈련 · 시각 미정',true],
+      [18.5,19.25,'식사','18:30','저녁',false],
+      [21.5,22.5,'이완','21:30','버퍼존 · 조명↓·미지근샤워·호흡',false],
+      [22.5,30.0,'수면','22:30','취침 22:30 · 약 7h45 → 06:15 기상',false],
+    ]},
+  { date:'9/11', dow:'금', tz:{t:'서울 KST', cls:'kst'}, tag:'지연 워밍업',
+    note:'취침을 살짝 뒤로. 저녁에 빛을 조금 더 쬐면서 지연 방향으로 워밍업.',
+    bands:[[7.75,8.5,'☀️ 야외 아침 햇빛 (리듬 고정)'],[19.25,20.0,'🌆 저녁 야외빛 (지연 워밍업)','eve']], cards:[
+      [5.0,6.25,'수면','','기상 06:15',false],
+      [7.0,7.75,'식사','07:00','식사',false],
+      [9.0,10.0,'커피','09:00','커피 ½잔 · 오후 컷',true],
+      [14.0,16.0,'훈련','','훈련 · 시각 미정',true],
+      [18.5,19.25,'식사','18:30','저녁',false],
+      [21.75,22.75,'이완','21:45','버퍼존 · 조명↓·미지근샤워·호흡',false],
+      [22.75,30.0,'수면','22:45','취침 22:45 · 약 7h45 → 06:30 기상',false],
+    ]},
+  { date:'9/12', dow:'토', tz:{t:'서울 KST', cls:'kst'}, tag:'지연 시작', turn:true,
+    note:'여기서부터 취침을 30~45분씩 뒤로. 아침빛은 피하고(선글라스) 저녁빛을 더. 몸을 WPB 밤으로 미는 시작점.',
+    bands:[[19.5,20.5,'🌆 저녁 야외빛 (지연↑)','eve']], cards:[
+      [5.0,6.5,'수면','','기상 06:30',false],
+      [7.5,8.25,'식사','07:30','식사 · 조금 늦게',false],
+      [9.0,10.0,'커피','09:00','커피 ½잔 · 오후 컷',true],
+      [14.0,16.0,'훈련','','훈련 · 시각 미정',true],
+      [19.0,19.75,'식사','19:00','저녁',false],
+      [22.25,23.25,'이완','22:15','버퍼존 · 조명↓·미지근샤워·호흡',false],
+      [23.25,30.0,'수면','23:15','취침 23:15 · 약 7h45 → 07:00 기상',false],
+    ]},
+  { date:'9/13', dow:'일', tz:{t:'서울 KST', cls:'kst'}, tag:'지연', turn:true,
+    note:'취침을 한 번 더 뒤로. 14일(이동 전날)은 여기서 하루 더 밀 수 있게 여유를 남겨둬요.',
+    bands:[[20.0,21.0,'🌆 저녁 야외빛 (지연↑)','eve']], cards:[
+      [5.0,7.0,'수면','','기상 07:00',false],
+      [8.0,8.75,'식사','08:00','식사 · 늦게',false],
+      [9.5,10.5,'커피','09:30','커피 ½잔 · 오후 컷',true],
+      [14.0,16.0,'훈련','','훈련 · 시각 미정',true],
+      [19.5,20.25,'식사','19:30','저녁',false],
+      [23.0,24.0,'이완','23:00','버퍼존 · 조명↓·미지근샤워·호흡',false],
+      [24.0,30.0,'수면','24:00','취침 24:00 · 약 7h45 → 07:45 기상',false],
+    ]},
+];
+
+function evHtml(c){
+  const [s,e,t,tl,nm,dash] = c;
+  const top = PAD + h6(s)*PXH + 1, hgt = Math.max((h6(e)-h6(s))*PXH - 2, 26);
+  const [bg,fg] = COLOR[t];
+  const border = dash ? ';border:2px dashed #b98a3e' : ';border:1px solid rgba(0,0,0,.05)';
+  const si = nm.indexOf(' · ');
+  const main = si < 0 ? nm : nm.slice(0, si);
+  const sub = si < 0 ? '' : nm.slice(si + 3);
+  const subh = sub ? `<span class="sub">${sub}</span>` : '';
+  if (t === '수면'){
+    const align = s < 12 ? 'flex-end' : 'flex-start';
+    return `<div class="ev sleep" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg};justify-content:${align}"><span class="nm">${main}</span>${subh}</div>`;
+  }
+  const tlh = tl ? `<span class="tl" style="color:${fg}">${tl}</span>` : '';
+  return `<div class="ev" style="top:${top}px;height:${hgt}px;background:${bg};color:${fg};justify-content:flex-start${border}">${tlh}<span class="nm">${main}</span>${subh}</div>`;
+}
+function bandHtml(b){ const [s,e,label,cls]=b; const top=PAD + h6(s)*PXH, hgt=(h6(e)-h6(s))*PXH; const c = cls==='eve'?'band eve':'band'; return `<div class="${c}" style="top:${top}px;height:${hgt}px"><span>${label}</span></div>`; }
+
+let gutter = '';
+for (let i=0; i<=AX1-AX0; i++) gutter += `<div class="hr" style="top:${PAD + i*PXH}px">${hhmm(AX0+i)}</div>`;
+let html = `<div class="gut"><div class="gtop"></div><div class="gutgrid" style="height:${H}px">${gutter}</div></div>`;
+for (const d of DAYS){
+  const bands = (d.bands||[]).map(bandHtml).join('');
+  const cards = d.cards.map(evHtml).join('');
+  const tzb = d.tz ? `<div class="tz ${d.tz.cls}">${d.tz.t}</div>` : '';
+  const tagcls = d.turn ? 'ct turn' : 'ct';
+  html += `<div class="col"><div class="ch"><div class="cd">${d.date} <span>(${d.dow})</span></div>${tzb}<div class="${tagcls}">${d.tag}</div></div><div class="grid" style="height:${H}px">${bands}${cards}</div></div>`;
+}
+document.getElementById('cal').innerHTML = html;
+
+const chs = [...document.querySelectorAll('.ch')];
+const maxH = Math.max(104, ...chs.map((c) => c.offsetHeight));
+chs.forEach((c) => (c.style.height = maxH + 'px'));
+const gtop = document.querySelector('.gtop'); if (gtop) gtop.style.height = maxH + 'px';
+
+const legendItems = [['수면','수면'],['훈련','훈련'],['식사','식사'],['이완','버퍼존·이완'],['커피','카페인(옵션·점선)'],['낮잠','낮잠(옵션·점선)']];
+document.getElementById('legend').innerHTML = legendItems.map(([k,n])=>`<span class="lg"><i style="background:${COLOR[k][0]}"></i>${n}</span>`).join('');
+</script>
+<script id="protocol-targets" type="application/json">
+{"name":"WPB 시차 프리시프트","targets":[
+ {"date":"2026-09-09","bed":"22:30","wake":"06:15","label":"회복 D1"},
+ {"date":"2026-09-10","bed":"22:30","wake":"06:15","label":"회복 D2"},
+ {"date":"2026-09-11","bed":"22:45","wake":"06:30","label":"지연 워밍업"},
+ {"date":"2026-09-12","bed":"23:15","wake":"07:00","label":"지연 시작"},
+ {"date":"2026-09-13","bed":"24:00","wake":"07:45","label":"지연 계속"}
+]}
+</script>
+</body>
+</html>
