@@ -1,0 +1,19 @@
+{
+  "type": "periodic",
+  "user": "yijisoo@gmail.com",
+  "period": { "start": "2026-03-01", "end": "2026-06-17" },
+  "title": "2차 리포트",
+  "who": "이지수 님",
+  "sessionRef": 9,
+  "stat": "median",
+  "usSegment": null,
+  "usBand": { "label": "미국", "range": ["2026-04-21", "2026-04-30"] },
+  "routineFrom": null,
+  "segments": [
+    { "label": "3월", "range": ["2026-03-01", "2026-03-31"], "color": "#4355B0" },
+    { "label": "4월", "range": ["2026-04-01", "2026-04-30"], "color": "#4355B0" },
+    { "label": "5월", "range": ["2026-05-01", "2026-05-31"], "color": "#4355B0" },
+    { "label": "6월", "range": ["2026-06-01", "2026-06-17"], "color": "#4355B0" }
+  ],
+  "sections": ["jonghap", "keymetrics", "규칙성", "각성", "총수면", "음주양압기", "도움효과", "coachnote", "goal"]
+}

@@ -114,24 +114,38 @@ def bed_scatter():
     Y = lambda v: padT + (v - lo) / (hi - lo) * plotH
     X = lambda i: padL + i / (len(N) - 1) * (W - padL - padR)
     colmap = {s["label"]: s["color"] for s in SEGS}
-    # 강조 밴드 = usSegment
+    # 강조 밴드 = usBand(날짜범위, 세그먼트와 무관) 우선, 없으면 usSegment
     band = ""
+    ub = cfg.get("usBand")   # {"label": "미국", "range": ["YYYY-MM-DD","YYYY-MM-DD"]}
     us = cfg.get("usSegment")
-    if us:
+    if ub:
+        idx = [i for i, n in enumerate(N) if ub["range"][0] <= n["date"] <= ub["range"][1]]
+        blab = ub.get("label", "")
+    elif us:
         idx = [i for i, n in enumerate(N) if n.get("seg") == us]
-        if idx:
-            x1, x2 = X(idx[0]) - 6, X(idx[-1]) + 6
-            col = "#4355B0"  # 주목 구간(미국)만 브랜드 틴트
-            band = (f'<rect x="{x1:.0f}" y="{padT}" width="{x2-x1:.0f}" height="{plotH}" fill="{col}" opacity="0.07"/>'
-                    f'<text x="{(x1+x2)/2:.0f}" y="{padT+11}" fill="{col}" font-size="10" font-weight="800" text-anchor="middle">{us} 체류</text>')
-    y0 = Y(0)
-    grid = (f'<line x1="{padL}" y1="{y0:.0f}" x2="{W-padR}" y2="{y0:.0f}" stroke="#cfd4de" stroke-dasharray="3 3"/>'
-            f'<text x="{padL-6}" y="{y0+3:.0f}" fill="#9aa0aa" font-size="9" text-anchor="end">자정</text>')
-    axis = (f'<text x="{padL-6}" y="{Y(lo+15)+3:.0f}" fill="#9aa0aa" font-size="9" text-anchor="end">일찍</text>'
-            f'<text x="{padL-6}" y="{Y(hi-15)+3:.0f}" fill="#9aa0aa" font-size="9" text-anchor="end">늦게</text>')
+        blab = us
+    else:
+        idx, blab = [], ""
+    if idx:
+        x1, x2 = X(idx[0]) - 6, X(idx[-1]) + 6
+        col = "#4355B0"  # 주목 구간(체류)만 브랜드 틴트
+        band = (f'<rect x="{x1:.0f}" y="{padT}" width="{x2-x1:.0f}" height="{plotH}" fill="{col}" opacity="0.07"/>'
+                f'<text x="{(x1+x2)/2:.0f}" y="{padT+11}" fill="{col}" font-size="10" font-weight="800" text-anchor="middle">{blab} 체류</text>')
+    # 시각 눈금 (자정=0 기준 매시 정각, 밤 시각 라벨)
+    ticks = ""
+    for hh in range(-8, 9):
+        v = hh * 60
+        if v < lo or v > hi: continue
+        yy = Y(v)
+        lab = "자정" if hh == 0 else f"{((hh + 24) % 24) % 12 or 12}시"
+        emph = hh == 0
+        dash = ' stroke-dasharray="3 3"' if emph else ''
+        col = "#cfd4de" if emph else "#eef0f3"
+        ticks += (f'<line x1="{padL}" y1="{yy:.0f}" x2="{W-padR}" y2="{yy:.0f}" stroke="{col}"{dash}/>'
+                  f'<text x="{padL-6}" y="{yy+3:.0f}" fill="#9aa0aa" font-size="9" text-anchor="end">{lab}</text>')
     dots = "".join(f'<circle cx="{X(i):.0f}" cy="{Y(cont(n["bedMin"])):.0f}" r="5" fill="#5b6472"/>' for i, n in enumerate(N))
     legend = "".join(f'<span><i style="background:{s["color"]}"></i>{s["label"]}</span>' for s in SEGS)
-    return (f'<svg viewBox="0 0 {W} {H_}" width="100%" preserveAspectRatio="xMidYMid meet">{band}{grid}{axis}{dots}</svg>',
+    return (f'<svg viewBox="0 0 {W} {H_}" width="100%" preserveAspectRatio="xMidYMid meet">{band}{ticks}{dots}</svg>',
             legend)
 
 def routine_rows():  # 낮잠·운동 밤별 나열 (8/12+ 관찰)
@@ -166,16 +180,19 @@ def shead(s):
 # ── 상세 지표 공통 문법 (핸드오버 2026-09-08): Period Comparison + Coach Insight ──
 REF_MAX = 4  # 표본 N일 이하 = 참고 데이터
 
-def prows(valuefn):  # 시기별 비교 행 (세그먼트 색 없음, 값 우선, 3일=참고 배지)
+def prows(valuefn, segNotes=None):  # 시기별 비교 행 (세그먼트 색 없음, 값 우선, 3일=참고 배지)
     out = ""
     for s in SEGS:
         r = seg_nights(s["label"])
         if not r: continue
         refb = len(r) <= REF_MAX
         rb = '<span class="refbadge">참고 데이터</span>' if refb else ""
-        out += (f'<div class="prow{" ref" if refb else ""}"><div class="prow-top">'
-                f'<span class="plabel">{s["label"]}</span><span class="pvalue">{valuefn(r)}</span></div>'
-                f'<div class="pdate">{seg_lbl(s)} · {len(r)}일{rb}</div></div>')
+        note = (segNotes or {}).get(s["label"])
+        nh = f'<div class="pnote">{fill(note)}</div>' if note else ""
+        out += (f'<div class="prow{" ref" if refb else ""}">'
+                f'<div class="prow-l"><span class="plabel">{s["label"]}</span>'
+                f'<div class="pdate">{seg_lbl(s)} · {len(r)}일{rb}</div>{nh}</div>'
+                f'<span class="pvalue">{valuefn(r)}</span></div>')
     return f'<div class="pcomp">{out}</div>'
 
 def cins(metric):  # Coach Insight = 한 줄 결론 + 짧은 근거 (RD.analysis, 검증된 텍스트)
@@ -185,11 +202,13 @@ def cins(metric):  # Coach Insight = 한 줄 결론 + 짧은 근거 (RD.analysis
 
 def sec_규칙성():
     s = nar["규칙성"]; svg, leg = bed_scatter()
+    bl = (cfg.get("usBand") or {}).get("label") or cfg.get("usSegment")
+    blnote = f" · 색이 진한 기간이 {bl} 체류" if bl else ""
     return f'''<section class="block">{shead(s)}
-    {prows(lambda r: hmin(sd_bed(r)))}
+    {prows(lambda r: hmin(sd_bed(r)), s.get("segNotes"))}
     <div class="tcap">취침 시각 분포</div>
     <div class="card scatterwrap">{svg}
-      <div class="llegend"><span style="color:#9aa0aa">점 하나 = 하룻밤 취침 시각 · 색이 진한 기간이 미국 체류</span></div></div>
+      <div class="llegend"><span style="color:#9aa0aa">점 하나 = 하룻밤 취침 시각{blnote}</span></div></div>
     {cins("규칙성")}
   </section>'''
 
@@ -198,7 +217,7 @@ def sec_각성():
     return f'''<section class="block">{shead(s)}
     <div class="mlead">밤에 평균 {wcMean}회 깼어요</div>
     <div class="mcap">각성 없이 잔 날 {pct_wake0(N):.0f}% · 깬 날도 대부분 10분 안쪽이었어요</div>
-    {prows(lambda r: f"{pct_wake0(r):.0f}%")}
+    {prows(lambda r: f"{pct_wake0(r):.0f}%", s.get("segNotes"))}
     {cins("각성")}</section>'''
 
 def sec_총수면():
@@ -206,7 +225,7 @@ def sec_총수면():
     cells = "".join(f'<div class="smcell"><b>{pct_lt6(seg_nights(x["label"])):.0f}%</b><span>{x["label"]}</span></div>'
                     for x in SEGS if seg_nights(x["label"]))
     return f'''<section class="block">{shead(s)}
-    {prows(lambda r: hm(med_tst(r)))}
+    {prows(lambda r: hm(med_tst(r)), s.get("segNotes"))}
     <div class="secmetric"><div class="sm-h">6시간 미만 수면</div><div class="sm-vals">{cells}</div></div>
     {cins("총수면")}</section>'''
 
