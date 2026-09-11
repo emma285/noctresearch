@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>윤이나 · 마운자로 접종 가이드 + 시즌 캘린더</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+*{box-sizing:border-box}
+body{font-family:'Pretendard',system-ui,sans-serif;background:#F4F6F8;color:#0D1B2A;margin:0;padding:32px 20px 56px;line-height:1.6}
+.wrap{max-width:960px;margin:0 auto}
+.flag{display:inline-block;font-size:11px;font-weight:800;color:#8a5a00;background:#fbf3e6;border:1px solid #f0dcae;border-radius:999px;padding:3px 10px;margin-bottom:12px}
+h1{font-size:23px;font-weight:800;margin:0 0 4px}
+.sub{font-size:13px;color:#9298a2;font-weight:600;margin:0 0 22px}
+h2{font-size:16px;font-weight:800;margin:30px 0 12px;color:#0D1B2A}
+h2 .n{color:#5A6B9E;margin-right:7px}
+p{font-size:13.5px;color:#37434F;margin:0 0 10px}
+.goals{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:6px 0 4px}
+.goal{background:#fff;border:1px solid #E3E8EC;border-radius:12px;padding:14px 15px}
+.goal .t{font-size:13px;font-weight:800;color:#20506A;margin-bottom:4px}
+.goal .d{font-size:12px;color:#5b6672}
+.card{background:#fff;border:1px solid #E3E8EC;border-radius:12px;padding:16px 18px;margin:4px 0}
+ul.p{margin:0;padding-left:19px}
+ul.p li{font-size:13.5px;color:#37434F;margin-bottom:7px}
+ul.p b{color:#20506A}
+ul.p li>b:first-child{display:block;margin-bottom:3px}
+.legend{display:flex;flex-wrap:wrap;gap:13px;margin:12px 0 10px;font-size:12.5px;color:#37434F}
+.lg{display:flex;align-items:center;gap:6px}
+.lg i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+.calwrap{border:1px solid #E3E8EC;border-radius:12px;background:#fff;overflow:hidden}
+.cal{display:grid;grid-template-columns:repeat(7,1fr)}
+.dow{font-size:10px;font-weight:800;color:#9aa6b2;text-align:center;padding:5px 0;border-bottom:1px solid #D6DDE4;background:#FAFBFC}
+.cell{min-height:48px;border-right:1px solid #D6DDE4;border-bottom:1px solid #D6DDE4;padding:3px 4px;position:relative;display:flex;flex-direction:column;gap:2px}
+.cell:nth-child(7n){border-right:none}
+.cell.out{background:#FAFBFC}.cell.out .dn{color:#c7cfd6}
+.dn{font-size:10.5px;font-weight:800;color:#37434F}
+.dn .mo{font-size:8.5px;color:#9aa6b2;margin-right:2px}
+.cell.se{background:rgba(180,140,0,.07)}
+.cell.tour{background:#e8f2f8}
+.cell.tourspan{background:repeating-linear-gradient(135deg,#eef5fa 0 6px,#e2eef6 6px 12px)}
+.cell.injcell{box-shadow:inset 0 0 0 2px #26374A;z-index:1}
+.cell.injcell.injdone{box-shadow:inset 0 0 0 2px #b8c2cc}
+.pill{font-size:8px;font-weight:800;border-radius:5px;padding:1px 4px;line-height:1.2;display:inline-block;width:fit-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill.inj{background:#26374A;color:#fff}
+.pill.inj.done{background:#c3cdd6;color:#4a5a68}
+.pill.se{background:rgba(180,140,0,.12);color:#a98832}
+.pill.tour{background:#C0504D;color:#fff}
+table.sch{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.sch th,table.sch td{border:1px solid #E3E8EC;padding:7px 9px;text-align:left}
+table.sch th{background:#FAFBFC;font-weight:800;color:#20506A;font-size:11.5px}
+table.sch tr.done td{color:#9aa6b2}
+table.sch .ext{color:#a8483b;font-weight:700}
+@media(max-width:640px){
+  html,body{overflow-x:hidden}
+  .goals{grid-template-columns:1fr}
+  .calwrap{overflow:hidden}
+  .cal{grid-template-columns:repeat(7,1fr)}
+  .cell{min-height:44px;padding:3px 2px;gap:3px}
+  .cell .dn{font-size:10px}
+  .cell .dn .mo{font-size:8px}
+  .cell .pill{width:9px;height:9px;min-width:9px;padding:0;border-radius:50%;font-size:0;line-height:0;overflow:hidden;text-indent:-999px;box-shadow:none}
+  .cell .pill.se{background:#DAC079}
+  .legend .lg{font-size:11px}
+  .legend{gap:10px}
+  table.sch{display:block;width:100%}
+  table.sch tbody{display:block;width:100%}
+  table.sch thead{display:none}
+  table.sch tr{display:block;width:100%;border:1px solid #E3E8EC;border-radius:10px;margin-bottom:9px;overflow:hidden}
+  table.sch td{display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;align-items:baseline;text-align:right;border:none;border-bottom:1px solid #F0F3F5;padding:7px 12px;font-size:13px;overflow-wrap:anywhere}
+  table.sch tr td:first-child{background:#FAFBFC;font-weight:800}
+  table.sch td:last-child{border-bottom:none}
+  table.sch td::before{content:attr(data-label);font-weight:800;color:#20506A;text-align:left}
+  table.sch tr td:first-child::before{content:"회차"}
+}
+.note{background:#fbf3e6;border:1px solid #f0dcae;border-radius:10px;padding:12px 15px;font-size:12.5px;color:#6b5220;margin-top:10px}
+.note b{color:#8a5a00}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="flag">마운자로(터제파타이드) 2.5mg · 주 1회 · 접종 타이밍 가이드</span>
+  <h1>윤이나 · 마운자로 접종 가이드 + 시즌 캘린더</h1>
+  <p class="sub">부작용은 덜하게, 끊김 없이 지속 가능하게, 11월 중요 경기엔 가장 잘 적응된 상태로</p>
+
+  <h2><span class="n">01</span>목표</h2>
+  <div class="goals">
+    <div class="goal"><div class="t">부작용 회피</div><div class="d">접종 후 2~3일(부작용 기간)이 경기일에 안 걸리게</div></div>
+    <div class="goal"><div class="t">지속 가능</div><div class="d">완전히 끊지 않고 매주 유지 (끊었다 다시 = 리셋)</div></div>
+    <div class="goal"><div class="t">11월 최적 적응</div><div class="d">초가을부터 끊김 없이 → 11월엔 부작용 무뎌진 상태</div></div>
+  </div>
+
+  <h2><span class="n">02</span>접종 원칙</h2>
+  <div class="card">
+    <ul class="p">
+      <li><b>일요일(최종 라운드 끝난 뒤) 저녁 접종</b> 부작용 제일 센 D+1~D+3이 월·화·수(이동·연습)에 오고, 경기는 약 최저 농도 때 와요</li>
+      <li><b>주 1회 유지, 완전 중단 없이</b> 2주 넘게 걸르면 몸이 내성을 잃어서 처음처럼 부작용이 돌아와요. 경기를 피해야 할 땐 <b>간격을 최대 12일까지만</b> 늘려요 (2주 미만)</li>
+      <li><b>접종 후 3~4일 뒤에 경기가 오게</b> 다음 대회 1R이 접종 D+4 이상이 되도록 날짜를 조금씩 조정해요</li>
+      <li><b>2.5mg 유지, 증량 계획 없음</b> 매주 꾸준히 맞는 것만으로 갈수록 무뎌져요</li>
+      <li><b>LOTTE→KPGA 붙은 구간</b>(10/1~4 + 10/6~9)은 접종을 그 사이에 넣으면 둘 중 하나에 걸려요. 그래서 <b>KPGA 끝난 뒤(10/9) 한 번</b>으로 건너뛰어 둘 다 피해요</li>
+    </ul>
+  </div>
+
+  <h2><span class="n">03</span>시즌 캘린더</h2>
+  <div class="legend" id="legend"></div>
+  <div class="calwrap"><div class="cal" id="cal"></div></div>
+
+  <h2><span class="n">04</span>접종 스케줄</h2>
+  <table class="sch">
+    <thead><tr><th>회차</th><th>접종일</th><th>간격</th><th>기준</th><th>부작용 기간(D1~3)</th><th>다음 경기</th></tr></thead>
+    <tbody>
+      <tr class="done"><td>1차</td><td data-label="접종일">9/4 (금)</td><td data-label="간격">—</td><td data-label="기준">완료</td><td data-label="부작용 기간">9/5~7</td><td data-label="다음 경기">—</td></tr>
+      <tr><td>2차</td><td data-label="접종일">9/11 (금)</td><td data-label="간격">7일</td><td data-label="기준">출국 전</td><td data-label="부작용 기간">9/12~14</td><td data-label="다음 경기">여유</td></tr>
+      <tr><td>3차</td><td data-label="접종일">9/20 (일)</td><td data-label="간격">9일</td><td data-label="기준">WPB (경기 전)</td><td data-label="부작용 기간">9/21~23</td><td data-label="다음 경기">Walmart D+5</td></tr>
+      <tr><td>4차</td><td data-label="접종일">9/27 (일)</td><td data-label="간격">7일</td><td data-label="기준">Walmart 최종일 후</td><td data-label="부작용 기간">9/28~30 (이동)</td><td data-label="다음 경기">LOTTE D+4</td></tr>
+      <tr><td>5차</td><td class="ext" data-label="접종일">10/9 (금)</td><td class="ext" data-label="간격">12일</td><td data-label="기준">KPGA 최종일 후 (LOTTE+KPGA 건너뛰기)</td><td data-label="부작용 기간">10/10~12</td><td data-label="다음 경기">BMW D+13</td></tr>
+      <tr><td>6차</td><td data-label="접종일">10/18 (일)</td><td data-label="간격">9일</td><td data-label="기준">경기 없는 주</td><td data-label="부작용 기간">10/19~21</td><td data-label="다음 경기">BMW D+4</td></tr>
+      <tr><td>7차</td><td data-label="접종일">10/25 (일)</td><td data-label="간격">7일</td><td data-label="기준">BMW 최종일 후</td><td data-label="부작용 기간">10/26~28 (이동)</td><td data-label="다음 경기">Maybank D+4</td></tr>
+      <tr><td>8차</td><td data-label="접종일">11/1 (일)</td><td data-label="간격">7일</td><td data-label="기준">Maybank 최종일 후</td><td data-label="부작용 기간">11/2~4</td><td data-label="다음 경기">11월 경기</td></tr>
+    </tbody>
+  </table>
+  <div class="note">전 대회에서 부작용 기간(D1~3)이 경기일과 한 번도 안 겹쳐요. 유일한 12일 간격(9/27→10/9)도 2주 미만이라 내성 리셋이 안 와요. 11월엔 8회차까지 끊김 없이 맞아 부작용이 가장 무뎌진 상태예요.</div>
+
+  <h2><span class="n">05</span>의학 근거</h2>
+  <div class="card">
+    <ul class="p">
+      <li><b>약효 지속·부작용 시점</b> 반감기가 약 5일이라 약이 오래 가요. 혈중 농도는 접종 후 8~72시간(대개 하루 안)에 제일 높고, 위장 부작용도 이때 몰려요. 주 1회로 4주쯤이면 몸속 농도가 안정돼요</li>
+      <li><b>부작용 적응(내성)</b> 구역감·부작용은 시작 직후랑 증량 직후 며칠이 제일 세고, 몇 주에 걸쳐 가라앉아요. 계속 맞을수록 새로 생기는 부작용도 줄어서, 매주 꾸준히 맞는 게 중요해요</li>
+      <li><b>중단 시 리셋</b> 2주 넘게 걸르면 몸이 내성을 잃어서, 다시 맞을 때 처음 강도로 부작용이 돌아와요. 이땐 보통 2.5mg부터 다시 올려야 하고요. 그래서 '시합 주엔 쉬고 다시'는 매번 부작용을 리셋시켜요</li>
+      <li><b>경기 시 주의사항</b> 식욕이 확 줄어서 에너지가 부족해지기 쉬워요. 근손실을 막으려면 단백질을 충분히(체중 kg당 1.8~2.2g) 먹고 저항운동을 유지해야 해요. 길거나 공복이거나 고강도인 운동에선 저혈당 위험도 올라가요</li>
+      <li><b>피로·졸림</b> 초기 2~4주에 흔해요. 열량·단백질 부족, 탈수, 전해질·혈당 변동이 원인이라, 어제 못 자서 피곤한 건지 약 때문인지를 구분해야 조치가 달라져요</li>
+    </ul>
+  </div>
+
+  <h2><span class="n">06</span>일상·라운드 관리</h2>
+  <div class="card">
+    <ul class="p">
+      <li><b>라운드 중 탄수 섭취</b> 식욕이 없어도 6홀마다 액상·젤 탄수 섭취(시간당 30~60g). 안 먹으면 후반 집중력·퍼팅부터 무너져요</li>
+      <li><b>수분·전해질 적극적으로</b> 위장 손실 + 더위 겹치면 탈수가 빨라요. 포도당 젤 하나는 백에 상비</li>
+      <li><b>단백질·수면 우선</b> 매 끼 단백질, 7~9시간 수면. 근질량·회복·피로 관리의 기본이에요</li>
+      <li><b>접종일 저녁 관리</b> 위 배출이 느려져 누우면 역류·팽만이 올 수 있어요. 저녁식사는 취침 3~4시간 전 마무리, 양 줄이고 기름진 것 빼기, 접종 후 첫 2박은 상체 살짝 높이기, 접종일 금주</li>
+    </ul>
+  </div>
+
+  <h2><span class="n">07</span>한계 · 확인 필요</h2>
+  <div class="card">
+    <ul class="p">
+      <li>이 문서는 접종 타이밍을 제안하는 자료예요.</li>
+      <li>지금은 정형외과에서 별다른 설명 없이 처방받은 상태라, 용량과 유지 여부는 전문의 상담으로 확정하시길 권해요.</li>
+      <li>11월 중요 경기 날짜가 확정되면 8차 이후를 이어서 배치할게요.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+const iso = d => d.toISOString().slice(0,10);
+const mk = s => { const [y,m,d]=s.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)); };
+const addD = (d,n) => new Date(d.getTime()+n*86400000);
+
+const INJ = [
+  {date:'2026-09-04', done:true},
+  {date:'2026-09-11'}, {date:'2026-09-20'}, {date:'2026-09-27'},
+  {date:'2026-10-09'}, {date:'2026-10-18'}, {date:'2026-10-25'}, {date:'2026-11-01'},
+];
+const TOURS = [
+  {name:'Walmart', r1:'2026-09-25', end:'2026-09-27'},
+  {name:'LOTTE',   r1:'2026-10-01', end:'2026-10-04'},
+  {name:'KPGA',    r1:'2026-10-06', end:'2026-10-09'},
+  {name:'BMW',     r1:'2026-10-22', end:'2026-10-25'},
+  {name:'Maybank', r1:'2026-10-29', end:'2026-11-01'},
+];
+
+const SE = new Set();
+INJ.forEach(i => { for(let k=1;k<=3;k++) SE.add(iso(addD(mk(i.date),k))); });
+function seN(k){ for(const i of INJ){ for(let n=1;n<=3;n++){ if(iso(addD(mk(i.date),n))===k) return n; } } return ''; }
+const INJMAP = Object.fromEntries(INJ.map(i=>[i.date,i]));
+const TOURDAY = {};
+TOURS.forEach(t=>{ for(let d=mk(t.r1),e=mk(t.end); d<=e; d=addD(d,1)){ const k=iso(d); TOURDAY[k]={name:t.name, r1:(k===t.r1)}; } });
+
+const START = mk('2026-08-31'), END = mk('2026-11-08');
+const DOW = ['월','화','수','목','금','토','일'];
+let html = DOW.map((d,i)=>`<div class="dow"${i===6?' style="color:#c98"':''}>${d}</div>`).join('');
+for(let d=START; d<=END; d=addD(d,1)){
+  const k=iso(d);
+  const inMonth = (d.getUTCMonth()>=8 && d.getUTCMonth()<=10); // 9·10·11월
+  const mo=d.getUTCMonth()+1, day=d.getUTCDate();
+  let cls='cell', chips='';
+  const inj=INJMAP[k], td=TOURDAY[k], isSE=SE.has(k);
+  if(td) cls += td.r1 ? ' tour' : ' tourspan';
+  else if(isSE) cls += ' se';
+  if(!inMonth) cls+=' out';
+  if(inj){ cls += ' injcell'+(inj.done?' injdone':''); chips += `<span class="pill inj${inj.done?' done':''}">💉${inj.done?'완료':'2.5mg'}</span>`; }
+  if(isSE) chips += `<span class="pill se">부작용 D+${seN(k)}</span>`;
+  if(td && td.r1) chips += `<span class="pill tour">🏌 ${td.name}</span>`;
+  const moLabel = (day===1||d.getTime()===START.getTime()) ? `<span class="mo">${mo}월</span>` : '';
+  html += `<div class="${cls}"><div class="dn">${moLabel}${day}</div>${chips}</div>`;
+}
+document.getElementById('cal').innerHTML = html;
+
+const leg = [
+  ['background:#26374A','💉 접종일 (일요일 저녁 원칙)'],
+  ['background:rgba(180,140,0,.16)','부작용 기간 D+1~3'],
+  ['background:#C0504D','🏌 경기 (1R)'],
+  ['background:repeating-linear-gradient(135deg,#eef5fa 0 4px,#e2eef6 4px 8px)','경기 진행'],
+];
+document.getElementById('legend').innerHTML = leg.map(([s,n])=>`<span class="lg"><i style="${s}"></i>${n}</span>`).join('');
+</script>
+</body>
+</html>
