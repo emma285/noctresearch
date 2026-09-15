@@ -48,7 +48,7 @@ export default async function ReportsPage({ searchParams }) {
             <SectionHeader title="자료" className="mt-6" />
             <Surface>
               {exposedExtras.map((e) => (
-                <ReportRow key={e.url} date="자료" title={e.label} sub={e.desc || "코치가 공유한 자료예요."} href={`/asset/${reportSlug(e.url)}`} />
+                <ReportRow key={e.url} date={e.date ? e.date.replaceAll("-", ".") : "자료"} title={e.label} sub={e.desc || "코치가 공유한 자료예요."} href={`/asset/${reportSlug(e.url)}`} />
               ))}
             </Surface>
           </>

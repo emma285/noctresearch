@@ -213,6 +213,7 @@ export default async function CoachClientDetail({ params }) {
               ) : assets.extras.map((x) => (
                 <a key={x.url} href={x.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3.5 border-t border-[#e7e9ed] first:border-t-0 hover:bg-[#fafbfc]">
                   <div className="flex-1 min-w-0"><div className="text-[14px] font-semibold text-[#1b2a3f] truncate">{x.label}</div>{x.desc ? <div className="text-[12px] text-[#9298a2] mt-0.5 truncate">{x.desc}</div> : null}</div>
+                  {x.date ? <span className="text-[11px] text-[#9298a2] font-semibold tabular-nums shrink-0">{x.date.replaceAll("-", ".")}</span> : null}
                   <span className="text-[#9298a2]">→</span>
                 </a>
               ))}
