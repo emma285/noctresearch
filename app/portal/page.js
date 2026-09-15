@@ -9,7 +9,7 @@ import Link from "next/link";
 import { getAthleteByEmail, getAthleteByRef, getSessionsByAthlete, getAllAthletes, getNextGuideSessionByClient, getCoachOverview } from "../../lib/master";
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday, getLatestLogTz } from "../../lib/log";
-import { HOME_TZ, todayIn } from "../../lib/tz";
+import { HOME_TZ, todayIn, wallInTz } from "../../lib/tz";
 
 const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0ab", 경기: "#F4978E", 이동: "#7EC8E3", 훈련: "#A0B0FF", 기타: "#6b7280" };
 import AppShell, { AppBody } from "../../components/app/AppShell";
@@ -64,17 +64,40 @@ function ymd(iso) {
   return m ? { y: +m[1], mo: +m[2], d: +m[3] } : null;
 }
 function mmdd(iso) { const p = ymd(iso); return p ? `${String(p.mo).padStart(2, "0")}.${String(p.d).padStart(2, "0")}` : ""; }
-function fullDate(iso, abroad = false) {
-  const p = ymd(iso); if (!p) return "";
-  const dow = DOW[new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay()];
-  return `${p.mo}월 ${p.d}일(${dow}) 오전 10시${abroad ? " (한국 시간)" : ""}`;
+function korTime(min) {
+  const h = Math.floor(min / 60), m = ((min % 60) + 60) % 60;
+  const ap = h < 12 ? "오전" : "오후";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${ap} ${h12}시${m ? ` ${m}분` : ""}`;
 }
-function ddayOf(iso, tz = HOME_TZ) {
-  const p = ymd(iso); if (!p) return null;
-  const target = Date.UTC(p.y, p.mo - 1, p.d);
+// UTC ms → 그 tz의 { y, mo, d, dow, timeStr }
+function locOf(ms, tz) {
+  const w = wallInTz(ms, tz); if (!w) return null;
+  const [y, mo, d] = w.date.split("-").map(Number);
+  const dow = DOW[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
+  return { y, mo, d, dow, timeStr: korTime(w.min) };
+}
+// 세션 표시: 실제 시각(ms) 있으면 선수 현지시각으로(해외면 한국시각 병기), 없으면 날짜만.
+function sessionWhen(ms, dateIso, tz = HOME_TZ) {
+  if (ms != null) {
+    const loc = locOf(ms, tz); if (!loc) return "";
+    let s = `${loc.mo}월 ${loc.d}일(${loc.dow}) ${loc.timeStr}`;
+    if (tz !== HOME_TZ) {
+      const home = locOf(ms, HOME_TZ);
+      if (home) s += ` · 한국 ${home.mo}/${home.d} ${home.timeStr}`;
+    }
+    return s;
+  }
+  const p = ymd(dateIso); if (!p) return "";
+  const dow = DOW[new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay()];
+  return `${p.mo}월 ${p.d}일(${dow}) · 시간 미정`;
+}
+function ddayOf(ms, dateIso, tz = HOME_TZ) {
+  let target;
+  if (ms != null) { const l = locOf(ms, tz); if (!l) return null; target = Date.UTC(l.y, l.mo - 1, l.d); }
+  else { const p = ymd(dateIso); if (!p) return null; target = Date.UTC(p.y, p.mo - 1, p.d); }
   const [ty, tm, td] = todayIn(tz).split("-").map(Number); // 선수 현지 오늘 기준
-  const today = Date.UTC(ty, tm - 1, td);
-  return Math.round((target - today) / 86400000);
+  return Math.round((target - Date.UTC(ty, tm - 1, td)) / 86400000);
 }
 
 export const dynamic = "force-dynamic";
@@ -107,6 +130,8 @@ export default async function PortalPage({ searchParams }) {
   const ongoing = ["진행중", "종료"].includes(athlete?.status) || searchParams?.stage === "ongoing";
 
   const nextSessionAt = athlete?.nextSession || (ongoing ? null : meta.firstSessionAt) || (searchParams?.stage === "done" ? "2026-08-09" : null);
+  // 실제 세션 인스턴트(Neon nextSession일 때만). firstSessionAt(날짜만)이면 null → 날짜만 표시.
+  const nextInstantMs = athlete?.nextSession && athlete?.nextSessionTs ? (Date.parse(athlete.nextSessionTs) || null) : null;
   const programWeeks = meta.programWeeks || ((searchParams?.stage === "done" || searchParams?.stage === "ongoing") ? 8 : null);
   // 프로그램: 마스터 선택값(3주 수면 리셋/8주 수면 셋업/수면 케어) → 히어로엔 짧게(3주·8주·케어). 없으면 주차 폴백.
   const programLabel = athlete?.program
@@ -115,8 +140,7 @@ export default async function PortalPage({ searchParams }) {
   const scheduleDone = !!nextSessionAt;
   // 선수 최근 로그 tz → 해외면 D-day를 현지 오늘 기준으로, 세션 시각엔 "(한국 시간)" 표기.
   const athleteTz = (await getLatestLogTz(athlete?.email || myEmail)) || HOME_TZ;
-  const abroad = athleteTz !== HOME_TZ;
-  const dday = ddayOf(nextSessionAt, athleteTz);
+  const dday = ddayOf(nextInstantMs, nextSessionAt, athleteTz);
   const ddayText = dday === null ? "미정" : dday > 0 ? `D-${dday}` : dday === 0 ? "D-day" : "진행중";
 
   // 지난 세션 + 다가오는 일정 — 둘 다 pageId만 필요하고 서로 독립이라 병렬 조회 (waterfall 제거)
@@ -161,7 +185,7 @@ export default async function PortalPage({ searchParams }) {
               <CheckRow title="사전 수면 설문 작성" desc={intakeDone ? "완료" : "68문항 · 약 15분"} done={intakeDone} href={intakeDone ? undefined : "/athlete"} />
               <CheckRow
                 title="첫 세션 일정 잡기"
-                desc={scheduleDone ? fullDate(nextSessionAt, abroad) : "코치가 일정을 잡아드려요"}
+                desc={scheduleDone ? sessionWhen(nextInstantMs, nextSessionAt, athleteTz) : "코치가 일정을 잡아드려요"}
                 done={scheduleDone}
               />
               <CheckRow title="도움될 자료 업로드" desc={prepDone ? "완료" : "경기·훈련·수면 관련 자료"} done={prepDone} href={prepDone ? undefined : "/prep"} />
@@ -178,7 +202,7 @@ export default async function PortalPage({ searchParams }) {
                   <StatusBadge>{nextOrdinal}회차</StatusBadge>
                 </div>
                 <div className="text-lg font-bold text-foreground mt-[11px] tracking-[-0.3px]">
-                  {nextSessionAt ? fullDate(nextSessionAt, abroad) : "일정 조율 중"}
+                  {nextSessionAt ? sessionWhen(nextInstantMs, nextSessionAt, athleteTz) : "일정 조율 중"}
                 </div>
                 <div className="text-[13px] text-muted-foreground mt-1">
                   {nextSessionAt ? `${ddayText} · ${nextOrdinal}회차 코칭 세션` : `${nextOrdinal}회차 코칭 세션은 코치와 조율 중이에요`}

@@ -7,7 +7,8 @@ import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByRef, getSessionsByAthlete } from "../../../../lib/master";
 import { getAthleteEvents } from "../../../../lib/calendar";
 import { getSleepTargets, adherence, getAppliedProtocolSlugs } from "../../../../lib/targets";
-import { getLogTimeline, getFirstLogDate, kstToday } from "../../../../lib/log";
+import { getLogTimeline, getFirstLogDate, kstToday, getLatestLogTz } from "../../../../lib/log";
+import { HOME_TZ } from "../../../../lib/tz";
 import { getAttachments } from "../../../../lib/attachments";
 import { resolveAssets, reportSlug } from "../../../../lib/athleteAssets";
 import { extractProtocolTargets } from "../../../../lib/protocolExtract";
@@ -61,6 +62,7 @@ export default async function CoachClientDetail({ params }) {
   const athlete = await getAthleteByRef(id); // id=pageId 우선, 옛 이메일 링크도 하위호환
   if (!athlete) return <CoachShell active="athletes" coachName={coachName}><div className="p-10 text-center text-sm text-muted-foreground">선수를 찾을 수 없어요.</div></CoachShell>;
   const email = athlete.email || "";
+  const athleteTz = (await getLatestLogTz(email)) || HOME_TZ; // 세션 시각 입력 기본 시간대 = 선수 최근 로그 tz
 
   const [sessions, calEvents, sleepTargets] = await Promise.all([
     athlete.pageId ? getSessionsByAthlete(athlete.pageId) : [],
@@ -127,7 +129,7 @@ export default async function CoachClientDetail({ params }) {
                     <span className="w-9 h-9 rounded-lg bg-[#eef0fb] text-primary text-[12px] font-extrabold flex items-center justify-center flex-none">{s.n ?? "-"}회</span>
                     <div className="flex-1 min-w-0">
                       <div className="text-[14px] font-bold text-[#1b2a3f] flex items-center gap-2">{s.n ? `${s.n}회차 코칭 세션` : (s.title || "코칭 세션")}<span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${status.c}`}>{status.t}</span></div>
-                      <SessionDateEditor sessionId={s.id} initialISO={s.date} />
+                      <SessionDateEditor sessionId={s.id} initialISO={s.date} initialTs={s.dateTs} defaultTz={athleteTz} />
                     </div>
                     {!done
                       ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg bg-primary text-white whitespace-nowrap">가이드 작성</Link>
