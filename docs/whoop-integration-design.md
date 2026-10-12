@@ -17,7 +17,7 @@
 
 ---
 
-## 1. 선행조건 (Emma 몫, 코드보다 먼저)
+## 1. 선행조건 (Phase 0, 코드보다 먼저 — Jake가 공유계정으로 수행. Emma는 개인정보처리방침 URL만)
 
 1. `https://developer-dashboard.whoop.com` 에서 앱 등록 (WHOOP 멤버십 필요, 앱 5개까지).
 2. **`Client ID` / `Client Secret`** 발급 → env 등록(아래).
@@ -219,7 +219,7 @@ POST token url  grant_type=refresh_token, refresh_token, client_id, client_secre
 
 ## 7. 단계별 실행
 
-- **Phase 0 (Emma)**: 대시보드 앱 등록 + 승인 신청 제출 + Client ID/Secret env 등록.
+- **Phase 0 (Jake, 공유계정)**: 대시보드 앱 등록 + 승인 신청 제출 + Client ID/Secret env 등록. (Emma는 개인정보처리방침 URL만 제공)
 - **Phase 1**: OAuth connect/callback + 토큰 암호화 저장 + 30일 백필 → 본인 웁 1명 검증.
 - **Phase 2**: 웹훅 수신(서명검증·upsert) + refresh cron → 자동 갱신.
 - **Phase 3**: 포탈 리포트 시각화(수면단계/HRV/recovery).

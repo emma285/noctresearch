@@ -60,9 +60,10 @@ git checkout -b feat/whoop
 
 ---
 
-## 4. ⚠️ Phase 0 (Emma 몫, 블로커) — 코드보다 먼저
+## 4. ⚠️ Phase 0 (Jake가 수행, 블로커) — 코드보다 먼저
 
-Jake가 **실제 연결 테스트**를 하려면 아래가 먼저 나와야 함. 단, **코드 자체는 Client ID/Secret 없이도 미리 짤 수 있음** (연결 테스트만 발급 후 가능).
+Jake가 Emma 계정(`emma285`)을 공유받아 쓰므로 **WHOOP 대시보드 등록·Client ID 발급·승인 신청 전부 Jake가 직접** 진행. 단, **코드 자체는 Client ID/Secret 없이도 미리 짤 수 있음** (실제 연결 테스트만 발급 후 가능).
+> Emma가 챙길 건 하나뿐: **개인정보처리방침 URL**(승인 신청 준비물, 아래). noct-research.com에 있으면 그 URL, 없으면 만들어야 함.
 
 - [ ] `developer-dashboard.whoop.com` 앱 등록 → `Client ID` / `Client Secret` 발급
 - [ ] Redirect URI 등록 (대시보드값과 **정확히 일치**해야 함):
@@ -124,8 +125,8 @@ Jake가 **실제 연결 테스트**를 하려면 아래가 먼저 나와야 함.
 ## 8. 진행 순서 요약
 
 ```
-Phase 0 (Emma)  앱 등록 + Client ID 발급 + 승인 신청        ← 지금
-   │  (코드는 기다리지 말고 병행)
+Phase 0 (Jake)  앱 등록 + Client ID 발급 + 승인 신청        ← 지금
+   │  (Emma는 개인정보처리방침 URL만 제공 / 코드는 기다리지 말고 병행)
 Phase 1 (Jake)  OAuth connect/callback + 암호화 저장 + 30일 백필 → 본인 웁 1명 검증
 Phase 2 (Jake)  웹훅 수신 + refresh 크론 → 자동 유입
 Phase 3 (Jake)  포탈 리포트 시각화
