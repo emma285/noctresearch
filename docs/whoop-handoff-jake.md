@@ -69,7 +69,7 @@ Jake가 **실제 연결 테스트**를 하려면 아래가 먼저 나와야 함.
   - `https://noctresearch.vercel.app/api/whoop/callback`
   - `http://localhost:3000/api/whoop/callback` (로컬 테스트용)
 - [ ] **승인 신청 동시 제출** (개발단계 최대 10명 연결, 실서비스 >10명은 심사 수 주 소요)
-  - 준비물: 개인정보처리방침 URL · 앱이름/연락이메일 · "Connect with WHOOP" 버튼(브랜드 가이드) · 테스트 1명
+  - 준비물: 개인정보처리방침 URL · 앱이름/**연락이메일 = `contact@noct-research.com`**(신규 가입·연동은 이 이메일로 통일) · "Connect with WHOOP" 버튼(브랜드 가이드) · 테스트 1명
 
 > Jake: Phase 1~2 코드는 Phase 0 기다리지 말고 바로 시작해도 됨. `/callback`의 실제 token 교환 검증만 Client ID 나온 뒤에.
 

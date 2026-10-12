@@ -23,7 +23,7 @@
 2. **`Client ID` / `Client Secret`** 발급 → env 등록(아래).
 3. Redirect URI를 대시보드에 **정확히 일치**하게 등록: `https://noctresearch.vercel.app/api/whoop/callback` (+ 로컬 `http://localhost:3000/api/whoop/callback`).
 4. **승인 신청도 동시에 제출** — 개발단계는 **최대 10명**만 연결됨, 실서비스(>10명)는 **심사 필요(수 주 소요)**. 심사 도는 동안 개발 진행.
-   - 승인 준비물: API 이용약관 동의 · 앱이름/연락 이메일 · **개인정보처리방침 URL** · WHOOP 브랜드/디자인 가이드 준수("Connect with WHOOP" 버튼) · 최소 1명 테스트.
+   - 승인 준비물: API 이용약관 동의 · 앱이름/**연락 이메일=`contact@noct-research.com`**(신규 가입·연동 공식 이메일로 통일) · **개인정보처리방침 URL** · WHOOP 브랜드/디자인 가이드 준수("Connect with WHOOP" 버튼) · 최소 1명 테스트.
 
 > ⚠️ 코드는 Client ID/Secret 없이도 미리 짤 수 있음. 실제 연결 테스트만 발급 후 가능.
 
