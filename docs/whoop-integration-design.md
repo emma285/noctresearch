@@ -91,7 +91,7 @@ export const whoopConnections = pgTable("whoop_connections", {
   id: id(),
   clientId: text("client_id").references(() => clients.id),
   userEmail: text("user_email").notNull().unique(),   // 조회 키(clerk 이메일)
-  whoopUserId: integer("whoop_user_id"),
+  whoopUserId: bigint("whoop_user_id", { mode: "number" }), // WHOOP int64
   accessTokenEnc: text("access_token_enc").notNull(),
   refreshTokenEnc: text("refresh_token_enc").notNull(), // rotating: 갱신마다 덮어쓰기
   scope: text("scope"),
@@ -105,7 +105,7 @@ export const whoopConnections = pgTable("whoop_connections", {
 export const whoopSleep = pgTable("whoop_sleep", {
   sleepId: text("sleep_id").primaryKey(),              // WHOOP UUID
   userEmail: text("user_email").notNull(),
-  cycleId: integer("cycle_id"),
+  cycleId: bigint("cycle_id", { mode: "number" }), // WHOOP int64
   startTs: timestamp("start_ts", { withTimezone: true }),
   endTs: timestamp("end_ts", { withTimezone: true }),
   tzOffset: text("tz_offset"),
@@ -129,7 +129,7 @@ export const whoopSleep = pgTable("whoop_sleep", {
 
 // 회복 (HRV·RHR·recovery score)
 export const whoopRecovery = pgTable("whoop_recovery", {
-  cycleId: integer("cycle_id").primaryKey(),
+  cycleId: bigint("cycle_id", { mode: "number" }).primaryKey(), // WHOOP int64
   userEmail: text("user_email").notNull(),
   sleepId: text("sleep_id"),
   scoreState: text("score_state"),
@@ -143,6 +143,8 @@ export const whoopRecovery = pgTable("whoop_recovery", {
 });
 // (strain 필요 시 whoopCycle 동일 패턴 추가. cycle.* 웹훅은 없어서 recovery 올 때 /v2/cycle 당김.)
 ```
+
+> **변경(2026-10-13, Jake)**: `cycle_id`·`whoop_user_id`는 WHOOP OpenAPI에서 int64로 정의 → `integer`(int32, 최대 약 21억) 대신 `bigint`. cycle_id는 WHOOP 전체 사용자 기준 일련번호라 우리 데이터 양과 무관하게 커짐.
 
 마이그레이션: `drizzle-kit generate` → `drizzle/` 에 SQL → 배포 시 적용(기존 파이프라인 따름).
 
