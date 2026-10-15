@@ -187,11 +187,15 @@ if sig !== header['X-WHOOP-Signature']  → 401
 payload = { user_id, id, type, trace_id }   // id만 옴
 switch(type):
   'sleep.updated'    → GET /v2/activity/sleep/{id}  → whoopSleep upsert
-  'sleep.deleted'    → whoopSleep 삭제/표시
-  'recovery.updated' → GET /v2/recovery (해당 cycle) → whoopRecovery upsert
-  'workout.updated'  → (선택)
-// trace_id로 중복처리 방지. 이벤트: sleep/recovery/workout .updated|.deleted (cycle.* 없음)
+  'sleep.deleted'    → whoopSleep 삭제
+  'recovery.updated' → GET /v2/activity/sleep/{id} → cycle_id → GET /v2/cycle/{cycle_id}/recovery → whoopRecovery upsert
+  'recovery.deleted' → whoopRecovery 삭제 (sleep_id = id)
+  'workout.*'        → 무시(저장 안 함)
+// 이벤트: sleep/recovery/workout .updated|.deleted (cycle.* 없음)
 ```
+> **변경(2026-10-15, Jake)**: 공식 문서 기준 v2 웹훅의 recovery `id`는 cycle id가 아니라 **수면 UUID** → 위처럼 수면 조회 후 cycle_id로 회복 조회. `recovery.deleted` 처리 추가.
+> trace_id 저장 테이블은 만들지 않음: 모든 처리가 "WHOOP에서 다시 가져와 덮어쓰기/삭제"라 같은 알림이 여러 번 와도 결과가 같음(멱등). 처리 실패 시 500 → WHOOP가 약 1시간 동안 5회 재시도.
+> refresh 동시성: 웹훅과 cron이 동시에 갱신해 한쪽이 거절되면, DB에 새 토큰이 저장됐는지 다시 확인 후 사용(잘못된 needs_reauth 방지).
 > `whoop_user_id`로 어느 선수인지 매핑(연결 시 profile에서 저장해둔 whoopUserId ↔ payload.user_id).
 
 ### 토큰 refresh cron

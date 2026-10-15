@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/routine-check",
       "schedule": "59 14 * * *"
+    },
+    {
+      "path": "/api/cron/whoop-refresh",
+      "schedule": "0 * * * *"
     }
   ]
 }

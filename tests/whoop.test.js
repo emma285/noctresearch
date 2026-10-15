@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { randomBytes } from 'node:crypto'
 import { encryptToken, decryptToken, newOAuthState, verifyOAuthState } from '../lib/whoop/crypto'
 import { buildAuthorizeUrl, mapSleep, mapRecovery, WHOOP_SCOPES } from '../lib/whoop/api'
+import { createHmac } from 'node:crypto'
+import { verifyWebhookSignature, planWebhookAction } from '../lib/whoop/webhook'
 
 beforeAll(() => {
   process.env.WHOOP_TOKEN_ENC_KEY = randomBytes(32).toString('base64')
@@ -123,5 +125,43 @@ describe('회복 변환', () => {
     const r = mapRecovery({ ...rec, score_state: 'UNSCORABLE', score: undefined }, 'a@b.com')
     expect(r.recoveryScore).toBeNull()
     expect(r.hrvRmssdMs).toBeNull()
+  })
+})
+
+describe('웹훅 서명검증', () => {
+  const secret = 'client-secret'
+  const ts = '1760500000000'
+  const body = JSON.stringify({ user_id: 10129, id: scoredSleep.id, type: 'sleep.updated', trace_id: 't-1' })
+  const sig = createHmac('sha256', secret).update(ts + body).digest('base64')
+
+  it('올바른 서명이면 통과', () => {
+    expect(verifyWebhookSignature(body, ts, sig, secret)).toBe(true)
+  })
+
+  it('바디 변조 / 다른 timestamp / 다른 secret / 헤더 없음은 거절', () => {
+    expect(verifyWebhookSignature(body.replace('10129', '99999'), ts, sig, secret)).toBe(false)
+    expect(verifyWebhookSignature(body, '1760500000001', sig, secret)).toBe(false)
+    expect(verifyWebhookSignature(body, ts, sig, 'other-secret')).toBe(false)
+    expect(verifyWebhookSignature(body, null, sig, secret)).toBe(false)
+    expect(verifyWebhookSignature(body, ts, null, secret)).toBe(false)
+  })
+})
+
+describe('웹훅 이벤트 → 할 일', () => {
+  const base = { user_id: 10129, id: scoredSleep.id, trace_id: 't-1' }
+
+  it('sleep/recovery updated·deleted 매핑 (recovery id = 수면 UUID)', () => {
+    expect(planWebhookAction({ ...base, type: 'sleep.updated' })).toEqual({ action: 'upsert_sleep', sleepId: scoredSleep.id })
+    expect(planWebhookAction({ ...base, type: 'sleep.deleted' })).toEqual({ action: 'delete_sleep', sleepId: scoredSleep.id })
+    expect(planWebhookAction({ ...base, type: 'recovery.updated' })).toEqual({ action: 'upsert_recovery', sleepId: scoredSleep.id })
+    expect(planWebhookAction({ ...base, type: 'recovery.deleted' })).toEqual({ action: 'delete_recovery', sleepId: scoredSleep.id })
+  })
+
+  it('workout·모르는 타입·필드 누락은 무시', () => {
+    expect(planWebhookAction({ ...base, type: 'workout.updated' }).action).toBe('ignore')
+    expect(planWebhookAction({ ...base, type: 'cycle.updated' }).action).toBe('ignore')
+    expect(planWebhookAction({ ...base, id: undefined, type: 'sleep.updated' }).action).toBe('ignore')
+    expect(planWebhookAction({ ...base, user_id: undefined, type: 'sleep.updated' }).action).toBe('ignore')
+    expect(planWebhookAction(null).action).toBe('ignore')
   })
 })
