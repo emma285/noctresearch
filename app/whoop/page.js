@@ -1,0 +1,89 @@
+// app/whoop/page.js — 선수 WHOOP 페이지 (내정보 > 기기 연동 · 홈 WHOOP 카드에서 진입).
+// 미연결: 안내 + 연결 버튼 / 연결됨: 지난밤 요약 + 최근 2주 차트 + 해제 / 재연결 필요: 재연결 안내.
+import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
+import { ChevronLeft, Link2, RefreshCw } from "lucide-react";
+import AppShell, { AppBody } from "../../components/app/AppShell";
+import { Surface, SectionHeader, Row, StatusBadge } from "../../components/app/primitives";
+import WhoopSummary from "../../components/whoop/WhoopSummary";
+import WhoopCharts from "../../components/whoop/WhoopCharts";
+import WhoopDisconnect from "../../components/whoop/WhoopDisconnect";
+import { getWhoopStatus, getWhoopDays } from "../../lib/whoop/read";
+
+export const metadata = { title: "WHOOP | NOCT" };
+export const dynamic = "force-dynamic";
+
+// /api/whoop/callback 이 붙여주는 ?whoop= 결과 안내
+const NOTICE = {
+  connected: "WHOOP이 연결됐어요. 지난 30일 기록을 가져왔어요.",
+  denied: "WHOOP 연결을 취소했어요.",
+  invalid_state: "연결 확인에 실패했어요. 다시 시도해주세요.",
+  login_required: "로그인 후 다시 시도해주세요.",
+  error: "연결 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.",
+};
+
+export default async function WhoopPage({ searchParams }) {
+  const user = await currentUser();
+  const email = user?.emailAddresses?.[0]?.emailAddress || "";
+  const { status } = await getWhoopStatus(email);
+  const linked = status === "active" || status === "needs_reauth";
+  const days = linked ? await getWhoopDays(email, 14) : [];
+  const notice = NOTICE[searchParams?.whoop];
+
+  return (
+    <AppShell>
+      <div className="px-5 pt-[calc(env(safe-area-inset-top)+20px)] pb-2">
+        <Link href="/me" className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted-foreground mb-3">
+          <ChevronLeft className="w-4 h-4" />내 정보
+        </Link>
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-[26px] font-bold tracking-[-0.5px] text-foreground">WHOOP</h1>
+          {status === "active" ? <StatusBadge dot>연결됨</StatusBadge> : status === "needs_reauth" ? <StatusBadge tone="plain">재연결 필요</StatusBadge> : null}
+        </div>
+      </div>
+
+      <AppBody className="pt-2">
+        {notice ? <div className="mt-2 text-[13px] font-semibold text-primary bg-primary/10 rounded-xl px-4 py-3">{notice}</div> : null}
+
+        {!linked ? (
+          <>
+            <Surface className="mt-4">
+              <div className="p-4">
+                <div className="text-base font-semibold text-foreground">WHOOP 데이터를 코칭에 연결해요</div>
+                <p className="text-[13px] text-muted-foreground mt-1.5 leading-relaxed">
+                  한 번 연결하면 수면·회복(HRV, 안정시 심박) 기록이 매일 자동으로 들어와요.
+                  따로 입력할 필요 없이 코치와 함께 볼 수 있어요.
+                </p>
+              </div>
+              <Row icon={Link2} action title="WHOOP 연결하기" href="/api/whoop/connect" />
+            </Surface>
+            <p className="text-[12px] text-muted-foreground mt-3 leading-relaxed">
+              연결 버튼을 누르면 WHOOP 로그인 화면으로 이동해요. 언제든 이 화면에서 연결을 해제할 수 있어요.
+            </p>
+          </>
+        ) : (
+          <>
+            {status === "needs_reauth" ? (
+              <Surface className="mt-4">
+                <Row icon={RefreshCw} action title="WHOOP 다시 연결하기" desc="연결이 만료돼 새 기록이 들어오지 않고 있어요." href="/api/whoop/connect" />
+              </Surface>
+            ) : null}
+
+            <SectionHeader title="지난밤" className="mt-6" />
+            <Surface>
+              <WhoopSummary latest={days[days.length - 1]} />
+            </Surface>
+
+            <SectionHeader title="최근 2주" />
+            <WhoopCharts days={days} />
+
+            <SectionHeader title="연결 관리" />
+            <Surface>
+              <WhoopDisconnect />
+            </Surface>
+          </>
+        )}
+      </AppBody>
+    </AppShell>
+  );
+}

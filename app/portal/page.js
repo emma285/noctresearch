@@ -2,7 +2,7 @@
 // 상태 분기: 온보딩(첫 세션 전) / 정식(첫 세션 후). 데이터=마스터(단일 소스)+Clerk 폴백.
 // 코치 이메일이면 코치 대시보드(별도), ?as=<이메일>이면 그 선수 미리보기.
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
-import { Calendar, Upload } from "lucide-react";
+import { Calendar, Upload, Activity } from "lucide-react";
 import CoachDashboard from "../../components/coach/CoachDashboard";
 import { isCoachEmail, COACH_EMAILS } from "../../lib/coach";
 import Link from "next/link";
@@ -10,6 +10,8 @@ import { getAthleteByEmail, getAthleteByRef, getSessionsByAthlete, getAllAthlete
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday, getLatestLogTz } from "../../lib/log";
 import { HOME_TZ, todayIn, wallInTz } from "../../lib/tz";
+import { getWhoopStatus, getWhoopDays } from "../../lib/whoop/read";
+import WhoopSummary from "../../components/whoop/WhoopSummary";
 
 const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0ab", 경기: "#F4978E", 이동: "#7EC8E3", 훈련: "#A0B0FF", 기타: "#6b7280" };
 import AppShell, { AppBody } from "../../components/app/AppShell";
@@ -156,6 +158,21 @@ export default async function PortalPage({ searchParams }) {
   const nextOrdinal = effectiveCount + 1;
   const upcoming = calEvents.filter((e) => e.kind === "event" && (e.end || e.start).slice(0, 10) >= kstToday()).slice(0, 4);
 
+  // WHOOP — 연결한 선수에게만 홈 요약 카드 (미연결 선수 화면은 그대로)
+  const whoopEmail = athlete?.email || myEmail;
+  const whoop = whoopEmail ? await getWhoopStatus(whoopEmail) : { status: "none" };
+  const whoopLinked = whoop.status === "active" || whoop.status === "needs_reauth";
+  const whoopDays = whoopLinked ? await getWhoopDays(whoopEmail, 2) : [];
+  const whoopCard = whoopLinked ? (
+    <>
+      <SectionHeader title="WHOOP" caption={whoop.status === "needs_reauth" ? "연결이 만료됐어요. 다시 연결해주세요." : undefined} />
+      <Surface>
+        <WhoopSummary latest={whoopDays[whoopDays.length - 1]} />
+        <Row icon={Activity} action sub title={whoop.status === "needs_reauth" ? "다시 연결하기" : "자세히 보기"} href="/whoop" />
+      </Surface>
+    </>
+  ) : null;
+
   const statusLabel = ongoing ? "코칭 진행중" : intakeDone ? "첫 세션 준비 중" : "시작 준비";
   const showMetrics = intakeDone || ongoing;
 
@@ -190,6 +207,7 @@ export default async function PortalPage({ searchParams }) {
               />
               <CheckRow title="도움될 자료 업로드" desc={prepDone ? "완료" : "경기·훈련·수면 관련 자료"} done={prepDone} href={prepDone ? undefined : "/prep"} />
             </Surface>
+            {whoopCard}
           </>
         ) : (
           /* ── 정식 세션 홈 (첫 세션 후) / 첫 세션 준비 중 ── */
@@ -210,6 +228,7 @@ export default async function PortalPage({ searchParams }) {
               </div>
               <Row icon={Upload} action sub title="코칭 준비 자료 올리기" href="/prep" />
             </Surface>
+            {whoopCard}
 
             {ongoing ? (
               <>

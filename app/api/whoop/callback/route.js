@@ -1,5 +1,5 @@
 // app/api/whoop/callback/route.js
-// WHOOP 동의 후 돌아오는 곳: state 검증 → code→token 교환 → 암호화 저장 → 과거 30일 백필 → /portal.
+// WHOOP 동의 후 돌아오는 곳: state 검증 → code→token 교환 → 암호화 저장 → 과거 30일 백필 → /whoop.
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "../../../../lib/whoop/session";
@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function back(request, result) {
-  const url = new URL("/portal", request.url);
+  const url = new URL("/whoop", request.url);
   url.searchParams.set("whoop", result);
   const res = NextResponse.redirect(url);
   res.cookies.set(STATE_COOKIE, "", { path: "/api/whoop", maxAge: 0 });
