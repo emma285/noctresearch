@@ -4,6 +4,7 @@ import { encryptToken, decryptToken, newOAuthState, verifyOAuthState } from '../
 import { buildAuthorizeUrl, mapSleep, mapRecovery, WHOOP_SCOPES } from '../lib/whoop/api'
 import { createHmac } from 'node:crypto'
 import { verifyWebhookSignature, planWebhookAction } from '../lib/whoop/webhook'
+import { buildWhoopDays } from '../lib/whoop/days'
 
 beforeAll(() => {
   process.env.WHOOP_TOKEN_ENC_KEY = randomBytes(32).toString('base64')
@@ -163,5 +164,85 @@ describe('웹훅 이벤트 → 할 일', () => {
     expect(planWebhookAction({ ...base, id: undefined, type: 'sleep.updated' }).action).toBe('ignore')
     expect(planWebhookAction({ ...base, user_id: undefined, type: 'sleep.updated' }).action).toBe('ignore')
     expect(planWebhookAction(null).action).toBe('ignore')
+  })
+})
+
+describe('sleep need 합산 — 빈 값을 0으로 채우지 않음', () => {
+  it('구성값 하나라도 없으면 null', () => {
+    const { need_from_recent_nap_milli, ...partial } = scoredSleep.score.sleep_needed
+    const r = mapSleep({ ...scoredSleep, score: { ...scoredSleep.score, sleep_needed: partial } }, 'a@b.com')
+    expect(r.sleepNeedMs).toBeNull()
+  })
+})
+
+describe('날짜별 데이터 상태 (기록 없음 / 계산 중 / 계산 불가 / 값 있음)', () => {
+  // 기준 시각: 한국 10/16 12:00
+  const now = new Date('2026-10-16T03:00:00Z')
+  const sleep = (wakeDate, scoreState, extra = {}) => ({
+    sleepId: 's-' + wakeDate, isNap: false, tzOffset: '+09:00', scoreState,
+    startTs: new Date(`${wakeDate}T00:00:00+09:00`), endTs: new Date(`${wakeDate}T07:00:00+09:00`),
+    lightMs: 3600000, swsMs: 3600000, remMs: 3600000, awakeMs: 600000, sleepEffPct: 90, sleepPerfPct: 80,
+    ...extra,
+  })
+  const rec = (wakeDate, scoreState, extra = {}) => ({
+    sleepId: 's-' + wakeDate, scoreState, recoveryScore: 50, hrvRmssdMs: 40, restingHr: 55, ...extra,
+  })
+  const byDate = (days) => Object.fromEntries(days.map((d) => [d.date, d]))
+
+  it('기록 없는 날도 날짜가 빠지지 않고 기록 없음으로 들어감', () => {
+    const days = buildWhoopDays([sleep('2026-10-13', 'SCORED'), sleep('2026-10-15', 'SCORED')], [], 4, now)
+    expect(days.map((d) => d.date)).toEqual(['2026-10-13', '2026-10-14', '2026-10-15'])
+    const d = byDate(days)['2026-10-14']
+    expect(d.sleepState).toBe('none')
+    expect(d.recState).toBe('none')
+    expect(d.asleepMs).toBeNull()
+    expect(d.recoveryScore).toBeNull()
+  })
+
+  it('오늘은 기록 있을 때만 포함 (아직 자는 중일 수 있음)', () => {
+    expect(buildWhoopDays([sleep('2026-10-15', 'SCORED')], [], 3, now).map((d) => d.date))
+      .toEqual(['2026-10-14', '2026-10-15'])
+    expect(buildWhoopDays([sleep('2026-10-16', 'SCORED')], [], 3, now).map((d) => d.date))
+      .toEqual(['2026-10-14', '2026-10-15', '2026-10-16'])
+  })
+
+  it('계산 중 / 계산 불가: 시간은 있고 값은 전부 null', () => {
+    const days = byDate(buildWhoopDays(
+      [sleep('2026-10-14', 'PENDING_SCORE'), sleep('2026-10-15', 'UNSCORABLE')],
+      [rec('2026-10-14', 'PENDING_SCORE'), rec('2026-10-15', 'UNSCORABLE')], 3, now))
+    expect(days['2026-10-14'].sleepState).toBe('pending')
+    expect(days['2026-10-14'].recState).toBe('pending')
+    expect(days['2026-10-15'].sleepState).toBe('unscorable')
+    expect(days['2026-10-15'].recState).toBe('unscorable')
+    for (const d of [days['2026-10-14'], days['2026-10-15']]) {
+      expect(d.wakeMin).toBe(7 * 60)
+      expect(d.asleepMs).toBeNull()
+      expect(d.deepMs).toBeNull()
+      expect(d.recoveryScore).toBeNull()
+      expect(d.hrvMs).toBeNull()
+    }
+  })
+
+  it('수면은 값 있음, 회복은 기록 없음 — 상태를 따로 가짐', () => {
+    const d = buildWhoopDays([sleep('2026-10-15', 'SCORED')], [], 2, now).at(-1)
+    expect(d.sleepState).toBe('scored')
+    expect(d.recState).toBe('none')
+    expect(d.asleepMs).toBe(3 * 3600000)
+  })
+
+  it('0은 0 그대로 (값 있음)', () => {
+    const d = buildWhoopDays(
+      [sleep('2026-10-15', 'SCORED', { remMs: 0, awakeMs: 0 })],
+      [rec('2026-10-15', 'SCORED', { recoveryScore: 0 })], 2, now).at(-1)
+    expect(d.remMs).toBe(0)
+    expect(d.awakeMs).toBe(0)
+    expect(d.recoveryScore).toBe(0)
+    expect(d.asleepMs).toBe(2 * 3600000)
+  })
+
+  it('값 있음인데 단계 하나가 비면 총 수면시간은 null (0으로 채워 합산 안 함)', () => {
+    const d = buildWhoopDays([sleep('2026-10-15', 'SCORED', { remMs: null })], [], 2, now).at(-1)
+    expect(d.remMs).toBeNull()
+    expect(d.asleepMs).toBeNull()
   })
 })

@@ -1,8 +1,10 @@
 "use client";
 // components/whoop/WhoopCharts.jsx — WHOOP 최근 N일 차트 (선수 /whoop · 코치 선수상세 공용)
-// days: lib/whoop/read.js getWhoopDays() 결과. 점수 계산 전(≠SCORED) 값은 null → 막대/점 없이 비우고 "미정" 표기.
+// days: lib/whoop/read.js getWhoopDays() 결과(기록 없는 날 포함). 값 없는 날은 막대/점 없이 비우고
+// 아래에 상태별 날짜 표기(기록 없음/계산 중/계산 불가). 0은 0으로 그림.
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { cn } from "../../lib/utils";
+import { STATE_LABEL } from "../../lib/whoop/format";
 
 const C = { deep: "#4355B0", rem: "#7EC8E3", light: "#A0B0FF", awake: "#D5DAE3", line: "#4355B0", grid: "#EEF0F3", axis: "#9AA0AB" };
 const H = (ms) => (ms == null ? null : Math.round((ms / 3600000) * 10) / 10);
@@ -16,9 +18,9 @@ function ChartCard({ title, caption, missing, children, compact }) {
         {caption ? <div className="text-[12px] text-muted-foreground">{caption}</div> : null}
       </div>
       <div className="h-[170px] mt-3 -ml-2">{children}</div>
-      {missing.length ? (
-        <div className="text-[12px] text-muted-foreground mt-2">미정 (점수 계산 전): {missing.join(", ")}</div>
-      ) : null}
+      {missing.map(([state, labels]) => (
+        <div key={state} className="text-[12px] text-muted-foreground mt-2">{STATE_LABEL[state]}: {labels.join(", ")}</div>
+      ))}
     </div>
   );
 }
@@ -38,7 +40,7 @@ function Legend({ items }) {
 }
 
 export default function WhoopCharts({ days, compact = false }) {
-  if (!days?.length) {
+  if (!days?.some((d) => d.sleepState !== "none")) {
     return <div className="text-[13px] text-muted-foreground p-4">최근 2주 WHOOP 기록이 아직 없어요.</div>;
   }
   const rows = days.map((d) => ({
@@ -46,8 +48,12 @@ export default function WhoopCharts({ days, compact = false }) {
     deep: H(d.deepMs), rem: H(d.remMs), light: H(d.lightMs), awake: H(d.awakeMs),
     eff: round(d.sleepEffPct), rec: round(d.recoveryScore), hrv: round(d.hrvMs, 1), rhr: round(d.restingHr),
   }));
-  const missSleep = days.filter((d) => !d.sleepScored).map((d) => d.label);
-  const missRec = days.filter((d) => !d.recScored).map((d) => d.label);
+  // 값 없는 날을 상태별로 묶음: [["none", ["10/9"]], ["pending", [...]], ...]
+  const missing = (key) => Object.keys(STATE_LABEL)
+    .map((state) => [state, days.filter((d) => d[key] === state).map((d) => d.label)])
+    .filter(([, labels]) => labels.length);
+  const missSleep = missing("sleepState");
+  const missRec = missing("recState");
 
   const lineChart = (key, unit, domain) => (
     <ResponsiveContainer width="100%" height="100%">
