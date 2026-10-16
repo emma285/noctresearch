@@ -10,7 +10,7 @@ import { getAthleteByEmail, getAthleteByRef, getSessionsByAthlete, getAllAthlete
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday, getLatestLogTz } from "../../lib/log";
 import { HOME_TZ, todayIn, wallInTz } from "../../lib/tz";
-import { getWhoopStatus, getWhoopDays } from "../../lib/whoop/read";
+import { getWhoopStatus, getWhoopDays, SHOW_WHOOP_DATA_TO_ATHLETES } from "../../lib/whoop/read";
 import WhoopSummary from "../../components/whoop/WhoopSummary";
 
 const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0ab", 경기: "#F4978E", 이동: "#7EC8E3", 훈련: "#A0B0FF", 기타: "#6b7280" };
@@ -159,11 +159,21 @@ export default async function PortalPage({ searchParams }) {
   const upcoming = calEvents.filter((e) => e.kind === "event" && (e.end || e.start).slice(0, 10) >= kstToday()).slice(0, 4);
 
   // WHOOP — 연결한 선수에게만 홈 요약 카드 (미연결 선수 화면은 그대로)
+  // 데이터 비공개 기간(SHOW_WHOOP_DATA_TO_ATHLETES=false)엔 재연결 필요 안내만 노출
   const whoopEmail = athlete?.email || myEmail;
   const whoop = whoopEmail ? await getWhoopStatus(whoopEmail) : { status: "none" };
   const whoopLinked = whoop.status === "active" || whoop.status === "needs_reauth";
-  const whoopDays = whoopLinked ? await getWhoopDays(whoopEmail, 2) : [];
-  const whoopCard = whoopLinked ? (
+  const whoopDays = whoopLinked && SHOW_WHOOP_DATA_TO_ATHLETES ? await getWhoopDays(whoopEmail, 2) : [];
+  const whoopCard = whoopLinked && !SHOW_WHOOP_DATA_TO_ATHLETES ? (
+    whoop.status === "needs_reauth" ? (
+      <>
+        <SectionHeader title="WHOOP" caption="연결이 만료됐어요. 다시 연결해주세요." />
+        <Surface>
+          <Row icon={Activity} action sub title="다시 연결하기" href="/whoop" />
+        </Surface>
+      </>
+    ) : null
+  ) : whoopLinked ? (
     <>
       <SectionHeader title="WHOOP" caption={whoop.status === "needs_reauth" ? "연결이 만료됐어요. 다시 연결해주세요." : undefined} />
       <Surface>

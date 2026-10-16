@@ -8,7 +8,7 @@ import { Surface, SectionHeader, Row, StatusBadge } from "../../components/app/p
 import WhoopSummary from "../../components/whoop/WhoopSummary";
 import WhoopCharts from "../../components/whoop/WhoopCharts";
 import WhoopDisconnect from "../../components/whoop/WhoopDisconnect";
-import { getWhoopStatus, getWhoopDays } from "../../lib/whoop/read";
+import { getWhoopStatus, getWhoopDays, SHOW_WHOOP_DATA_TO_ATHLETES } from "../../lib/whoop/read";
 
 export const metadata = { title: "WHOOP | NOCT" };
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export default async function WhoopPage({ searchParams }) {
   const email = user?.emailAddresses?.[0]?.emailAddress || "";
   const { status } = await getWhoopStatus(email);
   const linked = status === "active" || status === "needs_reauth";
-  const days = linked ? await getWhoopDays(email, 14) : [];
+  const days = linked && SHOW_WHOOP_DATA_TO_ATHLETES ? await getWhoopDays(email, 14) : [];
   const notice = NOTICE[searchParams?.whoop];
 
   return (
@@ -69,13 +69,26 @@ export default async function WhoopPage({ searchParams }) {
               </Surface>
             ) : null}
 
-            <SectionHeader title="지난밤" className="mt-6" />
-            <Surface>
-              <WhoopSummary latest={days[days.length - 1]} />
-            </Surface>
+            {SHOW_WHOOP_DATA_TO_ATHLETES ? (
+              <>
+                <SectionHeader title="지난밤" className="mt-6" />
+                <Surface>
+                  <WhoopSummary latest={days[days.length - 1]} />
+                </Surface>
 
-            <SectionHeader title="최근 2주" />
-            <WhoopCharts days={days} />
+                <SectionHeader title="최근 2주" />
+                <WhoopCharts days={days} />
+              </>
+            ) : (
+              <Surface className="mt-4">
+                <div className="p-4">
+                  <div className="text-base font-semibold text-foreground">WHOOP 기록이 코칭에 연결돼 있어요</div>
+                  <p className="text-[13px] text-muted-foreground mt-1.5 leading-relaxed">
+                    수면·회복 기록은 매일 자동으로 들어오고, 코치가 확인해요.
+                  </p>
+                </div>
+              </Surface>
+            )}
 
             <SectionHeader title="연결 관리" />
             <Surface>
