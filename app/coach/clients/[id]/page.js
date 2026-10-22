@@ -19,6 +19,7 @@ import CoachManageForm from "../../../../components/coach/CoachManageForm";
 import CoachScheduleEditor from "../../../../components/coach/CoachScheduleEditor";
 import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 import WhoopCharts from "../../../../components/whoop/WhoopCharts";
+import WhoopSyncBar from "../../../../components/whoop/WhoopSyncBar";
 import { getWhoopStatus, getWhoopDays } from "../../../../lib/whoop/read";
 
 const WHOOP_BADGE = { active: { t: "연결됨", c: "bg-[#e7f4ec] text-[#1f8a4c]" }, needs_reauth: { t: "재연결 필요", c: "bg-[#fdecea] text-[#c0392b]" } };
@@ -157,6 +158,7 @@ export default async function CoachClientDetail({ params }) {
 
             {WHOOP_BADGE[whoop.status] ? (
               <Panel title="WHOOP · 최근 2주" right={<span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${WHOOP_BADGE[whoop.status].c}`}>{WHOOP_BADGE[whoop.status].t}</span>}>
+                <WhoopSyncBar athleteRef={athlete.pageId || id} lastCheckedAt={whoop.lastCheckedAt ? new Date(whoop.lastCheckedAt).toISOString() : null} lastCheckSource={whoop.lastCheckSource} />
                 <div className="p-4">
                   <WhoopCharts days={whoopDays} compact />
                 </div>

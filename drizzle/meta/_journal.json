@@ -43,6 +43,13 @@
       "when": 1791877969678,
       "tag": "0005_vengeful_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792636301336,
+      "tag": "0006_early_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }
