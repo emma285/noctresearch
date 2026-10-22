@@ -3,7 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import AppShell, { AppBody } from "../../components/app/AppShell";
 import { Surface, Row, SectionHeader } from "../../components/app/primitives";
 import LogoutAction from "../../components/app/LogoutAction";
-import { Watch } from "lucide-react";
+import WhoopStatusIcon from "../../components/whoop/WhoopStatusIcon";
 import { isCoachEmail } from "../../lib/coach";
 import { getWhoopStatus } from "../../lib/whoop/read";
 
@@ -34,7 +34,7 @@ export default async function MePage() {
           <>
             <SectionHeader title="기기 연동" caption="웨어러블 기록을 자동으로 받아와요." />
             <Surface>
-              <Row icon={Watch} title="WHOOP" desc={WHOOP_DESC[whoop.status] || "연결 안 됨"} href="/whoop" />
+              <Row icon={() => <WhoopStatusIcon status={whoop.status} size={22} fallback />} title="WHOOP" desc={WHOOP_DESC[whoop.status] || "연결 안 됨"} href="/whoop" />
             </Surface>
           </>
         ) : null}
