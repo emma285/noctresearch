@@ -5,8 +5,6 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { and, eq, gte, lt, desc } from "drizzle-orm";
 import { db, schema } from "../../../lib/db";
-import { notifyCoaching } from "../../../lib/notify";
-import { getAthleteByEmail } from "../../../lib/master";
 
 const { logs } = schema;
 
@@ -33,16 +31,6 @@ export async function POST(request) {
     const [row] = await db.insert(logs)
       .values({ userEmail: user, date, kind, summary, data })
       .returning({ id: logs.id });
-
-    // 슬립로그(수면)만 즉시 슬랙 알림 — 루틴은 밤 11:59 일괄(cron).
-    if (kind === "sleep") {
-      try {
-        const athlete = await getAthleteByEmail(user);
-        const who = athlete?.name || user;
-        const memo = (data.memo || "").trim();
-        await notifyCoaching(`🌙 *슬립로그 도착* — ${who}\n${date}${summary ? `\n${summary}` : ""}${memo ? `\n📝 메모: ${memo}` : ""}`);
-      } catch { /* 알림 실패가 저장을 막지 않도록 무시 */ }
-    }
 
     revalidateTag("athlete-data");
     return NextResponse.json({ success: true, id: row.id });

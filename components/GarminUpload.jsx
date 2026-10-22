@@ -141,7 +141,6 @@ export default function GarminUpload() {
     const folder = phone.replace(/\D/g, "");
     try {
       let done = 0;
-      const breakdown = {};
       for (let di = 0; di < days.length; di++) {
         const d = days[di];
         const dayLabel = d.date ? d.date : `day${di + 1}`;
@@ -158,15 +157,7 @@ export default function GarminUpload() {
           done += 1;
           setProgress({ done, total: totalCount });
         }
-        if (d.files.length) breakdown[d.date || `${di + 1}일차`] = d.files.length;
       }
-      try {
-        await fetch("/api/notify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone, count: totalCount, folder, breakdown }),
-        });
-      } catch (_) {}
       setSubmitted(true);
     } catch (e) {
       console.error(e);

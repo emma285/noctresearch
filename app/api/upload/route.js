@@ -19,7 +19,7 @@ export async function POST(request) {
         };
       },
       onUploadCompleted: async ({ blob }) => {
-        // 완료 콜백은 배포 환경에서만 발화(공개 URL 필요). 알림은 클라이언트가 /api/notify로 별도 처리.
+        // 완료 콜백은 배포 환경에서만 발화(공개 URL 필요).
         console.log("garmin blob uploaded:", blob.pathname);
       },
     });

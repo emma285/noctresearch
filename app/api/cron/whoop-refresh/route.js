@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {
-  // Vercel Cron 인증 — CRON_SECRET 설정 시 Bearer 헤더 확인 (routine-check와 동일)
+  // Vercel Cron 인증 — CRON_SECRET 설정 시 Bearer 헤더 확인
   const secret = process.env.CRON_SECRET;
   if (secret) {
     const auth = request.headers.get("authorization") || "";
