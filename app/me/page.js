@@ -4,6 +4,7 @@ import AppShell, { AppBody } from "../../components/app/AppShell";
 import { Surface, Row, SectionHeader } from "../../components/app/primitives";
 import LogoutAction from "../../components/app/LogoutAction";
 import WhoopStatusIcon from "../../components/whoop/WhoopStatusIcon";
+import { ShieldCheck } from "lucide-react";
 import { isCoachEmail } from "../../lib/coach";
 import { getWhoopStatus } from "../../lib/whoop/read";
 
@@ -41,6 +42,7 @@ export default async function MePage() {
 
         <SectionHeader title="계정" />
         <Surface>
+          <Row icon={ShieldCheck} title="개인정보처리방침" href="/privacy" />
           <LogoutAction />
         </Surface>
       </AppBody>
