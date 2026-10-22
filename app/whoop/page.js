@@ -1,6 +1,7 @@
 // app/whoop/page.js — 선수 WHOOP 페이지 (내정보 > 기기 연동 · 홈 WHOOP 카드에서 진입).
 // 미연결: 안내 + 연결 버튼 / 연결됨: 지난밤 요약 + 최근 2주 차트 + 해제 / 재연결 필요: 재연결 안내.
 import { currentUser } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { ChevronLeft, Link2, RefreshCw } from "lucide-react";
 import AppShell, { AppBody } from "../../components/app/AppShell";
@@ -9,6 +10,7 @@ import WhoopSummary from "../../components/whoop/WhoopSummary";
 import WhoopCharts from "../../components/whoop/WhoopCharts";
 import WhoopDisconnect from "../../components/whoop/WhoopDisconnect";
 import WhoopStatusIcon from "../../components/whoop/WhoopStatusIcon";
+import ClearWhoopNotice from "../../components/whoop/ClearWhoopNotice";
 import { getWhoopStatus, getWhoopDays, SHOW_WHOOP_DATA_TO_ATHLETES } from "../../lib/whoop/read";
 
 export const metadata = { title: "WHOOP | NOCT" };
@@ -31,9 +33,13 @@ export default async function WhoopPage({ searchParams }) {
   const { status } = await getWhoopStatus(email);
   const linked = status === "active" || status === "needs_reauth";
   const days = linked && SHOW_WHOOP_DATA_TO_ATHLETES ? await getWhoopDays(email, 14) : [];
-  const rawNotice = NOTICE[searchParams?.whoop];
+  // 결과: 주소(?whoop=) 우선, 없으면 callback이 남긴 2분짜리 쿠키(주소 끝이 떨어졌을 때 예비). 보여준 뒤 쿠키는 지움.
+  const noticeCookie = cookies().get("whoop_notice")?.value;
+  const fromCookie = noticeCookie ? Object.fromEntries(new URLSearchParams(noticeCookie)) : {};
+  const result = searchParams?.whoop ? searchParams : fromCookie;
+  const rawNotice = NOTICE[result.whoop];
   // hint는 주소창에서 바꿀 수 있으니 가린 이메일 형태(a***@도메인)일 때만 표시
-  const hint = /^.\*\*\*@[\w.-]+$/.test(searchParams?.hint || "") ? searchParams.hint : "";
+  const hint = /^.\*\*\*@[\w.-]+$/.test(result.hint || "") ? result.hint : "";
   const notice = typeof rawNotice === "function" ? rawNotice(hint) : rawNotice;
 
   return (
@@ -49,6 +55,7 @@ export default async function WhoopPage({ searchParams }) {
       </div>
 
       <AppBody className="pt-2">
+        {noticeCookie ? <ClearWhoopNotice /> : null}
         {notice ? <div className="mt-2 text-[13px] font-semibold text-primary bg-primary/10 rounded-xl px-4 py-3">{notice}</div> : null}
 
         {!linked ? (

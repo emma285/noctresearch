@@ -16,12 +16,19 @@ function maskEmail(email) {
   return `${local.slice(0, 1)}***@${domain || ""}`;
 }
 
+// 결과는 주소(?whoop=)와 2분짜리 쿠키 두 곳에 실어 보냄.
+// WHOOP에서 돌아올 때 Clerk 로그인 재확인(handshake)을 거치며 주소 끝이 떨어질 수 있어서, 쿠키가 예비.
+const NOTICE_COOKIE = "whoop_notice"; // app/whoop/page.js 에서 읽음
+
 function back(request, result, extra = {}) {
   const url = new URL("/whoop", request.url);
   url.searchParams.set("whoop", result);
   for (const [k, v] of Object.entries(extra)) url.searchParams.set(k, v);
   const res = NextResponse.redirect(url);
   res.cookies.set(STATE_COOKIE, "", { path: "/api/whoop", maxAge: 0 });
+  res.cookies.set(NOTICE_COOKIE, new URLSearchParams({ whoop: result, ...extra }).toString(), {
+    path: "/whoop", maxAge: 120, sameSite: "lax", secure: process.env.NODE_ENV === "production",
+  });
   return res;
 }
 
