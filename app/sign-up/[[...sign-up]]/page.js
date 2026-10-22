@@ -36,6 +36,7 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [over14, setOver14] = useState(false); // 만 14세 이상 확인(필수) — 개인정보처리방침 연령 기준
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,14 +47,14 @@ export default function SignUpPage() {
 
   async function onCreate(e) {
     e.preventDefault();
-    if (!isLoaded || loading) return;
+    if (!isLoaded || loading || !over14) return;
     setLoading(true);
     setError("");
     try {
       await signUp.create({
         emailAddress: email.trim(),
         password,
-        unsafeMetadata: { name: name.trim() },
+        unsafeMetadata: { name: name.trim(), over14ConfirmedAt: new Date().toISOString() }, // 연령 확인 근거
       });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setStep("verify");
@@ -105,7 +106,11 @@ export default function SignUpPage() {
         <input type="password" autoComplete="new-password" placeholder="비밀번호 (8자 이상)" value={password} onChange={(e) => setPassword(e.target.value)} required className={INPUT} />
         {/* Clerk 봇 방지 위젯 (활성 시에만 표시) */}
         <div id="clerk-captcha" />
-        <button type="submit" disabled={loading} className={BTN}>{loading ? "만드는 중…" : "계정 만들기"}</button>
+        <label className="flex items-center gap-2.5 mt-1 text-[14px] text-white/80 cursor-pointer select-none">
+          <input type="checkbox" checked={over14} onChange={(e) => setOver14(e.target.checked)} required className="w-[18px] h-[18px] accent-white" />
+          <span><span className="text-white/50">[필수]</span> 만 14세 이상입니다</span>
+        </label>
+        <button type="submit" disabled={loading || !over14} className={BTN}>{loading ? "만드는 중…" : "계정 만들기"}</button>
       </form>
       <p className="text-[14px] text-white/50 text-center mt-7">이미 계정이 있나요? <a href="/sign-in" className="text-white font-semibold">로그인</a></p>
     </AuthLayout>
