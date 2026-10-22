@@ -107,6 +107,7 @@ export default function SignUpPage() {
         <button type="submit" disabled={loading || !over14} className={BTN}>{loading ? "만드는 중…" : "계정 만들기"}</button>
       </form>
       <p className="text-[14px] text-white/50 text-center mt-7">이미 계정이 있나요? <a href="/sign-in" className="text-white font-semibold">로그인</a></p>
+      <p className="text-[12.5px] text-white/40 text-center mt-3"><a href="/privacy" target="_blank" className="underline underline-offset-2">개인정보처리방침</a></p>
     </AuthLayout>
   ) : (
     <AuthLayout title={"이메일을\n확인해 주세요"} sub={`${email}로 보낸 6자리 코드를 입력해 주세요.`}>

@@ -72,6 +72,7 @@ export default async function WhoopPage({ searchParams }) {
             </Surface>
             <p className="text-[12px] text-muted-foreground mt-3 leading-relaxed">
               연결 버튼을 누르면 WHOOP 로그인 화면으로 이동해요. 언제든 이 화면에서 연결을 해제할 수 있어요.
+              {" "}<Link href="/privacy" className="underline underline-offset-2">개인정보처리방침</Link>
             </p>
           </>
         ) : (
