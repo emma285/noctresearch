@@ -1,6 +1,7 @@
 "use client";
 // 대시보드 선수 테이블 행 — 행 전체 클릭 시 상세로. 액션 버튼은 각자 목적지(전파 차단).
 import { useRouter } from "next/navigation";
+import WhoopStatusIcon from "../whoop/WhoopStatusIcon";
 
 export default function AthleteRow({ a }) {
   const router = useRouter();
@@ -11,7 +12,7 @@ export default function AthleteRow({ a }) {
       <td className="px-4 py-3 border-b border-[#e7e9ed]">
         <div className="flex items-center gap-2.5">
           <span className="w-8 h-8 rounded-full bg-[#e4e7ec] flex-none flex items-center justify-center text-[12px] font-bold text-[#6b7280]">{(a.name || "선")[0]}</span>
-          <span className="min-w-0"><span className="block text-[13px] font-bold text-[#1b2a3f] truncate">{a.name}</span><span className="block text-[11.5px] text-[#9298a2]">{a.sport || "선수"}</span></span>
+          <span className="min-w-0"><span className="flex items-center gap-2 text-[13px] font-bold text-[#1b2a3f]"><span className="truncate">{a.name}</span><WhoopStatusIcon status={a.whoopStatus} size={14} /></span><span className="block text-[11.5px] text-[#9298a2]">{a.sport || "선수"}</span></span>
         </div>
       </td>
       <td className="px-4 py-3 border-b border-[#e7e9ed]">

@@ -20,9 +20,10 @@ import CoachScheduleEditor from "../../../../components/coach/CoachScheduleEdito
 import ReportPublishToggle from "../../../../components/coach/ReportPublishToggle";
 import WhoopCharts from "../../../../components/whoop/WhoopCharts";
 import WhoopSyncBar from "../../../../components/whoop/WhoopSyncBar";
+import WhoopStatusIcon from "../../../../components/whoop/WhoopStatusIcon";
 import { getWhoopStatus, getWhoopDays } from "../../../../lib/whoop/read";
 
-const WHOOP_BADGE = { active: { t: "연결됨", c: "bg-[#e7f4ec] text-[#1f8a4c]" }, needs_reauth: { t: "재연결 필요", c: "bg-[#fdecea] text-[#c0392b]" } };
+const WHOOP_LINKED = ["active", "needs_reauth"]; // 패널 표시 대상(상태는 WhoopStatusIcon)
 import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
 import ProtocolCompare from "../../../../components/coach/ProtocolCompare";
 import AddSessionForm from "../../../../components/coach/AddSessionForm";
@@ -88,7 +89,7 @@ export default async function CoachClientDetail({ params }) {
   const uploads = await getAttachments(email);
   // WHOOP — 연결(또는 재연결 필요)된 선수만 패널 표시
   const whoop = email ? await getWhoopStatus(email) : { status: "none" };
-  const whoopDays = WHOOP_BADGE[whoop.status] ? await getWhoopDays(email, 14) : [];
+  const whoopDays = WHOOP_LINKED.includes(whoop.status) ? await getWhoopDays(email, 14) : [];
   // 프로토콜 목표 vs 실제 순응도(실제 로그 있는 날 기준)
   const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
   const targetSummary = adherence(sleepTargets, sleepByDate);
@@ -156,8 +157,8 @@ export default async function CoachClientDetail({ params }) {
               </div>
             </Panel>
 
-            {WHOOP_BADGE[whoop.status] ? (
-              <Panel title="WHOOP · 최근 2주" right={<span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${WHOOP_BADGE[whoop.status].c}`}>{WHOOP_BADGE[whoop.status].t}</span>}>
+            {WHOOP_LINKED.includes(whoop.status) ? (
+              <Panel title="WHOOP · 최근 2주" right={<WhoopStatusIcon status={whoop.status} />}>
                 <WhoopSyncBar athleteRef={athlete.pageId || id} lastCheckedAt={whoop.lastCheckedAt ? new Date(whoop.lastCheckedAt).toISOString() : null} lastCheckSource={whoop.lastCheckSource} />
                 <div className="p-4">
                   <WhoopCharts days={whoopDays} compact />

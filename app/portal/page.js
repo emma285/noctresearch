@@ -10,7 +10,7 @@ import { getAthleteByEmail, getAthleteByRef, getSessionsByAthlete, getAllAthlete
 import { getAthleteEvents } from "../../lib/calendar";
 import { kstToday, getLatestLogTz } from "../../lib/log";
 import { HOME_TZ, todayIn, wallInTz } from "../../lib/tz";
-import { getWhoopStatus, getWhoopDays, SHOW_WHOOP_DATA_TO_ATHLETES } from "../../lib/whoop/read";
+import { getWhoopStatus, getWhoopDays, getWhoopStatusMap, SHOW_WHOOP_DATA_TO_ATHLETES } from "../../lib/whoop/read";
 import WhoopSummary from "../../components/whoop/WhoopSummary";
 
 const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0ab", 경기: "#F4978E", 이동: "#7EC8E3", 훈련: "#A0B0FF", 기타: "#6b7280" };
@@ -35,7 +35,7 @@ function progShort(program) {
 }
 async function getAthletes() {
   try {
-    const [rows, latestSession] = await Promise.all([getAllAthletes(), getNextGuideSessionByClient()]);
+    const [rows, latestSession, whoopStatus] = await Promise.all([getAllAthletes(), getNextGuideSessionByClient(), getWhoopStatusMap()]);
     const list = rows
       .filter((a) => a.email && !COACH_EMAILS.includes(String(a.email).toLowerCase()))
       .map((a) => ({
@@ -50,6 +50,7 @@ async function getAthletes() {
         programLabel: progShort(a.program),
         sport: a.sport || "",
         latestSessionId: latestSession[a.pageId] || "",
+        whoopStatus: whoopStatus[String(a.email).toLowerCase()] || "none",
       }));
     const rank = (a) => (a.ongoing ? 0 : a.intakeDone ? 1 : 2);
     list.sort((x, y) => rank(x) - rank(y) || (x.nextSession && y.nextSession ? x.nextSession.localeCompare(y.nextSession) : x.nextSession ? -1 : y.nextSession ? 1 : x.name.localeCompare(y.name)));
