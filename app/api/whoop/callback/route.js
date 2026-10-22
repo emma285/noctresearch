@@ -5,14 +5,21 @@ import { cookies } from "next/headers";
 import { getCurrentUser } from "../../../../lib/whoop/session";
 import { verifyOAuthState, STATE_COOKIE } from "../../../../lib/whoop/crypto";
 import { exchangeCode, whoopGet } from "../../../../lib/whoop/api";
-import { saveConnection, backfill } from "../../../../lib/whoop/store";
+import { saveConnection, backfill, findOtherActiveEmail } from "../../../../lib/whoop/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function back(request, result) {
+// a***@gmail.com 형태로 가림
+function maskEmail(email) {
+  const [local, domain] = String(email).split("@");
+  return `${local.slice(0, 1)}***@${domain || ""}`;
+}
+
+function back(request, result, extra = {}) {
   const url = new URL("/whoop", request.url);
   url.searchParams.set("whoop", result);
+  for (const [k, v] of Object.entries(extra)) url.searchParams.set(k, v);
   const res = NextResponse.redirect(url);
   res.cookies.set(STATE_COOKIE, "", { path: "/api/whoop", maxAge: 0 });
   return res;
@@ -36,6 +43,15 @@ export async function GET(request) {
   try {
     const tokens = await exchangeCode(code);
     const profile = await whoopGet("/v2/user/profile/basic", tokens.access_token);
+
+    // 같은 WHOOP 계정이 다른 앱 계정에 연결돼 있으면 저장하지 않고 안내.
+    // 방금 받은 토큰은 버리기만 함 — WHOOP 권한 취소(revoke)를 부르면 기존 계정 연결까지 끊길 수 있음.
+    const otherEmail = await findOtherActiveEmail(profile?.user_id, user.email);
+    if (otherEmail) {
+      console.log("whoop callback: already linked to another account", user.email);
+      return back(request, "already_linked", { hint: maskEmail(otherEmail) });
+    }
+
     await saveConnection({ email: user.email, whoopUserId: profile?.user_id ?? null, tokens });
 
     // 백필 실패해도 연결 자체는 유지 (이후 웹훅/재시도로 채움)

@@ -20,6 +20,8 @@ const NOTICE = {
   invalid_state: "연결 확인에 실패했어요. 다시 시도해주세요.",
   login_required: "로그인 후 다시 시도해주세요.",
   error: "연결 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.",
+  already_linked: (hint) =>
+    `이 WHOOP 계정은 이미 다른 계정${hint ? `(${hint})` : ""}에 연결돼 있어요. 그 계정에서 해제한 뒤 다시 연결해 주세요.`,
 };
 
 export default async function WhoopPage({ searchParams }) {
@@ -28,7 +30,10 @@ export default async function WhoopPage({ searchParams }) {
   const { status } = await getWhoopStatus(email);
   const linked = status === "active" || status === "needs_reauth";
   const days = linked && SHOW_WHOOP_DATA_TO_ATHLETES ? await getWhoopDays(email, 14) : [];
-  const notice = NOTICE[searchParams?.whoop];
+  const rawNotice = NOTICE[searchParams?.whoop];
+  // hint는 주소창에서 바꿀 수 있으니 가린 이메일 형태(a***@도메인)일 때만 표시
+  const hint = /^.\*\*\*@[\w.-]+$/.test(searchParams?.hint || "") ? searchParams.hint : "";
+  const notice = typeof rawNotice === "function" ? rawNotice(hint) : rawNotice;
 
   return (
     <AppShell>
