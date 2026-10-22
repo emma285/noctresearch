@@ -8,6 +8,7 @@ import { Surface, SectionHeader, Row, StatusBadge } from "../../components/app/p
 import WhoopSummary from "../../components/whoop/WhoopSummary";
 import WhoopCharts from "../../components/whoop/WhoopCharts";
 import WhoopDisconnect from "../../components/whoop/WhoopDisconnect";
+import WhoopStatusIcon from "../../components/whoop/WhoopStatusIcon";
 import { getWhoopStatus, getWhoopDays, SHOW_WHOOP_DATA_TO_ATHLETES } from "../../lib/whoop/read";
 
 export const metadata = { title: "WHOOP | NOCT" };
@@ -86,11 +87,14 @@ export default async function WhoopPage({ searchParams }) {
               </>
             ) : (
               <Surface className="mt-4">
-                <div className="p-4">
-                  <div className="text-base font-semibold text-foreground">WHOOP 기록이 코칭에 연결돼 있어요</div>
-                  <p className="text-[13px] text-muted-foreground mt-1.5 leading-relaxed">
-                    수면·회복 기록은 매일 자동으로 들어오고, 코치가 확인해요.
-                  </p>
+                <div className="p-4 flex items-start gap-3">
+                  <span className="mt-0.5"><WhoopStatusIcon status={status} size={22} /></span>
+                  <div className="min-w-0">
+                    <div className="text-base font-semibold text-foreground">WHOOP 기록이 코칭에 연결돼 있어요</div>
+                    <p className="text-[13px] text-muted-foreground mt-1.5 leading-relaxed">
+                      수면·회복 기록은 매일 자동으로 들어오고, 코치가 확인해요.
+                    </p>
+                  </div>
                 </div>
               </Surface>
             )}
