@@ -1,7 +1,8 @@
 // app/api/whoop/connect/route.js
 // "WHOOP 연결하기" 클릭 → state(CSRF + Clerk userId 바인딩) 쿠키 발급 → WHOOP 동의 화면으로 302.
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
+import { hasWhoopConsent } from "../../../../lib/consent";
 import { newOAuthState, STATE_COOKIE } from "../../../../lib/whoop/crypto";
 import { buildAuthorizeUrl } from "../../../../lib/whoop/api";
 
@@ -14,6 +15,12 @@ export async function GET(request) {
     const url = new URL("/sign-in", request.url);
     url.searchParams.set("redirect_url", "/api/whoop/connect");
     return NextResponse.redirect(url);
+  }
+
+  // WHOOP 기록 저장 동의 없이 주소로 직접 들어오면 WHOOP 화면으로 되돌림 (동의 시트는 /whoop 버튼에서)
+  const cc = typeof clerkClient === "function" ? await clerkClient() : clerkClient;
+  if (!hasWhoopConsent(await cc.users.getUser(userId))) {
+    return NextResponse.redirect(new URL("/whoop?whoop=consent_required", request.url));
   }
 
   const { state, cookie } = newOAuthState(userId);

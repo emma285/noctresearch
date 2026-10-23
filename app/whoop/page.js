@@ -3,14 +3,15 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { ChevronLeft, Link2, RefreshCw } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import AppShell, { AppBody } from "../../components/app/AppShell";
-import { Surface, SectionHeader, Row, StatusBadge } from "../../components/app/primitives";
+import { Surface, SectionHeader, StatusBadge } from "../../components/app/primitives";
 import WhoopSummary from "../../components/whoop/WhoopSummary";
 import WhoopCharts from "../../components/whoop/WhoopCharts";
 import WhoopDisconnect from "../../components/whoop/WhoopDisconnect";
 import WhoopStatusIcon from "../../components/whoop/WhoopStatusIcon";
 import ClearWhoopNotice from "../../components/whoop/ClearWhoopNotice";
+import WhoopConnectButton from "../../components/whoop/WhoopConnectButton";
 import { getWhoopStatus, getWhoopDays, SHOW_WHOOP_DATA_TO_ATHLETES } from "../../lib/whoop/read";
 
 export const metadata = { title: "WHOOP | NOCT" };
@@ -22,6 +23,7 @@ const NOTICE = {
   denied: "WHOOP 연결을 취소했어요.",
   invalid_state: "연결 확인에 실패했어요. 다시 시도해주세요.",
   login_required: "로그인 후 다시 시도해주세요.",
+  consent_required: "WHOOP을 연결하려면 기록 저장 동의가 필요해요.",
   error: "연결 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.",
   already_linked: (hint) =>
     `이 WHOOP 계정은 이미 다른 계정${hint ? `(${hint})` : ""}에 연결돼 있어요. 그 계정에서 해제한 뒤 다시 연결해 주세요.`,
@@ -68,7 +70,7 @@ export default async function WhoopPage({ searchParams }) {
                   따로 입력할 필요 없이 코치와 함께 볼 수 있어요.
                 </p>
               </div>
-              <Row icon={Link2} action title="WHOOP 연결하기" href="/api/whoop/connect" />
+              <WhoopConnectButton title="WHOOP 연결하기" />
             </Surface>
             <p className="text-[12px] text-muted-foreground mt-3 leading-relaxed">
               연결 버튼을 누르면 WHOOP 로그인 화면으로 이동해요. 언제든 이 화면에서 연결을 해제할 수 있어요.
@@ -79,7 +81,7 @@ export default async function WhoopPage({ searchParams }) {
           <>
             {status === "needs_reauth" ? (
               <Surface className="mt-4">
-                <Row icon={RefreshCw} action title="WHOOP 다시 연결하기" desc="연결이 만료돼 새 기록이 들어오지 않고 있어요." href="/api/whoop/connect" />
+                <WhoopConnectButton reconnect title="WHOOP 다시 연결하기" desc="연결이 만료돼 새 기록이 들어오지 않고 있어요." />
               </Surface>
             ) : null}
 
