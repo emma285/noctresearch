@@ -78,6 +78,8 @@ export default function SignUpPage() {
       const res = await signUp.attemptEmailAddressVerification({ code: code.trim() });
       if (res.status === "complete") {
         await setActive({ session: res.createdSessionId });
+        // 코치 콘솔 마스터에 가입자 등록. 포털이 마스터를 읽으므로 기다린 뒤 이동(실패해도 진행).
+        await fetch("/api/signup-sync", { method: "POST" }).catch(() => {});
         router.push("/portal");
       } else {
         setError("인증을 완료하지 못했어요. 코드를 다시 확인해 주세요.");
