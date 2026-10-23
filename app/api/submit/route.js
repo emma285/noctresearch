@@ -5,11 +5,23 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { getAthleteByEmail, updateMasterFields, createSession, saveIntakeResponse } from "../../../lib/master";
+import { hasHealthConsent } from "../../../lib/consent";
 
 // ─── API Handler ───
 export async function POST(request) {
   try {
     const data = await request.json();
+
+    // 건강 정보 별도 동의 없으면 저장하지 않음 (가입 화면 또는 앱 진입 팝업에서 동의)
+    {
+      const { userId } = auth();
+      if (userId) {
+        const cc = typeof clerkClient === "function" ? await clerkClient() : clerkClient;
+        if (!hasHealthConsent(await cc.users.getUser(userId))) {
+          return NextResponse.json({ success: false, message: "건강 정보 수집·이용 동의가 필요해요." }, { status: 403 });
+        }
+      }
+    }
 
     // 로그인 상태로 제출하면 Clerk에 "질문지 완료" 표시 → 포털이 전/후 상태 전환
     try {

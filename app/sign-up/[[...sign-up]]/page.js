@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useSignUp, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { krError } from "../../../components/auth/clerkError";
+import HealthConsentNotice from "../../../components/consent/HealthConsentNotice";
 
 // 풀-네이비 이머시브 레이아웃 (로그인과 동일). 모듈 레벨 — input 포커스 보존.
 function AuthLayout({ title, sub, children, eyebrow }) {
@@ -37,6 +38,8 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [over14, setOver14] = useState(false); // 만 14세 이상 확인(필수) — 개인정보처리방침 연령 기준
+  const [health, setHealth] = useState(false); // 건강 정보(민감정보) 별도 동의(필수)
+  const [showHealth, setShowHealth] = useState(false); // 동의 내용 "보기" 펼침
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,14 +50,15 @@ export default function SignUpPage() {
 
   async function onCreate(e) {
     e.preventDefault();
-    if (!isLoaded || loading || !over14) return;
+    if (!isLoaded || loading || !over14 || !health) return;
     setLoading(true);
     setError("");
     try {
+      const now = new Date().toISOString();
       await signUp.create({
         emailAddress: email.trim(),
         password,
-        unsafeMetadata: { name: name.trim(), over14ConfirmedAt: new Date().toISOString() }, // 연령 확인 근거
+        unsafeMetadata: { name: name.trim(), over14ConfirmedAt: now, healthConsentAt: now }, // 연령 확인·건강 정보 동의 근거
       });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setStep("verify");
@@ -104,7 +108,19 @@ export default function SignUpPage() {
           <input type="checkbox" checked={over14} onChange={(e) => setOver14(e.target.checked)} required className="w-[18px] h-[18px] accent-white" />
           <span><span className="text-white/50">[필수]</span> 만 14세 이상입니다</span>
         </label>
-        <button type="submit" disabled={loading || !over14} className={BTN}>{loading ? "만드는 중…" : "계정 만들기"}</button>
+        <div className="flex items-center gap-2.5 text-[14px] text-white/80">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" checked={health} onChange={(e) => setHealth(e.target.checked)} required className="w-[18px] h-[18px] accent-white" />
+            <span><span className="text-white/50">[필수]</span> 건강 정보 수집·이용 동의</span>
+          </label>
+          <button type="button" onClick={() => setShowHealth((v) => !v)} className="ml-auto text-[13px] text-white/50 underline underline-offset-2">{showHealth ? "접기" : "보기"}</button>
+        </div>
+        {showHealth ? (
+          <div className="rounded-xl bg-white/[0.06] border border-white/10 p-4 text-white/85">
+            <HealthConsentNotice />
+          </div>
+        ) : null}
+        <button type="submit" disabled={loading || !over14 || !health} className={BTN}>{loading ? "만드는 중…" : "계정 만들기"}</button>
       </form>
       <p className="text-[14px] text-white/50 text-center mt-7">이미 계정이 있나요? <a href="/sign-in" className="text-white font-semibold">로그인</a></p>
       <p className="text-[12.5px] text-white/40 text-center mt-3"><a href="/privacy" target="_blank" className="underline underline-offset-2">개인정보처리방침</a></p>

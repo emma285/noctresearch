@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { saveAttachment } from "../../../lib/attachments";
+import { hasHealthConsent } from "../../../lib/consent";
 
 async function getClerk() {
   return typeof clerkClient === "function" ? await clerkClient() : clerkClient;
@@ -16,6 +17,10 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "추가한 내용이 없어요." }, { status: 400 });
     }
     const { userId } = auth();
+    // 건강 정보 별도 동의 없으면 저장하지 않음
+    if (userId && !hasHealthConsent(await (await getClerk()).users.getUser(userId))) {
+      return NextResponse.json({ success: false, message: "건강 정보 수집·이용 동의가 필요해요." }, { status: 403 });
+    }
     let email = "";
     if (userId) {
       try {

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import HealthConsentGate from "../components/consent/HealthConsentGate";
 
 export const viewport = {
   themeColor: "#0D1B2A",
@@ -40,7 +41,10 @@ export default function RootLayout({ children }) {
       signUpFallbackRedirectUrl="/portal"
     >
       <html lang="ko">
-        <body className="antialiased">{children}</body>
+        <body className="antialiased">
+          {children}
+          <HealthConsentGate />
+        </body>
       </html>
     </ClerkProvider>
   );
