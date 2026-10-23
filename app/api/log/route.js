@@ -1,18 +1,24 @@
 // app/api/log/route.js
 // 선수 기록(수면·루틴) 저장·조회 — Neon(logs 테이블). 이메일(user_email)로 식별.
 // 응답 형태는 기존 Notion 버전과 100% 동일하게 유지(프론트 무변경).
+// 본인 기록만: 이메일은 요청값(user)이 아니라 로그인 세션에서 가져옴. 비로그인 → 401.
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { and, eq, gte, lt, desc } from "drizzle-orm";
 import { db, schema } from "../../../lib/db";
+import { getCurrentUser } from "../../../lib/whoop/session";
+
+const UNAUTHORIZED = () => NextResponse.json({ success: false, message: "로그인이 필요해요." }, { status: 401 });
 
 const { logs } = schema;
 
 // ── 저장 ──  POST { user, kind:'sleep'|'routine', date, summary, data, overwrite? }
 export async function POST(request) {
   try {
+    const me = await getCurrentUser();
+    if (!me) return UNAUTHORIZED();
     const body = await request.json();
-    const user = body.user || "unknown";
+    const user = me.email;
     const kind = body.kind === "sleep" ? "sleep" : "routine";
     const date = body.date || new Date().toISOString().slice(0, 10);
     const summary = body.summary || "";
@@ -42,12 +48,14 @@ export async function POST(request) {
 // ── 수정(블록 1개) ──  PATCH { id, summary, data }
 export async function PATCH(request) {
   try {
+    const me = await getCurrentUser();
+    if (!me) return UNAUTHORIZED();
     const { id, summary, data } = await request.json();
     if (!id) return NextResponse.json({ success: false, message: "id 없음" }, { status: 400 });
     const patch = {};
     if (summary !== undefined) patch.summary = summary;
     if (data !== undefined) patch.data = data;
-    await db.update(logs).set(patch).where(eq(logs.id, id));
+    await db.update(logs).set(patch).where(and(eq(logs.id, id), eq(logs.userEmail, me.email)));
     revalidateTag("athlete-data");
     return NextResponse.json({ success: true });
   } catch (e) {
@@ -58,9 +66,11 @@ export async function PATCH(request) {
 // ── 삭제 ──  DELETE { id }
 export async function DELETE(request) {
   try {
+    const me = await getCurrentUser();
+    if (!me) return UNAUTHORIZED();
     const { id } = await request.json();
     if (!id) return NextResponse.json({ success: false, message: "id 없음" }, { status: 400 });
-    await db.delete(logs).where(eq(logs.id, id));
+    await db.delete(logs).where(and(eq(logs.id, id), eq(logs.userEmail, me.email)));
     revalidateTag("athlete-data");
     return NextResponse.json({ success: true });
   } catch (e) {
@@ -68,14 +78,16 @@ export async function DELETE(request) {
   }
 }
 
-// ── 조회(월별) ──  GET ?user=<email>&month=YYYY-MM
+// ── 조회(월별) ──  GET ?user=<email>&month=YYYY-MM  (user는 호환용, 실제는 로그인 본인)
 // → { days: { "YYYY-MM-DD": {sleep, routine, sleepSummary, items[], blocks[]} } }
 export async function GET(request) {
   try {
     const url = new URL(request.url);
-    const user = url.searchParams.get("user");
     const month = url.searchParams.get("month");
-    if (!user) return NextResponse.json({ ok: true, route: "log", db: "neon" });
+    if (!url.searchParams.get("user")) return NextResponse.json({ ok: true, route: "log", db: "neon" });
+    const me = await getCurrentUser();
+    if (!me) return UNAUTHORIZED();
+    const user = me.email;
 
     // 최근 로그 tz (위저드가 "타임존 바뀜" 감지용). 최근 8건 중 tz 있는 첫 값.
     if (url.searchParams.get("latestTz")) {
