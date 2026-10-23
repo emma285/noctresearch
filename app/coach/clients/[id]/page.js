@@ -21,7 +21,8 @@ import ReportPublishToggle from "../../../../components/coach/ReportPublishToggl
 import WhoopCharts from "../../../../components/whoop/WhoopCharts";
 import WhoopSyncBar from "../../../../components/whoop/WhoopSyncBar";
 import WhoopStatusIcon from "../../../../components/whoop/WhoopStatusIcon";
-import { getWhoopStatus, getWhoopDays } from "../../../../lib/whoop/read";
+import { getWhoopStatus, getWhoopDays, hasWhoopData } from "../../../../lib/whoop/read";
+import WhoopDeleteData from "../../../../components/whoop/WhoopDeleteData";
 
 const WHOOP_LINKED = ["active", "needs_reauth"]; // 패널 표시 대상(상태는 WhoopStatusIcon)
 import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
@@ -90,6 +91,8 @@ export default async function CoachClientDetail({ params }) {
   // WHOOP — 연결(또는 재연결 필요)된 선수만 패널 표시
   const whoop = email ? await getWhoopStatus(email) : { status: "none" };
   const whoopDays = WHOOP_LINKED.includes(whoop.status) ? await getWhoopDays(email, 14) : [];
+  // 코칭 종료 + WHOOP 데이터 남음 → 배정·상태 패널에 삭제 안내·버튼
+  const showWhoopDelete = athlete.status === "종료" && email ? await hasWhoopData(email) : false;
   // 프로토콜 목표 vs 실제 순응도(실제 로그 있는 날 기준)
   const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
   const targetSummary = adherence(sleepTargets, sleepByDate);
@@ -208,6 +211,7 @@ export default async function CoachClientDetail({ params }) {
             <Panel title="배정 · 상태">
               <div className="p-4">
                 <CoachManageForm athlete={{ pageId: athlete.pageId, nextSession: athlete.nextSession, status: athlete.status, program: athlete.program }} />
+                {showWhoopDelete ? <WhoopDeleteData athleteRef={athlete.pageId || id} athleteName={athlete.name || email} /> : null}
               </div>
             </Panel>
 
