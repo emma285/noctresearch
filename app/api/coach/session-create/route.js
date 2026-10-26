@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { createSession } from "../../../../lib/master";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 async function getClerk() { return typeof clerkClient === "function" ? await clerkClient() : clerkClient; }
@@ -30,6 +31,7 @@ export async function POST(request) {
     }
 
     const id = await createSession(clientId, { n, sessionAt });
+    await logAccess({ actor: me.emailAddresses[0].emailAddress, action: "update", resource: "세션 생성", target: { clientId }, path: "/api/coach/session-create" });
     if (!id) return NextResponse.json({ success: false, message: "세션 생성 실패" }, { status: 400 });
 
     revalidateTag("athlete-data");

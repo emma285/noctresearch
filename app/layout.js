@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import HealthConsentGate from "../components/consent/HealthConsentGate";
+import AccessLogPing from "../components/AccessLogPing";
 
 export const viewport = {
   themeColor: "#0D1B2A",
@@ -44,6 +45,7 @@ export default function RootLayout({ children }) {
         <body className="antialiased">
           {children}
           <HealthConsentGate />
+          <AccessLogPing />
         </body>
       </html>
     </ClerkProvider>

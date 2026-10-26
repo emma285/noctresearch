@@ -9,6 +9,7 @@ import { db, schema } from "../../../../lib/db";
 import { isCoachEmail } from "../../../../lib/coach";
 import { extractProtocolTargets } from "../../../../lib/protocolExtract";
 import { kstToday } from "../../../../lib/log";
+import { logAccess } from "../../../../lib/accessLog";
 
 const { sleepTargets } = schema;
 export const runtime = "nodejs";
@@ -34,7 +35,8 @@ async function readProtocolTargets(slug) {
 
 // POST { clientId, slug } → 그 프로토콜 목표를 sleep_targets에 반영(같은 slug 기존분 교체)
 export async function POST(request) {
-  if (!(await requireCoach())) return NextResponse.json({ success: false, message: "코치만 가능해요." }, { status: 403 });
+  const coach = await requireCoach();
+  if (!coach) return NextResponse.json({ success: false, message: "코치만 가능해요." }, { status: 403 });
   try {
     const { clientId, slug } = await request.json();
     if (!clientId || !slug) return NextResponse.json({ success: false, message: "clientId·slug가 필요해요." }, { status: 400 });
@@ -48,6 +50,7 @@ export async function POST(request) {
     if (!rows.length) return NextResponse.json({ success: false, message: "유효한 목표가 없어요." });
     await db.delete(sleepTargets).where(and(eq(sleepTargets.clientId, clientId), eq(sleepTargets.protocolEventId, slug)));
     await db.insert(sleepTargets).values(rows);
+    await logAccess({ actor: coach, action: "update", resource: `목표 수면 (${slug})`, target: { clientId }, path: "/api/coach/targets" });
     return NextResponse.json({ success: true, count: rows.length, name: data.name || slug });
   } catch (e) {
     return NextResponse.json({ success: false, error: e?.message || "저장 실패" }, { status: 500 });
@@ -56,11 +59,13 @@ export async function POST(request) {
 
 // DELETE { clientId, slug } → 그 프로토콜 목표 제거
 export async function DELETE(request) {
-  if (!(await requireCoach())) return NextResponse.json({ success: false, message: "코치만 가능해요." }, { status: 403 });
+  const coach = await requireCoach();
+  if (!coach) return NextResponse.json({ success: false, message: "코치만 가능해요." }, { status: 403 });
   try {
     const { clientId, slug } = await request.json();
     if (!clientId || !slug) return NextResponse.json({ success: false, message: "clientId·slug가 필요해요." }, { status: 400 });
     await db.delete(sleepTargets).where(and(eq(sleepTargets.clientId, clientId), eq(sleepTargets.protocolEventId, slug)));
+    await logAccess({ actor: coach, action: "delete", resource: `목표 수면 (${slug})`, target: { clientId }, path: "/api/coach/targets" });
     return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ success: false, error: e?.message }, { status: 500 });

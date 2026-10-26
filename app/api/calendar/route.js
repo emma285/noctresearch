@@ -5,6 +5,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../lib/coach";
 import { getAthleteByEmail } from "../../../lib/master";
 import { createEvent, updateEvent, deleteEvent, getEventOwner, ATHLETE_TYPES } from "../../../lib/calendar";
+import { logAccess } from "../../../lib/accessLog";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,7 @@ export async function POST(request) {
     const target = me.coach ? masterPageId : me.myPageId;
     const r = await createEvent(target, { type, title, start, end, memo, isPublic: me.coach ? isPublic : true, source: me.coach ? "코치" : "선수" });
     if (!r.ok) return NextResponse.json({ success: false, message: r.reason || "생성 실패" }, { status: 400 });
+    if (me.coach) await logAccess({ actor: me.email, action: "update", resource: "선수 일정 추가", target: { clientId: target }, path: "/api/calendar" });
     revalidateTag("athlete-data");
     return NextResponse.json({ success: true, id: r.id });
   } catch (e) {
@@ -54,6 +56,7 @@ export async function PATCH(request) {
       if (type !== undefined && !ATHLETE_TYPES.includes(type)) return NextResponse.json({ success: false, message: "선택할 수 없는 종류예요." }, { status: 400 });
     }
     const ok = await updateEvent(id, { type, title, start, end, memo, isPublic: me.coach ? isPublic : undefined });
+    if (me.coach && ok) await logAccess({ actor: me.email, action: "update", resource: "선수 일정 수정", target: { eventId: id }, path: "/api/calendar" });
     revalidateTag("athlete-data");
     return NextResponse.json({ success: ok });
   } catch (e) {
@@ -71,6 +74,8 @@ export async function DELETE(request) {
       const owner = await getEventOwner(id);
       if (!me.myPageId || owner !== me.myPageId) return NextResponse.json({ success: false, message: "본인 일정만 삭제할 수 있어요." }, { status: 403 });
     }
+    // 삭제 후엔 대상 선수를 찾을 수 없어서 삭제 전에 기록
+    if (me.coach) await logAccess({ actor: me.email, action: "delete", resource: "선수 일정 삭제", target: { eventId: id }, path: "/api/calendar" });
     const ok = await deleteEvent(id);
     revalidateTag("athlete-data");
     return NextResponse.json({ success: ok });

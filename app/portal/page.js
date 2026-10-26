@@ -17,6 +17,7 @@ const TYPE_COLOR = { 세션: "#4355B0", 프로토콜: "#8E9BE8", 과제: "#9aa0a
 import AppShell, { AppBody } from "../../components/app/AppShell";
 import Hero from "../../components/app/Hero";
 import { Surface, SectionHeader, Row, StatusBadge, Metric, MetricRow, ReportRow, CheckRow } from "../../components/app/primitives";
+import { logAccess } from "../../lib/accessLog";
 
 const MASTER_DONE_STATES = ["intake제출", "온보딩완료", "진행중", "종료"];
 const CLIENT = { name: "선수" };
@@ -112,6 +113,7 @@ export default async function PortalPage({ searchParams }) {
   // 코치면 대시보드(별도 콘솔). ?as=<pageId 또는 이메일>이면 그 선수 미리보기.
   const previewRef = isCoachEmail(myEmail) && searchParams?.as ? String(searchParams.as) : null;
   if (isCoachEmail(myEmail) && !previewRef) {
+    await logAccess({ actor: myEmail, action: "view", resource: "선수 목록 (대시보드)", path: "/portal" });
     const [athletes, overview] = await Promise.all([getAthletes(), getCoachOverview()]);
     const coachName = user?.unsafeMetadata?.name || user?.firstName || myEmail?.split("@")[0] || "코치";
     return <CoachDashboard coachName={coachName} athletes={athletes} overview={overview} />;
@@ -119,6 +121,7 @@ export default async function PortalPage({ searchParams }) {
 
   // 마스터(단일 소스) 조회. 미리보기=pageId/이메일 해석, 아니면 본인 이메일. 없으면 Clerk 폴백.
   const athlete = previewRef ? await getAthleteByRef(previewRef) : (myEmail ? await getAthleteByEmail(myEmail) : null);
+  if (previewRef && athlete) await logAccess({ actor: myEmail, action: "view", resource: "선수 화면 미리보기", target: { email: athlete.email, clientId: athlete.pageId }, path: "/portal" });
   const meta = user?.publicMetadata || {};
   const masterDone = athlete?.status ? MASTER_DONE_STATES.includes(athlete.status) : null;
 

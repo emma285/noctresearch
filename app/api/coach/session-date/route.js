@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { updateSessionDate } from "../../../../lib/master";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 async function getClerk() { return typeof clerkClient === "function" ? await clerkClient() : clerkClient; }
@@ -23,6 +24,7 @@ export async function POST(request) {
     if (!sessionId) return NextResponse.json({ success: false, message: "세션 id가 필요해요." }, { status: 400 });
 
     const r = await updateSessionDate(sessionId, sessionAt || "");
+    await logAccess({ actor: me.emailAddresses[0].emailAddress, action: "update", resource: "세션 일시", target: { sessionId }, path: "/api/coach/session-date" });
     if (!r.ok) {
       const msg = r.reason === "bad-date" ? "날짜 형식이 올바르지 않아요." : r.reason === "no-session" ? "세션을 찾을 수 없어요." : (r.reason || "저장 실패");
       return NextResponse.json({ success: false, message: msg }, { status: 400 });

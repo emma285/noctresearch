@@ -5,6 +5,7 @@ import { CalendarDays } from "lucide-react";
 import { isCoachEmail } from "../../../lib/coach";
 import { getAllSessionsForCoach } from "../../../lib/master";
 import CoachShell from "../../../components/coach/CoachShell";
+import { logAccess } from "../../../lib/accessLog";
 
 export const metadata = { title: "일정 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -20,6 +21,8 @@ export default async function CoachSchedulePage() {
   const upcoming = (await getAllSessionsForCoach())
     .filter((s) => s.date && new Date(s.date).getTime() >= now - 12 * 3600000)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "view", resource: "코칭 일정", path: "/coach/schedule" });
 
   // 날짜별 그룹
   const groups = [];

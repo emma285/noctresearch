@@ -6,6 +6,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByRef } from "../../../../lib/master";
 import { deleteWhoopData } from "../../../../lib/whoop/store";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export async function POST(request) {
 
   try {
     await deleteWhoopData(athlete.email);
+    await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "delete", resource: "WHOOP 데이터", target: { email: athlete.email, clientId: athlete.pageId }, path: "/api/coach/whoop-delete" });
     revalidateTag("athlete-data");
     return NextResponse.json({ ok: true });
   } catch (e) {

@@ -5,6 +5,7 @@ import { getAllAthletes } from "../../../lib/master";
 import { resolveAssets } from "../../../lib/athleteAssets";
 import CoachShell from "../../../components/coach/CoachShell";
 import ReportPublishToggle from "../../../components/coach/ReportPublishToggle";
+import { logAccess } from "../../../lib/accessLog";
 
 export const metadata = { title: "리포트 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export default async function CoachReportsPage() {
   if (!isCoachEmail(user?.emailAddresses?.[0]?.emailAddress)) return <div className="p-10 text-center text-sm text-muted-foreground">코치 전용 페이지예요.</div>;
   const coachName = user?.unsafeMetadata?.name || user?.firstName || "코치";
   const athletes = (await getAllAthletes()).filter((a) => a.email && !COACH_EMAILS.includes(String(a.email).toLowerCase()));
+  await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "view", resource: "리포트 목록", path: "/coach/reports" });
   const withReports = athletes.map((a) => ({ a, reports: resolveAssets(a).reports, pub: new Set((a.publishedReports || []).map(String)) })).filter((x) => x.reports.length > 0);
 
   return (

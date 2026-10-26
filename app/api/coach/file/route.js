@@ -3,6 +3,7 @@
 // 슬랙/Notion의 첨부 링크가 이 라우트를 가리킴 → 코치 로그인 상태에서 열림.
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logAccess } from "../../../../lib/accessLog";
 
 const COACH_EMAILS = (process.env.COACH_EMAILS || "hi.mido.kim@gmail.com")
   .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
@@ -33,6 +34,7 @@ export async function GET(request) {
       headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
     });
     if (!res.ok) return new NextResponse("파일을 불러올 수 없어요.", { status: res.status });
+    await logAccess({ actor: email, action: "download", resource: `파일 (${target.pathname.split("/").pop()})`, target: { fileUrl: u }, path: "/api/coach/file" });
 
     const headers = new Headers();
     headers.set("Content-Type", res.headers.get("content-type") || "application/octet-stream");

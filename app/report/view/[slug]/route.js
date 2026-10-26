@@ -10,6 +10,7 @@ import path from "node:path";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByEmail } from "../../../../lib/master";
 import { resolveAssets, publishedReportSet } from "../../../../lib/athleteAssets";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export async function GET(_request, { params }) {
     let allowed = false;
     if (isCoachEmail(email)) {
       allowed = true; // 코치는 모든 리포트 열람 가능
+      await logAccess({ actor: email, action: "view", resource: `리포트 (${slug})`, target: { ref: slug }, path: `/report/view/${slug}` });
     } else {
       // 선수 본인 리포트만 — 요청 slug가 본인 리포트 목록에 있고, 그 리포트가 공개됐을 때만.
       // 공개 판정 = Neon publishedReports(콘솔 목록과 동일 소스). Neon 미연결 선수는 Clerk 메타 폴백.

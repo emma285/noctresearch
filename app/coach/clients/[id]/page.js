@@ -29,6 +29,7 @@ import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
 import ProtocolCompare from "../../../../components/coach/ProtocolCompare";
 import AddSessionForm from "../../../../components/coach/AddSessionForm";
 import SessionDateEditor from "../../../../components/coach/SessionDateEditor";
+import { logAccess } from "../../../../lib/accessLog";
 
 // 부가자료 HTML에 프로토콜 목표(#protocol-targets)가 있으면 정보 반환
 async function protocolInfo(slug) {
@@ -69,6 +70,7 @@ export default async function CoachClientDetail({ params }) {
   const athlete = await getAthleteByRef(id); // id=pageId 우선, 옛 이메일 링크도 하위호환
   if (!athlete) return <CoachShell active="athletes" coachName={coachName}><div className="p-10 text-center text-sm text-muted-foreground">선수를 찾을 수 없어요.</div></CoachShell>;
   const email = athlete.email || "";
+  await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "view", resource: "선수 상세", target: { email, clientId: athlete.pageId }, path: `/coach/clients/${id}` });
 
   const [sessions, calEvents, sleepTargets] = await Promise.all([
     athlete.pageId ? getSessionsByAthlete(athlete.pageId) : [],

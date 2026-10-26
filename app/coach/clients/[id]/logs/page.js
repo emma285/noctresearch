@@ -7,6 +7,7 @@ import { isCoachEmail } from "../../../../../lib/coach";
 import { getAthleteByRef } from "../../../../../lib/master";
 import { getLogDays } from "../../../../../lib/log";
 import { Surface, SectionHeader } from "../../../../../components/app/primitives";
+import { logAccess } from "../../../../../lib/accessLog";
 
 export const metadata = { title: "선수 기록 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function CoachAthleteLogs({ params }) {
   }
   const athlete = await getAthleteByRef(id);
   const email = athlete?.email || "";
+  if (athlete) await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "view", resource: "수면·루틴 기록 (월별)", target: { email, clientId: athlete.pageId }, path: `/coach/clients/${id}/logs` });
 
   // 최근 3개월 로그 집계
   let days = {};

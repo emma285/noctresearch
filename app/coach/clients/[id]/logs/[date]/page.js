@@ -8,6 +8,7 @@ import { getAthleteByRef } from "../../../../../../lib/master";
 import { getDayEntries } from "../../../../../../lib/log";
 import { TYPES } from "../../../../../../components/app/routineTypes";
 import { Surface, Row, SectionHeader } from "../../../../../../components/app/primitives";
+import { logAccess } from "../../../../../../lib/accessLog";
 
 export const metadata = { title: "선수 기록 상세 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function CoachAthleteDayDetail({ params }) {
   }
   const athlete = await getAthleteByRef(id);
   const email = athlete?.email || "";
+  if (athlete) await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "view", resource: `수면·루틴 기록 (${date})`, target: { email, clientId: athlete.pageId }, path: `/coach/clients/${id}/logs/${date}` });
   const { sleep, blocks } = await getDayEntries(email, date);
 
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date || "");

@@ -50,6 +50,13 @@
       "when": 1792636301336,
       "tag": "0006_early_malcolm_colcord",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792997370663,
+      "tag": "0007_access_logs",
+      "breakpoints": true
     }
   ]
 }

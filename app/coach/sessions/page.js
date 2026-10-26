@@ -5,6 +5,7 @@ import { isCoachEmail } from "../../../lib/coach";
 import { getAllSessionsForCoach } from "../../../lib/master";
 import CoachShell from "../../../components/coach/CoachShell";
 import SessionDateEditor from "../../../components/coach/SessionDateEditor";
+import { logAccess } from "../../../lib/accessLog";
 
 export const metadata = { title: "세션 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -51,6 +52,7 @@ export default async function CoachSessionsPage() {
   if (!isCoachEmail(user?.emailAddresses?.[0]?.emailAddress)) return <div className="p-10 text-center text-sm text-muted-foreground">코치 전용 페이지예요.</div>;
   const coachName = user?.unsafeMetadata?.name || user?.firstName || "코치";
   const all = await getAllSessionsForCoach();
+  await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "view", resource: "세션 목록", path: "/coach/sessions" });
   const now = Date.now();
   const upcoming = all.filter((s) => s.date && new Date(s.date).getTime() >= now - 12 * 3600000).sort((a, b) => new Date(a.date) - new Date(b.date));
   const past = all.filter((s) => !s.date || new Date(s.date).getTime() < now - 12 * 3600000);

@@ -5,6 +5,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByRef } from "../../../../lib/master";
 import { getConnection, syncConnection } from "../../../../lib/whoop/store";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export async function POST(request) {
 
   try {
     const result = await syncConnection(await getConnection(athlete.email), "manual");
+    await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "update", resource: "WHOOP 데이터 (수동 동기화)", target: { email: athlete.email, clientId: athlete.pageId }, path: "/api/coach/whoop-sync" });
     return NextResponse.json(result);
   } catch (e) {
     console.error("whoop manual sync failed:", e?.message);

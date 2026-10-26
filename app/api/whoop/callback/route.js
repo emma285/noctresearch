@@ -6,6 +6,7 @@ import { getCurrentUser } from "../../../../lib/whoop/session";
 import { verifyOAuthState, STATE_COOKIE } from "../../../../lib/whoop/crypto";
 import { exchangeCode, whoopGet } from "../../../../lib/whoop/api";
 import { saveConnection, backfill, findOtherActiveEmail } from "../../../../lib/whoop/store";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,7 @@ export async function GET(request) {
     }
 
     await saveConnection({ email: user.email, whoopUserId: profile?.user_id ?? null, tokens });
+    await logAccess({ actor: user.email, action: "whoop_connect", resource: "WHOOP 연결", path: "/api/whoop/callback" });
 
     // 백필 실패해도 연결 자체는 유지 (이후 웹훅/재시도로 채움)
     try {

@@ -6,6 +6,7 @@ import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { getAthleteByEmail, setPublishedReports } from "../../../../lib/master";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,7 @@ export async function POST(request) {
     if (on === true) set.add(String(slug)); else set.delete(String(slug));
     const publishedReports = Array.from(set);
     await setPublishedReports(row.pageId, publishedReports);
+    await logAccess({ actor: me.emailAddresses[0].emailAddress, action: "update", resource: `리포트 공개 설정 (${slug})`, target: { email: athleteEmail, clientId: row.pageId }, path: "/api/coach/publish-report" });
     revalidateTag("athlete-data");
 
     // Clerk 하위호환 동기화 (best-effort)

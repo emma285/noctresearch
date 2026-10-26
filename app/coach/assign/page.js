@@ -3,6 +3,7 @@
 // 코치 이메일이 아니면 접근 차단. 선수 정보 + 현재 배정값을 불러와 폼에 채움.
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import AssignForm from "../../../components/coach/AssignForm";
+import { logAccess } from "../../../lib/accessLog";
 
 const COACH_EMAILS = (process.env.COACH_EMAILS || "hi.mido.kim@gmail.com")
   .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
@@ -47,5 +48,6 @@ export default async function CoachAssignPage({ searchParams }) {
     return <Notice>선수를 찾을 수 없어요. (uid: {uid})</Notice>;
   }
 
+  await logAccess({ actor: myEmail, action: "view", resource: "배정 화면", target: { email: target.email, ref: uid }, path: "/coach/assign" });
   return <AssignForm target={target} />;
 }

@@ -6,6 +6,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { getCurrentUser } from "../../../../lib/whoop/session";
 import { isCoachEmail } from "../../../../lib/coach";
 import { deleteAccountData } from "../../../../lib/account";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ export async function POST(request) {
 
   try {
     await deleteAccountData(user.email);
+    await logAccess({ actor: user.email, action: "withdraw", resource: "회원 탈퇴 (본인 데이터 전체 삭제)", path: "/api/account/delete" });
     revalidateTag("athlete-data");
     await (await getClerk()).users.deleteUser(user.userId);
     return NextResponse.json({ ok: true });

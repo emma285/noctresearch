@@ -8,6 +8,7 @@ import { and, eq, lt, desc } from "drizzle-orm";
 import { isCoachEmail } from "../../../../lib/coach";
 import { db, schema } from "../../../../lib/db";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
+import { logAccess } from "../../../../lib/accessLog";
 
 const { sessions, clients } = schema;
 export const runtime = "nodejs";
@@ -60,6 +61,7 @@ export async function POST(request) {
     // 저장
     if (action === "save") {
       await db.update(sessions).set({ guide: guide || {} }).where(eq(sessions.id, sessionId));
+      await logAccess({ actor: me.emailAddresses[0].emailAddress, action: "update", resource: "세션 가이드", target: { sessionId }, path: "/api/coach/session-guide" });
       revalidateTag("athlete-data");
       return NextResponse.json({ success: true });
     }
@@ -118,6 +120,7 @@ export async function POST(request) {
 
     const merged = { discuss: discuss || "", review: gen.review || "", goal: gen.goal || "", topics: gen.topics || "", checks: gen.checks || "", questions: gen.questions || "", memo: (s.guide?.memo) || "" };
     await db.update(sessions).set({ guide: merged }).where(eq(sessions.id, sessionId));
+    await logAccess({ actor: me.emailAddresses[0].emailAddress, action: "update", resource: "세션 가이드 (AI 초안 생성)", target: { email: c.email, clientId: s.clientId }, path: "/api/coach/session-guide" });
     revalidateTag("athlete-data");
     return NextResponse.json({ success: true, guide: merged });
   } catch (e) {

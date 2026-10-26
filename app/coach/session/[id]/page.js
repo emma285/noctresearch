@@ -9,6 +9,7 @@ import { db, schema } from "../../../../lib/db";
 import { getLogTimeline, kstToday } from "../../../../lib/log";
 import CoachShell from "../../../../components/coach/CoachShell";
 import SessionWorkspace from "../../../../components/coach/SessionWorkspace";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const metadata = { title: "세션 가이드·노트 | NOCT" };
 export const dynamic = "force-dynamic";
@@ -32,6 +33,8 @@ export default async function CoachSessionNotePage({ params, searchParams }) {
   if (!session) {
     return <CoachShell active="sessions" coachName={coachName}><div className="p-10 text-center text-sm text-muted-foreground">세션을 찾을 수 없어요.</div></CoachShell>;
   }
+
+  await logAccess({ actor: user.emailAddresses[0].emailAddress, action: "view", resource: "세션 노트", target: { sessionId: params.id }, path: `/coach/session/${params.id}` });
 
   // 선수 정보(이름·이메일) + 세션 가이드 타임라인 + 프로토콜 목표(비교 토글용)
   let clientName = "선수", clientEmail = "";

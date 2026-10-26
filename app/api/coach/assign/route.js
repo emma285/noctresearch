@@ -3,6 +3,7 @@
 // 포털은 이 값을 읽어 표시(없으면 '미정').
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { logAccess } from "../../../../lib/accessLog";
 
 const COACH_EMAILS = (process.env.COACH_EMAILS || "hi.mido.kim@gmail.com")
   .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
@@ -37,6 +38,7 @@ export async function POST(request) {
     if (dataUrl !== undefined) publicMetadata.dataUrl = dataUrl || null;
 
     await cc.users.updateUserMetadata(uid, { publicMetadata });
+    await logAccess({ actor: myEmail, action: "update", resource: "배정 정보", target: { email: (await cc.users.getUser(uid).catch(() => null))?.emailAddresses?.[0]?.emailAddress, ref: uid }, path: "/api/coach/assign" });
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("coach assign failed:", e?.message);

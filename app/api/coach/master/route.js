@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { updateMasterFields } from "../../../../lib/master";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,7 @@ export async function POST(request) {
     if (!pageId) return NextResponse.json({ success: false, message: "선수(pageId)가 없어요." }, { status: 400 });
 
     const ok = await updateMasterFields(pageId, { nextSession, status, week, program, sport, tier });
+    if (ok) await logAccess({ actor: me.emailAddresses[0].emailAddress, action: "update", resource: "선수 정보 (상태·일정·프로그램)", target: { clientId: pageId }, path: "/api/coach/master" });
     if (!ok) return NextResponse.json({ success: false, message: "저장할 내용이 없거나 실패했어요." }, { status: 400 });
     revalidateTag("athlete-data"); // 마스터 변경 → 캐시 무효화
     return NextResponse.json({ success: true });

@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "../../../../lib/whoop/session";
 import { disconnect } from "../../../../lib/whoop/store";
+import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export async function POST() {
     if (!user) return NextResponse.json({ success: false }, { status: 401 });
 
     const done = await disconnect(user.email);
+    if (done) await logAccess({ actor: user.email, action: "whoop_disconnect", resource: "WHOOP 연결 해제", path: "/api/whoop/disconnect" });
     return NextResponse.json({ success: true, disconnected: done });
   } catch (e) {
     console.error("whoop disconnect failed:", e?.message);
