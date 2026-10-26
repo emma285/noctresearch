@@ -13,7 +13,8 @@ const MASTER_DONE_STATES = ["intake제출", "온보딩완료", "진행중", "종
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const user = await currentUser();
+  // 탈퇴 직후엔 세션 토큰이 잠깐 남아 Clerk 유저 조회가 Not Found → 에러 대신 미인증 처리
+  const user = await currentUser().catch(() => null);
   const email = user?.emailAddresses?.[0]?.emailAddress;
 
   // 미인증이면 로그인으로 (redirect_url 없이 → 로그인 후 fallback=/ 로 돌아와 이 스마트 라우팅을 다시 탐).
