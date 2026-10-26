@@ -4,7 +4,7 @@ import { encryptToken, decryptToken, newOAuthState, verifyOAuthState } from '../
 import { buildAuthorizeUrl, mapSleep, mapRecovery, WHOOP_SCOPES } from '../lib/whoop/api'
 import { createHmac } from 'node:crypto'
 import { verifyWebhookSignature, planWebhookAction } from '../lib/whoop/webhook'
-import { buildWhoopDays } from '../lib/whoop/days'
+import { buildWhoopDays, sleepTimesForDate } from '../lib/whoop/days'
 
 beforeAll(() => {
   process.env.WHOOP_TOKEN_ENC_KEY = randomBytes(32).toString('base64')
@@ -244,5 +244,26 @@ describe('날짜별 데이터 상태 (기록 없음 / 계산 중 / 계산 불가
     const d = buildWhoopDays([sleep('2026-10-15', 'SCORED', { remMs: null })], [], 2, now).at(-1)
     expect(d.remMs).toBeNull()
     expect(d.asleepMs).toBeNull()
+  })
+})
+
+describe('수면일지 미리 채우기 — 기상일 기준 누운·깬 시각', () => {
+  const sl = (start, end, extra = {}) => ({ isNap: false, tzOffset: '+09:00', startTs: new Date(start), endTs: new Date(end), ...extra })
+
+  it('기상일이 같은 메인 수면의 누운·깬 시각(현지 분)', () => {
+    const t = sleepTimesForDate([sl('2026-10-14T23:40:00+09:00', '2026-10-15T07:05:00+09:00')], '2026-10-15')
+    expect(t).toEqual({ bedMin: 23 * 60 + 40, wakeMin: 7 * 60 + 5 })
+  })
+
+  it('낮잠·다른 날짜는 제외, 없으면 null', () => {
+    const nap = sl('2026-10-15T13:00:00+09:00', '2026-10-15T14:00:00+09:00', { isNap: true })
+    const other = sl('2026-10-13T23:00:00+09:00', '2026-10-14T07:00:00+09:00')
+    expect(sleepTimesForDate([nap, other], '2026-10-15')).toBeNull()
+  })
+
+  it('해외(현지 tz_offset) 기준으로 날짜·시각 계산', () => {
+    // 런던(+01:00) 10/15 06:30 기상 = 한국 10/15 14:30
+    const t = sleepTimesForDate([sl('2026-10-14T22:00:00+01:00', '2026-10-15T06:30:00+01:00', { tzOffset: '+01:00' })], '2026-10-15')
+    expect(t).toEqual({ bedMin: 22 * 60, wakeMin: 6 * 60 + 30 })
   })
 })

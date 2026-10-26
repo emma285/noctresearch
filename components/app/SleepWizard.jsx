@@ -63,6 +63,18 @@ function Q({ title, sub, children }) {
   );
 }
 
+// raw = WHOOP 원래 시각, value = 15분 단위로 맞춰 채운 값 (분)
+function WhoopFillNote({ raw, value }) {
+  return (
+    <div className="mb-4 rounded-xl bg-primary/10 px-3.5 py-2.5 text-[13px] font-semibold text-primary">
+      WHOOP 기록으로 채웠어요 · 다르면 고쳐 주세요
+      {raw != null && raw !== value ? (
+        <div className="mt-0.5 font-normal">WHOOP 기록 {fmt(raw)} → {fmt(value)} (15분 단위 반올림)</div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function SleepWizard({ email, date: initDate }) {
   const router = useRouter();
   const [am, setAm] = useState({ bed: 23 * 60 + 45, sol: null, wake: 7 * 60, outbed: null, woke: null, waso: null, feel: [], memo: "" });
@@ -73,7 +85,12 @@ export default function SleepWizard({ email, date: initDate }) {
   const [recentTz, setRecentTz] = useState(null); // 최근 로그 tz (바뀜 감지용)
   const [logTz, setLogTz] = useState(null); // 명시적으로 고른 tz (null=기본값 사용)
   const [tzAsk, setTzAsk] = useState(false); // tz 확인 팝업
-  const set = (k, v) => setAm((s) => ({ ...s, [k]: v }));
+  const [whoopFill, setWhoopFill] = useState({ bed: false, wake: false }); // WHOOP 값으로 채운 칸 (선수가 고치면 해제)
+  const [whoopRaw, setWhoopRaw] = useState({ bed: null, wake: null }); // 반올림 전 WHOOP 원래 시각 (안내 문구용)
+  const set = (k, v) => {
+    setAm((s) => ({ ...s, [k]: v }));
+    if (k === "bed" || k === "wake") setWhoopFill((f) => ({ ...f, [k]: false }));
+  };
 
   // 최근 로그 tz 조회 (마운트 시 1회) → 지금 기기 tz와 다르면 물어봄
   useEffect(() => {
@@ -106,6 +123,32 @@ export default function SleepWizard({ email, date: initDate }) {
     })();
     return () => { cancel = true; };
   }, [email, date]);
+
+  // 날짜 바뀔 때 그 기상일 WHOOP 기록 조회 → 누운 시각·깬 시각 미리 채우기 (선수가 고칠 수 있음)
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/whoop/diary-prefill?date=${date}`);
+        const j = await r.json();
+        if (cancel) return;
+        if (j.bed != null && j.wake != null) {
+          // 휠이 15분 단위라, 화면에 보이는 값과 저장되는 값이 같도록 15분 단위로 맞춤 (정확한 값은 코치 WHOOP 패널에 있음)
+          const r15 = (m) => (Math.round(m / 15) * 15) % 1440;
+          setAm((s) => ({ ...s, bed: r15(j.bed), wake: r15(j.wake) }));
+          setWhoopRaw({ bed: j.bed, wake: j.wake });
+          setWhoopFill({ bed: true, wake: true });
+        } else {
+          // 다른 날짜 WHOOP 값이 남지 않게 기본값으로
+          setWhoopFill((f) => {
+            if (f.bed || f.wake) setAm((s) => ({ ...s, ...(f.bed ? { bed: 23 * 60 + 45 } : {}), ...(f.wake ? { wake: 7 * 60 } : {}) }));
+            return { bed: false, wake: false };
+          });
+        }
+      } catch { /* 무시 — 기본값 유지 */ }
+    })();
+    return () => { cancel = true; };
+  }, [date]);
 
   const flow = ["bed", "sol", "wake", "outbed", "woke", ...(am.woke > 0 ? ["waso"] : []), "feel", "memo"];
   const id = flow[step];
@@ -171,10 +214,10 @@ export default function SleepWizard({ email, date: initDate }) {
 
       {/* 질문 */}
       <div className="flex-1 overflow-y-auto px-5 pt-6">
-        {id === "bed" && <Q title={"몇 시에\n잠들었나요?"} sub="침대에 누운 시각을 기재해주세요."><TimeWheel value={am.bed} onChange={(v) => set("bed", v)} /></Q>}
+        {id === "bed" && <Q title={"몇 시에\n잠들었나요?"} sub="침대에 누운 시각을 기재해주세요.">{whoopFill.bed ? <WhoopFillNote raw={whoopRaw.bed} value={am.bed} /> : null}<TimeWheel value={am.bed} onChange={(v) => set("bed", v)} /></Q>}
         {id === "sol" && <Q title={"잠드는데 얼마나\n걸렸나요?"} sub="체감 시간을 기록해주세요.">
           <div className="flex flex-col gap-2.5">{SOL.map((o) => <Chip key={o} on={am.sol === o} onClick={() => set("sol", o)}>{o}</Chip>)}</div></Q>}
-        {id === "wake" && <Q title="몇 시에 일어났나요?" sub="아침에 눈 뜬 시각을 기준으로 작성해주세요."><TimeWheel value={am.wake} onChange={(v) => set("wake", v)} /></Q>}
+        {id === "wake" && <Q title="몇 시에 일어났나요?" sub="아침에 눈 뜬 시각을 기준으로 작성해주세요.">{whoopFill.wake ? <WhoopFillNote raw={whoopRaw.wake} value={am.wake} /> : null}<TimeWheel value={am.wake} onChange={(v) => set("wake", v)} /></Q>}
         {id === "outbed" && <Q title={"침대 밖으로 나오는데\n얼마나 걸렸나요?"} sub="아침에 눈 뜨고 침대에 누워있던 시간을 체크해주세요.">
           <div className="flex flex-col gap-2.5">{OUTBED.map((o) => <Chip key={o} on={am.outbed === o} onClick={() => set("outbed", o)}>{o}</Chip>)}</div></Q>}
         {id === "woke" && <Q title={"자다가 중간에\n깬 적 있나요?"}>
