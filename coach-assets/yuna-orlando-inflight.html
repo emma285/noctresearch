@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>윤이나 · 서울→올랜도 이동 타임테이블 (10/28 출국~현지 10/29)</title>
+<title>윤이나 · 시차_10월 올랜도 (기내)</title>
 <style>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 *{box-sizing:border-box}
@@ -39,7 +39,7 @@ body{font-family:'Pretendard',system-ui,sans-serif;background:#F4F6F8;color:#0D1
 </head>
 <body>
 <div class="wrap">
-  <h1 class="ttl">시차_10월 올랜도 (도착 후)</h1>
+  <h1 class="ttl">시차_10월 올랜도 (기내)</h1>
   <div class="calwrap"><div class="cal" id="cal"></div></div>
 </div>
 
@@ -131,7 +131,7 @@ render();
 let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 80); });
 </script>
 <script id="protocol-targets" type="application/json">
-{"name":"올랜도 기내+도착 적응","targets":[
+{"name":"올랜도 기내 프로토콜","targets":[
  {"date":"2026-10-28","bed":"현지 22:00","wake":"현지 07:00","label":"올랜도 도착 첫밤"},
  {"date":"2026-10-29","bed":"22:30","wake":"07:00","label":"현지 1일차"}
 ]}
