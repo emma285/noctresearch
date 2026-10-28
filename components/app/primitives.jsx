@@ -87,11 +87,11 @@ export function MetricRow({ children, className }) {
 }
 
 /* ReportRow — 날짜/차수 + 제목 + 서브 + chevron. soon=예정(연하게). isNew=새 공개 노트(강조+NEW) */
-export function ReportRow({ date, badge, title, sub, href, soon = false, isNew = false }) {
+export function ReportRow({ date, badge, title, sub, href, soon = false, isNew = false, smallDate = false }) {
   const inner = (
     <>
-      <div className="w-[64px] shrink-0">
-        <div className={cn("text-[13px] font-semibold", soon ? "text-[#AAB0BB]" : "text-foreground")}>{date}</div>
+      <div className={cn("shrink-0", smallDate ? "w-[66px]" : "w-[64px]")}>
+        <div className={cn(smallDate ? "text-[11px] font-medium" : "text-[13px] font-semibold", soon ? "text-[#AAB0BB]" : smallDate ? "text-muted-foreground" : "text-foreground")}>{date}</div>
         {badge ? <div className={cn("text-[11px] font-semibold mt-1", soon ? "text-[#AAB0BB]" : "text-primary")}>{badge}</div> : null}
       </div>
       <div className="flex-1 min-w-0">
