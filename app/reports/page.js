@@ -3,7 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import AppShell, { AppBody } from "../../components/app/AppShell";
 import { Surface, ReportRow, SectionHeader } from "../../components/app/primitives";
-import { getAthleteByEmail, getAthleteByRef, getExposedAssetSlugs } from "../../lib/master";
+import { getAthleteByEmail, getAthleteByRef, getVisibleAssetSlugs } from "../../lib/master";
 import { resolveAssets, publishedReportSet, extrasBySlugs, reportSlug } from "../../lib/athleteAssets";
 import { isCoachEmail } from "../../lib/coach";
 
@@ -24,8 +24,8 @@ export default async function ReportsPage({ searchParams }) {
   const openReports = searchParams?.report === "open" ? assets.reports : assets.reports.filter((r) => pub.has(r.slug));
   const newest = [...openReports].reverse();
 
-  // 선수에게 노출된 부가자료(공개 세션에 첨부된 것) 아카이브
-  const exposedSlugs = athlete ? await getExposedAssetSlugs(athlete.pageId) : [];
+  // 선수에게 노출된 부가자료(공개 세션 첨부 + 상시 공개) 아카이브
+  const exposedSlugs = await getVisibleAssetSlugs(athlete);
   const exposedExtras = extrasBySlugs(assets.extras, exposedSlugs);
 
   return (
