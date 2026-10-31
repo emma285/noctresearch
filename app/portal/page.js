@@ -152,8 +152,10 @@ export default async function PortalPage({ searchParams }) {
     : [[], []];
   // 선수에겐 코치가 공개한 세션만 노출 (비공개=코치 검토 중은 목록에서 숨김)
   const sessions = allSessions.filter((s) => s.published);
-  const effectiveCount = allSessions.length || (searchParams?.stage === "ongoing" ? 1 : 0);
-  const nextOrdinal = effectiveCount + 1;
+  // 진행 세션 = 실제로 끝난 세션(노트 있음/공개)만. 코치가 만들어만 둔 예정 회차는 세지 않음.
+  const heldSessions = allSessions.filter((s) => s.published || s.hasNote);
+  const effectiveCount = heldSessions.length || (searchParams?.stage === "ongoing" ? 1 : 0);
+  const nextOrdinal = heldSessions.length ? Math.floor(Math.max(...heldSessions.map((s) => s.n || 0))) + 1 : effectiveCount + 1;
   const upcoming = calEvents.filter((e) => e.kind === "event" && (e.end || e.start).slice(0, 10) >= kstToday()).slice(0, 4);
 
   const statusLabel = ongoing ? "코칭 진행중" : intakeDone ? "첫 세션 준비 중" : "시작 준비";
