@@ -4,10 +4,16 @@
 // 다운로드 → ffmpeg 압축 → Whisper 전사 → Claude 상세/공개 초안(+다음세션 날짜 캐치) → 세션에 저장.
 // 노트 공개는 항상 false(코치가 앱에서 검토·수정 후 공개). Vercel 타임아웃 회피용 로컬 실행.
 //
-// 사용: node scripts/process-session-audio.mjs           (대기 중인 세션 전부)
+// 사용: node scripts/process-session-audio.mjs           (대기 쪽지 있을 때만 대기 세션 전부)
+//       node scripts/process-session-audio.mjs --scan    (쪽지 무시하고 대기 세션 강제 확인)
 //       node scripts/process-session-audio.mjs <세션id>   (특정 세션만, 강제 재생성)
+//
+// ⚠️ Neon compute 절약(2026-10-31): launchd가 5분마다 돌리지만 Blob 쪽지(_queue/session-audio, lib/audioQueue.js)만
+// head로 확인하고, 쪽지 없으면 Neon에 접속하지 않고 종료 → DB가 scale-to-zero로 잠들 수 있음.
+// 상태 승격(advanceStatuses)은 하루 1번만(logs/.last-advance).
 import { neon } from "@neondatabase/serverless";
-import { readFileSync, existsSync, writeFileSync, unlinkSync, statSync } from "node:fs";
+import { head, put, del, BlobNotFoundError } from "@vercel/blob";
+import { readFileSync, existsSync, writeFileSync, unlinkSync, statSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -248,16 +254,40 @@ async function processOne(s) {
   log(`  ✅ 저장 완료 (공개=off, 코치 검토 대기)${draft.nextSessionDate ? ` · 다음세션 ${draft.nextSessionDate.slice(0, 10)} 캐치` : ""}`);
 }
 
+// ── 전사 대기 쪽지 (Blob) ──
+const QUEUE = "_queue/session-audio"; // lib/audioQueue.js AUDIO_QUEUE_PATH 와 동일
+async function hasQueue() {
+  try { await head(QUEUE, { token: BLOB }); return true; }
+  catch (e) { if (e instanceof BlobNotFoundError) return false; throw e; }
+}
+const requeue = () => put(QUEUE, "retry", { access: "private", addRandomSuffix: false, allowOverwrite: true, contentType: "text/plain", token: BLOB })
+  .catch((e) => log(`  쪽지 재등록 실패: ${e.message}`));
+const STAMP = join(ROOT, "logs", ".last-advance");
+const advanceDue = () => !existsSync(STAMP) || readFileSync(STAMP, "utf8").trim() !== kstToday();
+
 (async () => {
   const arg = process.argv[2];
   let list;
-  if (arg) {
+  let failed = false;
+  if (arg && arg !== "--scan") {
     const rows = await sql`SELECT id, audio_url, n, session_at FROM sessions WHERE id=${arg}`;
     if (!rows.length || !rows[0].audio_url) { console.error("이 세션에 녹음 URL이 없어요."); process.exit(1); }
     list = rows;
   } else {
-    try { await advanceStatuses(); } catch (e) { log(`상태 승격 실패: ${e.message}`); }
-    list = await pending();
+    let queued = arg === "--scan";
+    if (!queued) {
+      try { queued = await hasQueue(); } catch (e) { log(`쪽지 확인 실패: ${e.message}`); return; }
+    }
+    const due = advanceDue();
+    if (!queued && !due) return; // 할 일 없음 → Neon 미접속 (로그도 안 남김)
+    if (due) {
+      try { await advanceStatuses(); mkdirSync(join(ROOT, "logs"), { recursive: true }); writeFileSync(STAMP, kstToday()); } catch (e) { log(`상태 승격 실패: ${e.message}`); }
+    }
+    if (!queued) return;
+    // 쪽지를 먼저 지움 → 처리 중 새 업로드가 오면 쪽지가 다시 생겨 다음 회차에 잡힘
+    try { await del(QUEUE, { token: BLOB }); } catch (e) { log(`쪽지 삭제 실패: ${e.message}`); }
+    try { list = await pending(); }
+    catch (e) { log(`대기 조회 실패: ${e.message}`); await requeue(); return; }
     log(`대기 세션 ${list.length}건`);
   }
   for (const s of list) {
@@ -265,9 +295,11 @@ async function processOne(s) {
       await processOne(s);
     } catch (e) {
       log(`  ❌ 실패: ${e.message}`);
+      failed = true;
       // 락 해제 (재시도되게 _lock 제거)
       try { await sql`UPDATE sessions SET detail = detail - '_lock' WHERE id=${s.id}`; } catch {}
     }
   }
+  if (failed && (!arg || arg === "--scan")) await requeue(); // 실패분은 다음 회차에 재시도
   log("완료");
 })();

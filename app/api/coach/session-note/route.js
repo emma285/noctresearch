@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { isCoachEmail } from "../../../../lib/coach";
 import { updateSessionNote } from "../../../../lib/master";
+import { markAudioPending } from "../../../../lib/audioQueue";
 
 export const runtime = "nodejs";
 async function getClerk() { return typeof clerkClient === "function" ? await clerkClient() : clerkClient; }
@@ -25,6 +26,8 @@ export async function POST(request) {
 
     const r = await updateSessionNote(id, { summary, actions, comment, published, detail, audioUrl, transcript });
     if (!r.ok) return NextResponse.json({ success: false, message: r.reason === "empty" ? "저장할 내용이 없어요." : (r.reason || "저장 실패") }, { status: 400 });
+    // 새 녹음 → 전사 대기 쪽지 (로컬 처리기는 쪽지 있을 때만 Neon 접속)
+    if (audioUrl) await markAudioPending(id);
 
     revalidateTag("athlete-data");
     return NextResponse.json({ success: true, createdNext: !!r.createdNext });
