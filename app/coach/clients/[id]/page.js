@@ -22,6 +22,7 @@ import LogTimelinePanel from "../../../../components/coach/LogTimelinePanel";
 import ProtocolCompare from "../../../../components/coach/ProtocolCompare";
 import AddSessionForm from "../../../../components/coach/AddSessionForm";
 import SessionDateEditor from "../../../../components/coach/SessionDateEditor";
+import DeleteSessionButton from "../../../../components/coach/DeleteSessionButton";
 
 // 부가자료 HTML에 프로토콜 목표(#protocol-targets)가 있으면 정보 반환
 async function protocolInfo(slug) {
@@ -136,6 +137,7 @@ export default async function CoachClientDetail({ params }) {
                         ? <Link href={`/coach/session/${s.id}`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">가이드 보기</Link>
                         : <span className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#eef0f3] text-[#c2c7cf] whitespace-nowrap cursor-not-allowed" title="세션 종료 · 가이드 작성 불가">가이드 작성</span>}
                     <Link href={`/coach/session/${s.id}?tab=note`} className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">노트</Link>
+                    {!done ? <DeleteSessionButton sessionId={s.id} n={s.n} /> : null}
                   </div>
                 );
               })}
