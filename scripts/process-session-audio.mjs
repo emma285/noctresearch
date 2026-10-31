@@ -10,10 +10,10 @@
 //
 // ⚠️ Neon compute 절약(2026-10-31): launchd가 5분마다 돌리지만 Blob 쪽지(_queue/session-audio, lib/audioQueue.js)만
 // head로 확인하고, 쪽지 없으면 Neon에 접속하지 않고 종료 → DB가 scale-to-zero로 잠들 수 있음.
-// 상태 승격(advanceStatuses)은 하루 1번만(logs/.last-advance).
+// 선수 상태 승격은 처리기에서 제거됨(설문 제출 시 바로 진행중, app/api/submit).
 import { neon } from "@neondatabase/serverless";
 import { head, put, del, BlobNotFoundError } from "@vercel/blob";
-import { readFileSync, existsSync, writeFileSync, unlinkSync, statSync, mkdirSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, unlinkSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -69,19 +69,6 @@ function parseNextDate(text, refIso) {
     return iso(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate(), h, mi);
   }
   return "";
-}
-
-// ── 상태 자동 승격: 세션 일시가 도래한 선수 → 진행중 (EARLY 상태만) ──
-const EARLY = ["", "초대됨", "로그인", "intake제출", "온보딩완료"];
-async function advanceStatuses() {
-  const ids = await sql`SELECT DISTINCT client_id FROM sessions WHERE session_at IS NOT NULL AND session_at <= now() AND client_id IS NOT NULL`;
-  for (const { client_id } of ids) {
-    try {
-      const r = await sql`UPDATE clients SET status='진행중', updated_at=now()
-        WHERE id=${client_id} AND coalesce(status,'') = ANY(${EARLY}) RETURNING name`;
-      if (r.length) log(`상태 승격: ${r[0].name || client_id.slice(0, 8)} → 진행중 (세션 날짜 도래)`);
-    } catch (e) { log(`  상태 승격 오류(${client_id.slice(0, 8)}): ${e.message}`); }
-  }
 }
 
 // ── 대기 세션: 녹음 있고 아직 미처리(detail에 chief 없음) & 락 없음 ──
@@ -262,8 +249,6 @@ async function hasQueue() {
 }
 const requeue = () => put(QUEUE, "retry", { access: "private", addRandomSuffix: false, allowOverwrite: true, contentType: "text/plain", token: BLOB })
   .catch((e) => log(`  쪽지 재등록 실패: ${e.message}`));
-const STAMP = join(ROOT, "logs", ".last-advance");
-const advanceDue = () => !existsSync(STAMP) || readFileSync(STAMP, "utf8").trim() !== kstToday();
 
 (async () => {
   const arg = process.argv[2];
@@ -278,12 +263,7 @@ const advanceDue = () => !existsSync(STAMP) || readFileSync(STAMP, "utf8").trim(
     if (!queued) {
       try { queued = await hasQueue(); } catch (e) { log(`쪽지 확인 실패: ${e.message}`); return; }
     }
-    const due = advanceDue();
-    if (!queued && !due) return; // 할 일 없음 → Neon 미접속 (로그도 안 남김)
-    if (due) {
-      try { await advanceStatuses(); mkdirSync(join(ROOT, "logs"), { recursive: true }); writeFileSync(STAMP, kstToday()); } catch (e) { log(`상태 승격 실패: ${e.message}`); }
-    }
-    if (!queued) return;
+    if (!queued) return; // 할 일 없음 → Neon 미접속 (로그도 안 남김)
     // 쪽지를 먼저 지움 → 처리 중 새 업로드가 오면 쪽지가 다시 생겨 다음 회차에 잡힘
     try { await del(QUEUE, { token: BLOB }); } catch (e) { log(`쪽지 삭제 실패: ${e.message}`); }
     try { list = await pending(); }

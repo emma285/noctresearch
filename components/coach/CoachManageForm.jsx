@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import TimeWheel from "../app/TimeWheel";
 
 const PROGRAMS = ["3주 수면 리셋", "8주 수면 셋업", "수면 케어"];
-// 코치가 수동으로 정하는 상태만. 나머지(로그인·intake제출·리포트게시)는 이벤트로 자동 전이.
+// 코치가 수동으로 정하는 상태만. 가입=로그인, 설문 제출=진행중은 자동. 종료는 여기서만.
 const STATUS_MANUAL = ["진행중", "종료"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINS = ["00", "15", "30", "45"];
@@ -60,7 +60,7 @@ export default function CoachManageForm({ athlete }) {
           <select value={status} onChange={(e) => setStatus(e.target.value)} className={sel + " w-full"}>
             {[...new Set([status, ...STATUS_MANUAL])].filter(Boolean).map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <p className="text-[11.5px] text-muted-foreground mt-2">가입·설문 제출·리포트 공개는 자동으로 넘어가요. 여기선 진행/종료만.</p>
+          <p className="text-[11.5px] text-muted-foreground mt-2">설문을 제출하면 자동으로 진행중이 돼요. 코칭이 끝나면 여기서 종료로 바꿔 저장해주세요.</p>
         </div>
       </div>
 

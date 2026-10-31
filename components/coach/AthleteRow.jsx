@@ -15,7 +15,7 @@ export default function AthleteRow({ a }) {
         </div>
       </td>
       <td className="px-4 py-3 border-b border-[#e7e9ed]">
-        <span className={`inline-block text-[11px] font-bold px-2.5 py-1 rounded-full ${a.ongoing ? "bg-[#e7f4ec] text-[#1f8a4c]" : "bg-[#eef0f3] text-[#6b7280]"}`}>{a.ongoing ? (a.status || "진행중") : (a.intakeDone ? "설문 완료" : "설문 대기")}</span>
+        <span className={`inline-block text-[11px] font-bold px-2.5 py-1 rounded-full ${a.status === "종료" ? "bg-[#eef0f3] text-[#3a3f48]" : a.ongoing ? "bg-[#e7f4ec] text-[#1f8a4c]" : "bg-[#eef0f3] text-[#6b7280]"}`}>{a.ongoing ? (a.status || "진행중") : (a.intakeDone ? "설문 완료" : "설문 대기")}</span>
       </td>
       <td className="px-4 py-3 border-b border-[#e7e9ed] text-[13px] text-[#3a3f48]">{a.sessionLabel || "미배정"}</td>
       <td className="px-4 py-3 border-b border-[#e7e9ed] text-[13px] text-[#3a3f48]">{a.programLabel || "미정"}</td>

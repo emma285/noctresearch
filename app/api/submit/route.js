@@ -605,12 +605,13 @@ export async function POST(request) {
         try {
           const u = await cc.users.getUser(userId);
           const email = u?.emailAddresses?.[0]?.emailAddress || "";
-          // 마스터 상태 자동 승격: 아직 초기(초대됨/로그인/빈값)면 intake제출로. 이미 진행중/종료면 건드리지 않음.
+          // 마스터 상태 자동 승격: 설문 제출 = 바로 진행중(2026-10-31, 예전엔 intake제출→첫세션 도래 시 처리기가 진행중).
+          // 이미 진행중/종료면 건드리지 않음. 종료는 코치가 선수상세 '배정 · 상태'에서 수동.
           try {
             const a = email ? await getAthleteByEmail(email) : null;
             if (a?.pageId) {
-              if (["", "초대됨", "로그인"].includes(a.status || "")) {
-                await updateMasterFields(a.pageId, { status: "intake제출" });
+              if (["", "초대됨", "로그인", "intake제출", "온보딩완료"].includes(a.status || "")) {
+                await updateMasterFields(a.pageId, { status: "진행중" });
               }
               await createSession(a.pageId, { n: 1 }); // intake 제출 → 1차 세션 열림 (idempotent)
               await saveIntakeResponse(a.pageId, data.formType, data); // 답변 Neon 저장(dual-write)
