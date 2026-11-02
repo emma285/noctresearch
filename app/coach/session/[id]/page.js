@@ -6,7 +6,7 @@ import { getSessionById } from "../../../../lib/master";
 import { resolveAssets } from "../../../../lib/athleteAssets";
 import { getSleepTargets, adherence } from "../../../../lib/targets";
 import { db, schema } from "../../../../lib/db";
-import { getLogTimeline, kstToday } from "../../../../lib/log";
+import { getLogTimeline, getFirstLogDate, kstToday } from "../../../../lib/log";
 import CoachShell from "../../../../components/coach/CoachShell";
 import SessionWorkspace from "../../../../components/coach/SessionWorkspace";
 
@@ -42,12 +42,16 @@ export default async function CoachSessionNotePage({ params, searchParams }) {
     if (c) { clientName = c.name || c.email || "선수"; clientEmail = c.email || ""; }
     sleepTargets = session.clientId ? await getSleepTargets(session.clientId) : [];
     if (clientEmail) {
-      // 타임라인 기간: 최근 7일 + 프로토콜 미래 목표일까지(있으면)
+      // 타임라인 기간: 첫 기록(또는 첫 목표)부터 오늘(+미래 목표일)까지 전체 → 좌우 스크롤로 다 보임(선수 상세와 동일).
       const today = kstToday();
       const dayDiff = (a, b) => Math.round((Date.parse(a) - Date.parse(b)) / 86400000);
+      const firstLog = await getFirstLogDate(clientEmail);
       const maxTargetDate = sleepTargets.reduce((m, t) => (t.date > m ? t.date : m), today);
+      const minTargetDate = sleepTargets.reduce((m, t) => (!m || t.date < m ? t.date : m), null);
       const endDate = maxTargetDate > today ? maxTargetDate : today;
-      const numDays = 7 + Math.max(0, dayDiff(endDate, today));
+      const startCands = [firstLog, minTargetDate].filter(Boolean);
+      const spanStart = startCands.length ? startCands.reduce((a, b) => (a < b ? a : b)) : today;
+      const numDays = Math.max(7, dayDiff(endDate, spanStart) + 1);
       timeline = await getLogTimeline(clientEmail, endDate, numDays);
       const sleepByDate = Object.fromEntries((timeline.sleeps || []).map((s) => [s.date, s]));
       targetSummary = adherence(sleepTargets, sleepByDate);

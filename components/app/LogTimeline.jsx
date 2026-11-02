@@ -128,7 +128,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
 
   const openTip = (e, text) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTip({ text, x: Math.min(r.left, window.innerWidth - 252), y: r.bottom + 4 }); };
   const hourLabels = Array.from({ length: 25 }, (_, r) => ({ r, h: (r + 6) % 24 }));
-  const NOTE_H = anyForeign ? 78 : 64; // 듀얼 헤더 있으면 노트 영역 살짝 키움
+  const NOTE_H = 64 + (anyForeign ? 14 : 0) + (on ? 16 : 0); // 듀얼 헤더·목표 비교줄 있으면 그만큼 키움(말줄임 방지)
 
   // ✈ 경계 구분선 (컬럼 사이). 좌우 tz가 다를 때.
   const Divider = () => (
@@ -180,11 +180,11 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
                     </div>
                   )}
                   {tgt && (
-                    <div style={{ fontSize: 9, fontWeight: 800, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {tgt.label && <span style={{ color: "#5A4FA6", background: "rgba(142,155,232,.16)", borderRadius: 4, padding: "1px 4px", marginRight: 4 }}>{tgt.label}</span>}
+                    <div style={{ fontSize: 9, fontWeight: 800, marginBottom: 3, lineHeight: 1.45 }}>
+                      {tgt.label && <span style={{ display: "inline-block", color: "#5A4FA6", background: "rgba(142,155,232,.16)", borderRadius: 4, padding: "0 4px", marginBottom: 1 }}>{tgt.label}</span>}
                       {slForNote
-                        ? (<span style={{ color: "#6b7280" }}>기상 <b style={{ color: DTXT(slForNote.wake, tgt.wake).c }}>{DTXT(slForNote.wake, tgt.wake).s}</b> · 취침 <b style={{ color: DTXT(slForNote.bed, tgt.bed).c }}>{DTXT(slForNote.bed, tgt.bed).s}</b></span>)
-                        : <span style={{ color: "#c2c7cf" }}>기록 없음</span>}
+                        ? (<span style={{ display: "block", color: "#6b7280", whiteSpace: "nowrap" }}>기상 <b style={{ color: DTXT(slForNote.wake, tgt.wake).c }}>{DTXT(slForNote.wake, tgt.wake).s}</b> · 취침 <b style={{ color: DTXT(slForNote.bed, tgt.bed).c }}>{DTXT(slForNote.bed, tgt.bed).s}</b></span>)
+                        : <span style={{ display: "block", color: "#c2c7cf" }}>기록 없음</span>}
                     </div>
                   )}
                   {slForNote && <div style={{ display: "-webkit-box", WebkitLineClamp: (tgt ? 1 : 2), WebkitBoxOrient: "vertical", overflow: "hidden" }}>{slForNote.feel}{slForNote.memo && <span style={{ color: "#8a90a0" }}> {slForNote.memo}</span>}</div>}
@@ -216,8 +216,8 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
                     );
                     // 루틴
                     return (
-                      <div key={bi} title={b.cat} style={{ ...base, color: b.fg, padding: b.h >= 16 ? "3px 6px" : "0 6px" }}>
-                        {b.h >= 30 ? (<><span style={{ fontWeight: 800, fontSize: 10.5, fontVariantNumeric: "tabular-nums", display: "block", lineHeight: 1.15 }}>{rtime}</span><span style={{ fontWeight: 600, fontSize: 9.5, display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.cat}</span></>)
+                      <div key={bi} title={b.cat} onClick={(e) => openTip(e, `${rtime} ${b.cat}`)} style={{ ...base, color: b.fg, padding: b.h >= 16 ? "3px 6px" : "0 6px", cursor: "pointer" }}>
+                        {b.h >= 30 ? (<><span style={{ fontWeight: 800, fontSize: 10.5, fontVariantNumeric: "tabular-nums", display: "block", lineHeight: 1.15 }}>{rtime}</span><span style={{ fontWeight: 600, fontSize: 9.5, lineHeight: 1.3, display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: Math.max(1, Math.floor((hh - 18) / 12.5)), overflow: "hidden", wordBreak: "keep-all", overflowWrap: "anywhere" }}>{b.cat}</span></>)
                           : (<span style={{ fontWeight: 700, fontSize: b.h >= 16 ? 9.5 : 8.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{b.h >= 16 ? b.cat : b.cat.split(" ")[0]}</span>)}
                       </div>
                     );
