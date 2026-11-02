@@ -123,8 +123,8 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
     const bedDay = t.bed > t.wake ? D - 1 : D;
     segs(abs(bedDay, t.bed), abs(D, t.wake)).forEach((sg, i) => TARGET_BLOCKS.push({ ...sg, isStart: i === 0 }));
   }
-  // 편차 텍스트 (실제-목표, 분). 음수=이르게, 양수=늦게.
-  const DTXT = (a, t) => { const d = a - t, m = Math.abs(d), h = Math.floor(m / 60), mm = m % 60; return { s: (d < 0 ? "−" : d > 0 ? "+" : "") + ((h ? h + "h" : "") + (mm ? mm + "m" : "") || "정시"), c: d < 0 ? "#c0554a" : d > 0 ? "#2a7fa5" : "#1f8a4c" }; };
+  // 편차 텍스트 (실제-목표, 분). 음수=이르게, 양수=늦게. 자정 넘김 대비 ±12시간 안으로 감쌈(00:15 vs 22:30 = +1h45m).
+  const DTXT = (a, t) => { const d = ((a - t + 2160) % 1440) - 720, m = Math.abs(d), h = Math.floor(m / 60), mm = m % 60; return { s: (d < 0 ? "−" : d > 0 ? "+" : "") + ((h ? h + "h" : "") + (mm ? mm + "m" : "") || "정시"), c: d < 0 ? "#c0554a" : d > 0 ? "#2a7fa5" : "#1f8a4c" }; };
 
   const openTip = (e, text) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTip({ text, x: Math.min(r.left, window.innerWidth - 252), y: r.bottom + 4 }); };
   const hourLabels = Array.from({ length: 25 }, (_, r) => ({ r, h: (r + 6) % 24 }));
