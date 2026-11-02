@@ -81,7 +81,21 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
   };
 
   const BLOCKS = [];
-  for (const rt of routines) { const di = colIdx(colKeyOf(rt.date, routineTzOf(rt))); if (di < 0) continue; const a = abs(di, rt.t); const t = T[rt.type] || T.etc; const foreign = !!(rt.tz && rt.tz !== HOME_TZ); const kstT = foreign ? fmt(localToHome(rt.date, rt.t, rt.tz).min) : null; markCol(di, routineTzOf(rt), foreign ? localToHome(rt.date, rt.t, rt.tz).date : null, null); segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), kstT, foreign, cat: (rt.type === "etc" && rt.text) ? (t.l + " · " + rt.text) : (t.l + (rt.d ? " " + rt.d : "") + (rt.text ? " · " + rt.text : "")), isStart: i === 0 })); }
+  for (const rt of routines) {
+    const di = colIdx(colKeyOf(rt.date, routineTzOf(rt))); if (di < 0) continue;
+    const a = abs(di, rt.t); const t = T[rt.type] || T.etc; const foreign = !!(rt.tz && rt.tz !== HOME_TZ);
+    const kstT = foreign ? fmt(localToHome(rt.date, rt.t, rt.tz).min) : null;
+    markCol(di, routineTzOf(rt), foreign ? localToHome(rt.date, rt.t, rt.tz).date : null, null);
+    // 호버 상세: 종류·내용 / 시각(소요시간 있으면 끝시각까지) / 한국 환산 / 강도·종류
+    const span = rt.durLb ? `${fmt(rt.t)}~${fmt(rt.t + rt.dur)} (${rt.durLb})` : fmt(rt.t);
+    const detail = [
+      `${t.l}${rt.text ? " · " + rt.text : ""}`,
+      `${dlabel(rt.date)} ${span}${foreign ? " · " + shortRegion(rt.tz) + " 현지" : ""}`,
+      foreign ? `한국 ${dlabel(localToHome(rt.date, rt.t, rt.tz).date)} ${kstT}` : null,
+      rt.detail ? `상세 ${rt.detail}` : null,
+    ].filter(Boolean).join("\n");
+    segs(a, a + (rt.dur || 30)).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "rout", bg: t.bg, fg: t.c, time: fmt(rt.t), kstT, foreign, detail, cat: (rt.type === "etc" && rt.text) ? (t.l + " · " + rt.text) : (t.l + (rt.d ? " " + rt.d : "") + (rt.text ? " · " + rt.text : "")), isStart: i === 0 }));
+  }
   for (const s of sleeps) {
     const D = colIdx(colKeyOf(s.date, sleepTzOf(s))); if (D < 0) continue;
     const bedDay = s.bed > s.wake ? D - 1 : D;
@@ -95,10 +109,20 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
     const bedKstT = foreign ? fmt(localToHome(bedDateStr, s.bed, bedTz).min) : null;
     const wakeKstT = foreign ? fmt(localToHome(s.date, s.wake, wakeTz).min) : null;
     const bedCity = crossing ? cityOf(bedTz) : "", wakeCity = crossing ? cityOf(wakeTz) : "";
-    if (sol > 0) segs(bA, bA + sol).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "awake", tip: "누워있음 " + sol + "분", isStart: i === 0 }));
+    const total = s.wake >= s.bed ? s.wake - s.bed : s.wake + 1440 - s.bed;
+    const detail = [
+      `수면 · ${dlabel(s.date)} 기상 기준${foreign ? " · " + shortRegion(wakeTz || bedTz) + " 현지" : ""}`,
+      `취침 ${fmt(s.bed)}${bedCity ? " " + bedCity : ""} → 기상 ${fmt(s.wake)}${wakeCity ? " " + wakeCity : ""} (총 ${Math.floor(total / 60)}시간${total % 60 ? " " + (total % 60) + "분" : ""})`,
+      foreign ? `한국 취침 ${bedKstT} → 기상 ${wakeKstT}` : null,
+      `입면 ${s.sol || "-"} · 침대밖까지 ${s.out || "-"}`,
+      s.woke ? `밤중깸 ${s.woke}회${s.waso ? " · 깨어있던 시간 " + s.waso : ""}` : "밤중깸 없음",
+      s.feel ? `느낌 ${s.feel}` : null,
+      s.memo ? `메모 ${s.memo}` : null,
+    ].filter(Boolean).join("\n");
+    if (sol > 0) segs(bA, bA + sol).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "awake", tip: "누워있음 " + sol + "분", detail: `누워있음 (잠들기까지) · 약 ${sol}분\n입면 응답: ${s.sol}`, isStart: i === 0 }));
     const sSegs = segs(bA + sol, wA);
-    sSegs.forEach((sg, i) => BLOCKS.push({ ...sg, kind: "sleep", bedT: fmt(s.bed), wakeT: fmt(s.wake), bedKstT, wakeKstT, foreign, crossing, bedCity, wakeCity, sol, out, woke: s.woke, waso: s.waso, isStart: i === 0 }));
-    if (out > 0) segs(wA, wA + out).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "awake", tip: "침대밖 " + out + "분", isStart: i === 0 }));
+    sSegs.forEach((sg, i) => BLOCKS.push({ ...sg, kind: "sleep", detail, bedT: fmt(s.bed), wakeT: fmt(s.wake), bedKstT, wakeKstT, foreign, crossing, bedCity, wakeCity, sol, out, woke: s.woke, waso: s.waso, isStart: i === 0 }));
+    if (out > 0) segs(wA, wA + out).forEach((sg, i) => BLOCKS.push({ ...sg, kind: "awake", tip: "침대밖 " + out + "분", detail: `깬 뒤 침대에 머문 시간 · 약 ${out}분\n응답: ${s.out}`, isStart: i === 0 }));
     // 이 수면이 주로 그려지는 칸에 tz 성격 귀속.
     const primaryCol = pickCol(sSegs);
     const kDate = foreign ? localToHome(s.date, s.wake, wakeTz).date : null;
@@ -126,6 +150,9 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
   // 편차 텍스트 (실제-목표, 분). 음수=이르게, 양수=늦게. 자정 넘김 대비 ±12시간 안으로 감쌈(00:15 vs 22:30 = +1h45m).
   const DTXT = (a, t) => { const d = ((a - t + 2160) % 1440) - 720, m = Math.abs(d), h = Math.floor(m / 60), mm = m % 60; return { s: (d < 0 ? "−" : d > 0 ? "+" : "") + ((h ? h + "h" : "") + (mm ? mm + "m" : "") || "정시"), c: d < 0 ? "#c0554a" : d > 0 ? "#2a7fa5" : "#1f8a4c" }; };
 
+  // 호버 툴팁: 커서 옆에 따라다님(화면 밖으로 안 나가게 클램프). 마우스 떼면 닫힘.
+  const hoverTip = (e, text) => { if (!text) return; const W = 252, x = e.clientX + 14 + W > window.innerWidth ? e.clientX - W - 8 : e.clientX + 14; setTip({ text, x: Math.max(8, x), y: Math.min(e.clientY + 14, window.innerHeight - 150), hover: true }); };
+  const hoverOff = () => setTip((t) => (t && t.hover ? null : t));
   const openTip = (e, text) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTip({ text, x: Math.min(r.left, window.innerWidth - 252), y: r.bottom + 4 }); };
   const hourLabels = Array.from({ length: 25 }, (_, r) => ({ r, h: (r + 6) % 24 }));
   const NOTE_H = 64 + (anyForeign ? 14 : 0) + (on ? 16 : 0); // 듀얼 헤더·목표 비교줄 있으면 그만큼 키움(말줄임 방지)
@@ -199,14 +226,15 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
                   ))}
                   {BLOCKS.filter((b) => b.col === ci).map((b, bi) => {
                     const hh = Math.max(b.h, 6);
-                    const base = { position: "absolute", left: 3, right: 3, top: b.top, height: hh, borderRadius: 6, overflow: "hidden", background: b.bg, zIndex: 1 };
+                    const hov = { onMouseMove: (e) => hoverTip(e, b.detail), onMouseLeave: hoverOff, onClick: (e) => openTip(e, b.detail) };
+                    const base = { position: "absolute", left: 3, right: 3, top: b.top, height: hh, borderRadius: 6, overflow: "hidden", background: b.bg, zIndex: 1, cursor: "pointer" };
                     // 표시 시각: 한국시간 토글이 켜지고 해외 로그면 KST 환산값. 이동(취침/기상 tz 다름)이면 도시 라벨.
                     const kv = kstView && b.foreign;
                     const bt = kv ? (b.bedKstT || b.bedT) : b.bedT, wt = kv ? (b.wakeKstT || b.wakeT) : b.wakeT, rtime = kv ? (b.kstT || b.time) : b.time;
                     const bc = b.crossing && !kstView ? ` ${b.bedCity}` : "", wc = b.crossing && !kstView ? ` ${b.wakeCity}` : "";
-                    if (b.kind === "awake") return <div key={bi} style={{ ...base, background: AWAKE, padding: "1px 6px" }}>{b.h >= 15 && <span style={{ color: "#33405c", fontWeight: 700, fontSize: 9, whiteSpace: "nowrap" }}>{b.tip}</span>}</div>;
+                    if (b.kind === "awake") return <div key={bi} {...hov} style={{ ...base, background: AWAKE, padding: "1px 6px" }}>{b.h >= 15 && <span style={{ color: "#33405c", fontWeight: 700, fontSize: 9, whiteSpace: "nowrap" }}>{b.tip}</span>}</div>;
                     if (b.kind === "sleep") return (
-                      <div key={bi} style={{ ...base, background: ASLEEP, color: "#fff", padding: "3px 6px" }}>
+                      <div key={bi} {...hov} style={{ ...base, background: ASLEEP, color: "#fff", padding: "3px 6px" }}>
                         {b.isStart && b.h >= 44 ? (
                           <div style={{ fontSize: 9.5, lineHeight: 1.5, fontWeight: 600 }}>
                             <b style={{ fontWeight: 800, fontSize: 10.5 }}>취침 {bt}{bc}</b><br />기상 {wt}{wc}<br />입면 {b.sol}분 · 침대밖 {b.out}분<br />{b.woke ? `밤중깸 ${b.woke}회${b.waso ? ` (${b.waso})` : ""}` : "밤중깸 없음"}{kv ? <><br /><span style={{ opacity: .75, fontWeight: 700 }}>한국 시간 기준</span></> : null}
@@ -216,7 +244,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
                     );
                     // 루틴
                     return (
-                      <div key={bi} title={b.cat} onClick={(e) => openTip(e, `${rtime} ${b.cat}`)} style={{ ...base, color: b.fg, padding: b.h >= 16 ? "3px 6px" : "0 6px", cursor: "pointer" }}>
+                      <div key={bi} {...hov} style={{ ...base, color: b.fg, padding: b.h >= 16 ? "3px 6px" : "0 6px" }}>
                         {b.h >= 30 ? (<><span style={{ fontWeight: 800, fontSize: 10.5, fontVariantNumeric: "tabular-nums", display: "block", lineHeight: 1.15 }}>{rtime}</span><span style={{ fontWeight: 600, fontSize: 9.5, lineHeight: 1.3, display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: Math.max(1, Math.floor((hh - 18) / 12.5)), overflow: "hidden", wordBreak: "keep-all", overflowWrap: "anywhere" }}>{b.cat}</span></>)
                           : (<span style={{ fontWeight: 700, fontSize: b.h >= 16 ? 9.5 : 8.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{b.h >= 16 ? b.cat : b.cat.split(" ")[0]}</span>)}
                       </div>
@@ -234,7 +262,7 @@ export default function LogTimeline({ cols = [], sleeps = [], routines = [], tar
         {anyForeign && <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>✈ 시간대 이동 · 🌐 현지날짜/지역 · <span style={{ color: "#2a7fa5", fontWeight: 800 }}>한국</span> 환산일</span>}
         {on && <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 12, height: 12, borderRadius: 3, border: "2px dashed #EC6BA8", background: "rgba(236,107,168,.14)", display: "inline-block", boxSizing: "border-box" }} />목표(프로토콜)</span>}
       </div>
-      {tip && <div style={{ position: "fixed", left: tip.x, top: tip.y, maxWidth: 240, background: "#0D1B2A", color: "#fff", fontSize: 11, lineHeight: 1.5, padding: "9px 11px", borderRadius: 9, boxShadow: "0 8px 24px rgba(13,27,42,.28)", zIndex: 50 }}>{tip.text}</div>}
+      {tip && <div style={{ position: "fixed", left: tip.x, top: tip.y, maxWidth: 240, background: "#0D1B2A", color: "#fff", fontSize: 11, lineHeight: 1.5, padding: "9px 11px", borderRadius: 9, boxShadow: "0 8px 24px rgba(13,27,42,.28)", zIndex: 50, whiteSpace: "pre-line", pointerEvents: "none" }}>{tip.text}</div>}
     </div>
   );
 }
