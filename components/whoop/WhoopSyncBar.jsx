@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { RefreshCw, Loader2 } from "lucide-react";
 
 const STALE_MS = 26 * 60 * 60 * 1000; // 하루 + cron 지연 여유
-const SOURCE = { auto: "자동", manual: "직접" };
+const SOURCE = { auto: "자동", manual: "직접", connect: "연결" };
 
 function fmt(iso, withTime = true) {
   if (!iso) return "";

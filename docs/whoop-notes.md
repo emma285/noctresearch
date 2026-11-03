@@ -15,6 +15,8 @@
 > - 1단계 완료: 운영 DB에 표 4개(whoop_connections/sleep/recovery + access_logs) + 접속기록 보호 트리거 2개 적용. drizzle.__drizzle_migrations에 0001~0007 기록 보강(0000만 있었음). `drizzle-kit push` 미사용.
 > - 2단계 완료: Vercel Production에 WHOOP_CLIENT_ID/SECRET/REDIRECT_URI/TOKEN_ENC_KEY + CRON_SECRET 등록(모두 Config 타입, Production 전용). Preview(feat/whoop) 4개는 그대로 유지.
 > - 5단계 완료: 개인정보처리방침 시행일 2026-10-22 → 2026-11-03.
+> - 운영 배포 완료(main b107343 + 환경변수 반영 재배포). WHOOP 대시보드 Webhook·Privacy URL 운영 주소로 교체. 엠마 계정 연결 테스트 성공(수면 17·회복 16건).
+> - 추가: 연결 시에도 '마지막 확인' 기록(source=connect), 코치 전용 WHOOP 리포트 페이지(`/coach/clients/[id]/whoop-report`) + 패널 [상세 리포트] 버튼. 리포트의 낮 활동 묶음은 사이클·운동 미저장이라 숨김 처리.
 
 1. **DB 마이그레이션 (운영 DB)**
    - 이 브랜치에서 추가한 마이그레이션 3개. 전부 새 테이블·새 컬럼 추가만, 기존 데이터 변경 없음.

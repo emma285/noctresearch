@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { getCurrentUser } from "../../../../lib/whoop/session";
 import { verifyOAuthState, STATE_COOKIE } from "../../../../lib/whoop/crypto";
 import { exchangeCode, whoopGet } from "../../../../lib/whoop/api";
-import { saveConnection, backfill, findOtherActiveEmail } from "../../../../lib/whoop/store";
+import { saveConnection, backfill, findOtherActiveEmail, markChecked } from "../../../../lib/whoop/store";
 import { logAccess } from "../../../../lib/accessLog";
 
 export const runtime = "nodejs";
@@ -66,6 +66,7 @@ export async function GET(request) {
     // 백필 실패해도 연결 자체는 유지 (이후 웹훅/재시도로 채움)
     try {
       const counts = await backfill(user.email, tokens.access_token, 30);
+      await markChecked(user.email, "connect"); // 연결하며 WHOOP에 직접 확인한 것 → 코치 패널 '마지막 확인'에 반영
       console.log("whoop backfill:", user.email, counts);
     } catch (e) {
       console.error("whoop backfill failed:", e?.message);

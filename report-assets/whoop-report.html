@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WHOOP 수면 리포트 샘플</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f4f2; --surface-1: #fcfcfb; --border: #e4e3df;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #77766f;
+  --grid: #ebeae6; --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+  --need: #52514e; --need-bar: #a3a29b; --rec-green: #16EC06; --rec-yellow: #FFDE00; --rec-red: #FF0026;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111110; --surface-1: #1a1a19; --border: #2e2e2b;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a998f;
+    --grid: #2a2a27; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --need: #c3c2b7; --need-bar: #75746d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111110; --surface-1: #1a1a19; --border: #2e2e2b;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a998f;
+  --grid: #2a2a27; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --need: #c3c2b7; --need-bar: #75746d;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; line-height: 1.5; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+header .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--text-muted); }
+header h1 { font-size: 22px; margin: 4px 0 2px; letter-spacing: -.01em; }
+header p { margin: 0; color: var(--text-secondary); font-size: 13px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 18px 18px 14px; margin-top: 14px; }
+.card h2 { font-size: 15px; margin: 0; }
+.card .sub { font-size: 12px; color: var(--text-secondary); margin: 2px 0 10px; }
+.segrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.seg { display: inline-flex; gap: 2px; background: var(--grid); padding: 3px; border-radius: 10px; }
+.seg button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; font: inherit; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--text-primary); font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.segrange { font-size: 12px; color: var(--text-muted); }
+.range { float: right; font-size: 12px; font-weight: 400; color: var(--text-muted); margin-left: 8px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+.kpi { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+.kpi .v { font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+.kpi .k { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+.nw { white-space: nowrap; }
+.kpi .n { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+@media (max-width: 600px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--text-secondary); font-size: 11px; }
+svg .val { fill: var(--text-primary); font-weight: 600; }
+.whoop { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .12em; padding: 2px 6px; border-radius: 4px;
+  background: var(--text-primary); color: var(--surface-1); margin-left: 6px; vertical-align: 2px; }
+.notes { font-size: 12px; color: var(--text-muted); margin: 8px 0 0; padding-left: 16px; }
+.summary { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
+.summary li { margin: 4px 0; }
+.kpi, .cmp > div, .card { min-width: 0; }
+.cmp { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.cmp > div + div { border-top: 4px double var(--text-muted); padding-top: 18px; }
+.cmp > div > .legend span { font-weight: 700; font-size: 13px; color: var(--text-primary); }
+@media (max-width: 600px) { .range { float: none; display: block; margin: 2px 0 0; } }
+details { margin-top: 14px; font-size: 13px; }
+summary { cursor: pointer; color: var(--text-secondary); }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; margin-top: 8px; font-size: 12px; white-space: nowrap; }
+th, td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--text-secondary); font-weight: 600; }
+#tip { position: fixed; pointer-events: none; background: var(--text-primary); color: var(--surface-1); font-size: 12px;
+  padding: 6px 8px; border-radius: 6px; white-space: pre; opacity: 0; transition: opacity .08s; z-index: 10; }
+.hit { fill: transparent; cursor: default; }
+.warn { color: #d03b3b; font-weight: 700; font-size: 13px; margin: 6px 0 8px; }
+.nodata { font-size: 13px; color: var(--text-secondary); background: var(--bg); border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+.tag { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+.sec { font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 40px 0 0; padding-bottom: 8px; border-bottom: 2px solid var(--text-primary); }
+.drow { padding: 5px 0; border-top: 1px solid var(--grid); }
+.drow:first-child { border-top: 0; }
+.dtop { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; font-size: 13px; line-height: 1.3; color: var(--text-secondary); margin-bottom: 2px; }
+.dtop > b { color: var(--text-primary); min-width: 64px; }
+.dtop span b { color: var(--text-primary); }
+.nhatch { background: repeating-linear-gradient(135deg, var(--series-1) 0 1.5px, transparent 1.5px 4px); }
+.dstack { display: flex; gap: 2px; height: 8px; }
+.dstack > div { height: 8px; min-width: 2px; }
+.dstack > div:last-child { border-radius: 0 4px 4px 0; }
+.dpart i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+.dtop .dpart { color: var(--text-primary); }
+.dtrack2 { height: 6px; margin-top: 3px; }
+.dtrack2 > div { height: 6px; border-radius: 0 3px 3px 0; min-width: 2px; }
+.dparts.sp { gap: 2px 8px; font-size: 11.5px; letter-spacing: -.2px; }
+.dparts.sp i { margin-right: 3px; }
+.dparts { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.dparts i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: 0; }
+.tsum { font-size: 14px; color: var(--text-secondary); margin: 6px 0 8px; line-height: 1.6; }
+.tsum b { color: var(--text-primary); }
+.tm { position: relative; display: grid; grid-template-columns: 88px 1fr; column-gap: 8px; margin-top: 4px; }
+.taxis { position: relative; height: 18px; font-size: 11px; color: var(--text-muted); }
+.taxis span { position: absolute; transform: translateX(-50%); }
+.tavgl { position: relative; height: 16px; font-size: 11px; font-weight: 700; color: var(--series-1); }
+.tavgl span { position: absolute; transform: translateX(-50%); }
+.tsum .rng { font-size: 12px; color: var(--text-secondary); margin: 0 0 4px; }
+.tmbg { position: absolute; left: 96px; right: 0; top: 34px; bottom: 0; pointer-events: none; }
+.tmg { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+.tmavg { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px dashed var(--series-1); opacity: .55; }
+.legend i.avgk { width: 0; height: 12px; border-left: 1.5px dashed var(--series-1); background: none; border-radius: 0; }
+.tmlab { display: flex; flex-direction: column; justify-content: center; padding: 6px 0; line-height: 1.25; }
+.tmlab b { font-size: 13px; color: var(--text-primary); }
+.tmlab span { font-size: 11px; color: var(--text-secondary); }
+.tmtrack { position: relative; }
+.tmB { grid-template-columns: max-content 1fr; }
+.tmB .tmlab span { white-space: nowrap; }
+.tmB .taxis { font-size: 10px; letter-spacing: -.2px; }
+.tmB .taxis, .tmB .tavgl, .tmB .tmtrack { margin-right: 14px; }
+.tmB .tmbg { right: 14px; }
+.tmlab b.v { font-size: 11px; }
+.tmlab small.cnt { font-size: 11px; font-weight: 400; color: var(--text-muted); }
+.tmtrack .tbar { position: absolute; top: 50%; margin-top: -5px; height: 10px; background: var(--series-1); border-radius: 4px; }
+.dmiss { border-top: 1px solid var(--grid); padding-top: 8px; margin-top: 2px; font-size: 13px; color: var(--text-muted); }
+.dmiss.top { border-top: 0; padding-top: 0; margin: 0 0 10px; }
+.dline { display: flex; align-items: center; gap: 10px; }
+.dline .dtrack { flex: 1; }
+.dgap { font-size: 12px; color: var(--text-secondary); white-space: nowrap; min-width: 92px; text-align: right; }
+.dgap b { color: var(--text-primary); }
+.dtrack { position: relative; height: 8px; }
+.hatch { background: repeating-linear-gradient(135deg, var(--need-bar) 0 1.5px, transparent 1.5px 4px); }
+.dneed { position: absolute; left: 0; top: 0; height: 8px; border-radius: 0 4px 4px 0; }
+.dfill { position: relative; height: 8px; background: var(--series-1); border-radius: 0 4px 4px 0; }
+.dfill.flat { border-radius: 0; }
+.dmore, .legend i.more { background: var(--series-1); opacity: .4; }
+.dmore { position: absolute; top: 0; height: 8px; border-radius: 0 4px 4px 0; }
+.fine { font-size: 11px; color: var(--text-muted); margin: 10px 0 0; }
+.card .sub .fnote { display: inline-block; margin-top: 3px; font-size: 11px; color: var(--text-muted); }
+.legend .lk { color: var(--text-muted); font-weight: 600; margin-right: -4px; }
+.sec-note { font-size: 13px; color: var(--text-secondary); margin: 8px 0 0; padding: 0; list-style: none; }
+.sec-note li { padding-left: 1em; text-indent: -1em; margin: 2px 0; }
+.sec-note li::before { content: "* "; }
+.wolist td, .wolist th { text-align: left; }
+.idx td:nth-child(3), .idx th:nth-child(3) { text-align: left; }
+footer { font-size: 11px; color: var(--text-muted); margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">SLEEP REPORT · SAMPLE</div>
+    <h1>WHOOP 수면 리포트</h1>
+    <p id="period"></p>
+  </header>
+
+  <div class="segrow"><div class="seg" id="seg" role="group" aria-label="상단 카드 기간"></div><span class="segrange" id="segrange"></span></div>
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card" data-range="day">
+    <h2>한눈에 보기</h2>
+    <ul class="summary" id="summary"></ul>
+    <p class="fine">* 시간은 초를 반올림해 분까지만 표시하므로(예: 49분 31초 → 50분), 더한 값에 1분 정도 오차가 생길 수 있습니다.<br>* 시각은 그 지역 현지 시각 기준입니다 (원정 중이면 원정지 시각).</p>
+  </section>
+
+  <details class="card" style="margin-top:14px">
+    <summary><b>지표 32개가 어디에 있나</b> (펼치기)</summary>
+    <div class="tablewrap"><table class="idx" id="index"></table></div>
+  </details>
+
+  <div class="sec">수면 시간</div>
+  <ul class="sec-note"><li>날짜 = 잠에서 깬 날 (예: 10/13 = 10/12 밤에 잠들어 10/13 아침에 깬 잠)</li><li>실제 수면 = 침대에 있던 시간 − 깬 시간 − 측정이 끊긴 시간</li><li>실제 수면은 밤잠만 기준 (낮잠 제외)</li></ul>
+  <section class="card" data-range="day">
+    <h2>실제 수면 시간 vs 필요 수면 시간 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">필요 수면 시간 = WHOOP이 매일 계산한, 그날 밤 필요한 잠의 양 (어떻게 정해졌는지는 바로 아래 섹션)<br>부족 = 필요 수면 시간에서 실제 수면 시간을 뺀 시간</p>
+    <div class="legend"><b class="lk">지표:</b><span><i style="background:var(--series-1)"></i>실제 수면 시간</span><span><i class="hatch"></i>수면 부족량</span><span id="needMore" hidden><i class="more"></i>필요보다 더 잔 만큼</span></div>
+    <div id="needchart"></div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>필요 수면 시간은 어떻게 정해졌나 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">필요 수면 시간 = 기본 필요 수면 + 수면 부채 + 활동량 보정 − 낮잠 보정<br>· 기본 필요 수면: 지금까지 기록으로 정한 평소 필요량<br>· 수면 부채: 최근 덜 자서 밀린 잠<br>· 활동량 보정: 낮 활동이 많았던 만큼 더 필요한 잠<br>· 낮잠 보정: 낮잠으로 이미 채워서 빼는 잠</p>
+    <div class="legend"><b class="lk">지표:</b><span><i style="background:var(--series-1)"></i>기본 필요 수면</span><span><i style="background:var(--series-2)"></i>수면 부채</span><span><i style="background:var(--series-3)"></i>활동량 보정</span><span><i class="nhatch"></i>낮잠 보정</span></div>
+    <div id="needparts"></div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>언제 자고 일어났나 · 얼마나 일정했나 <span class="whoop">DATA BY WHOOP</span></h2>
+    <div class="tsum" id="tmSum"></div>
+    <div class="legend"><b class="lk">지표:</b><span><i style="background:var(--series-1)"></i>침대에 있던 시간</span><span><i class="avgk"></i>평균 시각</span></div>
+    <div id="tmerge"></div>
+  </section>
+
+
+  <section class="card" data-range="day">
+    <h2>수면 성과 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">WHOOP 종합 점수 · 잔 시간, 일관성, 효율, 수면 중 스트레스를 함께 반영</p>
+    <div class="legend"><b class="lk">지표:</b><span>수면 성과</span><span><i style="background:var(--rec-green)"></i>최적 85~100%</span><span><i style="background:var(--rec-yellow)"></i>충분 70~84%</span><span><i style="background:var(--rec-red)"></i>부족 0~69%</span></div>
+    <div id="perf"></div>
+  </section>
+
+  <section class="card" data-range="week">
+    <h2>주중 vs 주말 수면 시각 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">막대 = 평균 취침 ~ 평균 기상</p>
+    <div class="legend"><b class="lk">지표:</b><span>주중·주말 차이</span><span><i style="background:var(--series-1)"></i>주중</span><span><i style="background:var(--series-2)"></i>주말</span></div>
+    <div id="weekendBars"></div>
+    <p class="notes" id="weekendNote" style="padding-left:0"></p>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>수면 일관성 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="warn">⚠ 해당 지표의 신뢰성·활용도가 낮아 사용 여부 판단 필요 — 기록이 충분히 쌓였는데도 '측정 불가'(0%)로 나오는 날이 있고(예: 10/15, 10/17, 10/23), 그 이유를 알 수 없음</p>
+    <p class="sub">최근 며칠과 취침·기상 시각이 비슷한 정도 (WHOOP 점수, 계산식 비공개)</p>
+    <div class="legend"><b class="lk">지표:</b><span>수면 일관성</span></div>
+    <div id="consistency"></div>
+  </section>
+
+  <div class="sec">수면의 질</div>
+  <ul class="sec-note"><li>날짜 = 잠에서 깬 날 (예: 10/13 = 10/12 밤에 잠들어 10/13 아침에 깬 잠)</li></ul>
+  <section class="card" data-range="day">
+    <h2>수면 단계 비율 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">실제로 잔 시간 중 각 단계가 차지한 비율<br><span class="fnote">* 수면 시간이나 취침 시각에 따라 단계 비율이 달라질 수 있음</span></p>
+    <div class="legend"><b class="lk">지표:</b><span>수면 단계 비율</span><span><i style="background:var(--series-1)"></i>깊은 수면</span><span><i style="background:var(--series-2)"></i>REM 수면</span><span><i style="background:var(--series-3)"></i>얕은 수면</span></div>
+    <div id="stages"></div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>수면 방해 횟수 · 깬 시간 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">방해 횟수 = 침대에 있던 시간 중 수면이 방해받은 횟수<br>깬 시간 = 침대에 있던 시간 중 깨어 있던 시간 합계</p>
+    <div class="legend"><b class="lk">지표:</b><span><i style="background:var(--series-1)"></i>방해 횟수</span><span><i style="background:var(--series-2)"></i>깬 시간</span></div>
+    <div id="disturb"></div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>측정이 끊긴 시간 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">자는 중 기기 신호가 끊긴 시간<br>이 시간은 실제 수면 시간에서 빠짐</p>
+    <div class="legend"><b class="lk">지표:</b><span>데이터 미수신 시간 · 미수신 비율</span></div>
+    <div id="nodata"></div>
+  </section>
+
+  <div class="sec">몸 상태</div>
+  <ul class="sec-note"><li>날짜 = 잠에서 깬 날 (예: 10/13 = 10/12 밤에 잠들어 10/13 아침에 깬 잠)</li></ul>
+  <section class="card" data-range="day">
+    <h2>Recovery <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">WHOOP 회복 점수 (0~100%) · 색 구간은 WHOOP 기준 그대로</p>
+    <div class="legend"><b class="lk">지표:</b><span>회복 점수</span></div>
+    <div class="legend"><span><i style="background:var(--rec-green)"></i>67~100%</span><span><i style="background:var(--rec-yellow)"></i>34~66%</span><span><i style="background:var(--rec-red)"></i>0~33%</span></div>
+    <div id="recovery"></div>
+    <ul class="notes"><li>* 표시 = WHOOP 초기 적응 기간 (개인 기준을 배우는 중이라 점수 정확도가 낮음)</li></ul>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>몸 상태, 평소와 비교 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">그날 값 − 평소 값 · 평소 = 그 전 30일 안 기록의 평균 (기록 3개 이상일 때부터)</p>
+    <div class="legend"><b class="lk">지표:</b><span>평소 대비 변화 (HRV·안정시 심박·호흡수·피부 온도)</span></div>
+    <div id="cmpmiss"></div>
+    <div class="cmp">
+      <div><div class="legend"><span>HRV (ms)</span></div><div id="hrv"></div></div>
+      <div><div class="legend"><span>안정시 심박 (bpm)</span></div><div id="rhr"></div></div>
+      <div><div class="legend"><span>호흡수 (회/분)</span></div><div id="resp"></div></div>
+      <div><div class="legend"><span>피부 온도 (℃)</span></div><div id="skin"></div></div>
+    </div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>산소포화도 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">자는 동안 잰 값 <span style="color:var(--text-muted)">(의료적 판단 용도가 아님)</span></p>
+    <div class="legend"><b class="lk">지표:</b><span>산소포화도 (%)</span></div>
+    <div id="spo2"></div>
+  </section>
+
+  <div class="sec">낮 활동</div>
+  <ul class="sec-note"><li>날짜 = 활동한 날</li></ul>
+  <section class="card" data-range="day">
+    <h2>낮 활동과 그날 밤 수면 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">그날 낮 활동 뒤에 잔 잠의 평균 실제 수면 시간 · 기록이 적어 참고용</p>
+    <div class="legend"><b class="lk">지표:</b><span>낮 부하 → 그날 밤 수면 · 운동한 날 vs 안 한 날 수면 · 운동 종목별 수면 영향 · 하루 활동량 → 수면 · 늦은 고강도 운동</span></div>
+    <div class="cmp">
+      <div><div class="legend"><span>운동 여부</span></div><div id="cmpWorkout"></div></div>
+      <div><div class="legend"><span id="strainLabel">하루 Strain</span></div><div id="cmpStrain"></div></div>
+      <div><div class="legend"><span id="stepsLabel">걸음 수</span></div><div id="cmpSteps"></div></div>
+      <div><div class="legend"><span>운동 종목</span></div><div id="cmpSport"></div></div>
+    </div>
+    <div class="nodata" id="latehi"></div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>부하와 회복 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub" id="balanceSub"></p>
+    <div class="legend"><b class="lk">지표:</b><span>부하 vs 회복 균형 · 주간 누적 부하 vs 수면 부채</span></div>
+    <div id="balance" class="nodata"></div>
+    <div class="legend" style="margin-top:12px"><span>주별 하루 Strain 합계 (월~일) · 오른쪽 = 그 주 마지막 수면 부채 · <b id="weekrange"></b></span></div>
+    <div id="weeks"></div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>하루 Strain · 걸음 수 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">그날 낮 활동으로 몸에 걸린 부하 (0~21)</p>
+    <div class="legend"><b class="lk">지표:</b><span>하루 Strain (하루 활동량 → 수면의 재료: 걸음 수)</span></div>
+    <div class="cmp">
+      <div><div class="legend"><span>하루 Strain</span></div><div id="strain"></div></div>
+      <div><div class="legend"><span>걸음 수</span></div><div id="steps"></div></div>
+    </div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>운동 기록 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">종목 · 시작~종료 · 운동 종료 후 그날 밤 잠자리에 들기까지 걸린 시간 · 코치 화면에서는 종목을 한글로 표시</p>
+    <div class="legend"><b class="lk">지표:</b><span>운동 시작·종료 시각 · 운동 종료 ~ 취침 간격</span></div>
+    <div class="tablewrap"><table class="wolist" id="wolist"></table></div>
+  </section>
+
+  <div class="sec">이번 데이터로는 만들 수 없는 지표</div>
+  <section class="card">
+    <h2>목표 대비 실제 (프로토콜 이행)</h2>
+    <div class="nodata">계산 불가 — 앱에서 코치가 정한 목표 수면(취침·기상)이 필요해요. WHOOP 기록만으로는 만들 수 없어요.</div>
+  </section>
+  <section class="card">
+    <h2>체감과 측정 차이</h2>
+    <div class="nodata">계산 불가 — 앱 수면일지(깬 횟수·깬 시간·아침 컨디션)가 필요해요. WHOOP 기록만으로는 만들 수 없어요.</div>
+  </section>
+  <section class="card">
+    <h2>낮잠 기록 · 낮잠 횟수·시간</h2>
+    <div class="nodata" id="napcard"></div>
+  </section>
+
+  <details>
+    <summary>날짜별 데이터 표로 보기</summary>
+    <div class="tablewrap"><table id="table"></table></div>
+  </details>
+
+  <footer>
+    WHOOP 데이터 기반 샘플 리포트 · 의료적 진단이 아닌 수면 코칭 참고 자료입니다.
+  </footer>
+</div>
+<div id="tip"></div>
+
+<script>
+const DATA = __DATA__;
+const NS = "http://www.w3.org/2000/svg";
+const hm = (m) => { m = Math.round(m); const h = Math.floor(m / 60), mm = m % 60; return h ? `${h}시간 ${mm}분` : `${mm}분`; };
+const clock18 = (m) => { const t = (Math.round(m) + 18 * 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
+const f1 = (x) => (Math.round(x * 10) / 10).toString();
+const label = (r) => `${r.date}(${r.wd})`;
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function svg(id, w, h) {
+  const s = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img" });
+  document.getElementById(id).appendChild(s);
+  return s;
+}
+// 위·아래만 둥근 막대 (기준선 쪽은 각지게)
+function bar(s, x, y, w, h, fill, roundTop = true) {
+  const r = Math.min(4, w / 2, Math.abs(h) / 2);
+  if (h <= 0) return;
+  const d = roundTop
+    ? `M${x},${y + h} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h} Z`
+    : `M${x},${y} V${y + h - r} Q${x},${y + h} ${x + r},${y + h} H${x + w - r} Q${x + w},${y + h} ${x + w},${y + h - r} V${y} Z`;
+  return el("path", { d, fill }, s);
+}
+function hbar(s, x, y, w, h, fill) {  // 왼쪽 기준선에서 오른쪽 끝만 둥근 가로 막대
+  const r = Math.min(4, h / 2, w / 2);
+  if (w <= 0) return;
+  return el("path", { d: `M${x},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x} Z`, fill }, s);
+}
+const tip = document.getElementById("tip");
+function hover(target, text) {
+  target.addEventListener("mousemove", (e) => { tip.textContent = text; tip.style.opacity = 1;
+    tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = e.clientY + 12 + "px"; });
+  target.addEventListener("mouseleave", () => (tip.style.opacity = 0));
+}
+const css = (v) => `var(${v})`;
+
+/* ---- 기간 ---- */
+const ALL_R = DATA.rows, ALL_D = DATA.drows;
+const OPEN = DATA.openDays || [];  // 아직 안 끝난 하루(오늘) — 낮 활동에서 뺀 날
+const END = [...ALL_R, ...ALL_D].reduce((m, d) => (d.iso > m ? d.iso : m), "");
+const FIRST = [...ALL_R, ...ALL_D].reduce((m, d) => (d.iso < m ? d.iso : m), "9999");
+const addDays = (iso, n) => { const t = new Date(iso + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+const md = (iso) => `${iso.slice(5, 7)}/${iso.slice(8, 10)}`;
+const winStart = (n) => (n ? addDays(END, -(n - 1)) : FIRST);
+const inWin = (n) => (x) => x.iso >= winStart(n) && x.iso <= END;
+const rangeText = (n) => `${md(winStart(n))} ~ ${md(END)}`;
+const DAYS = 14, WEEKS = 8;
+const R = ALL_R.filter(inWin(DAYS));      // 하단 일 단위 섹션: 최근 14일
+const DR = ALL_D.filter(inWin(DAYS));
+// 기간 안에서 기록 없는 날짜 (일 단위 목록 섹션 맨 아래 한 줄)
+function missingDays(rows) {
+  const out = []; for (let d = winStart(DAYS); d <= END; d = addDays(d, 1)) if (!rows.some((x) => x.iso === d) && !OPEN.includes(d)) out.push(d);
+  return out;
+}
+const missingLine = (rows) => { const m = missingDays(rows); return m.length ? `<div class="dmiss">기록 없음: ${m.map(md).join(", ")}</div>` : ""; };
+const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+// 기간 안의 기록으로 요약값 계산
+function agg(rows, drows) {
+  const A = { nNights: rows.length };
+  if (rows.length) {
+    A.avgActual = mean(rows.map((r) => r.actual)); A.avgNeed = mean(rows.map((r) => r.need));
+    A.shortNights = rows.filter((r) => r.need > r.actual).length;
+    A.avgShort = mean(rows.map((r) => Math.max(0, r.need - r.actual)));
+    A.bedSpread = Math.max(...rows.map((r) => r.bed)) - Math.min(...rows.map((r) => r.bed));
+    A.wakeSpread = Math.max(...rows.map((r) => r.wake)) - Math.min(...rows.map((r) => r.wake));
+    const we = rows.filter((r) => "토일".includes(r.wd)), wk = rows.filter((r) => !"토일".includes(r.wd)), mid = (r) => r.bed + r.inbed / 2;
+    A.nWe = we.length; A.social = we.length && wk.length ? mean(we.map(mid)) - mean(wk.map(mid)) : null;
+  }
+  const grp = (ds) => { const g = ds.filter((d) => d.nextActual != null); return g.length ? { n: g.length, actual: mean(g.map((d) => d.nextActual)), eff: mean(g.map((d) => d.nextEff)) } : null; };
+  const done = drows.filter((d) => d.done && d.strain != null), paired = done.filter((d) => d.nextActual != null);
+  A.workout = { yes: grp(paired.filter((d) => d.workouts.length)), no: grp(paired.filter((d) => !d.workouts.length)) };
+  if (paired.length) {
+    const sm = median(paired.map((d) => d.strain));
+    A.strainCmp = { median: sm, hi: grp(paired.filter((d) => d.strain > sm)), lo: grp(paired.filter((d) => d.strain <= sm)) };
+    const st = paired.filter((d) => d.steps != null), stm = st.length ? median(st.map((d) => d.steps)) : null;
+    A.stepsCmp = { median: stm, lo: grp(st.filter((d) => d.steps < stm)), hi: grp(st.filter((d) => d.steps >= stm)) };
+  } else { A.strainCmp = { median: null, hi: null, lo: null }; A.stepsCmp = { median: null, lo: null, hi: null }; }
+  const cnt = {}; drows.forEach((d) => d.workouts.forEach((w) => (cnt[w.sport] = (cnt[w.sport] || 0) + 1)));
+  const main = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
+  A.sportCmp = { name: main, main: main ? grp(drows.filter((d) => d.workouts.some((w) => w.sport === main))) : null,
+    other: main ? grp(drows.filter((d) => d.workouts.some((w) => w.sport !== main))) : null };
+  A.meanStrain = done.length ? mean(done.map((d) => d.strain)) : null;
+  const wr = done.filter((d) => d.recovery != null);
+  A.nRecStrain = wr.length;
+  A.lowRec = wr.filter((d) => d.recovery <= 33).map((d) => ({ date: d.date, strain: d.strain, over: d.strain > A.meanStrain, calibrating: d.calibrating }));
+  const late = drows.flatMap((d) => d.workouts.filter((w) => w.late));
+  A.lateHi = { n: drows.filter((d) => d.workouts.some((w) => w.late && w.z45 > 0)).length, lateAll: late.length };
+  return A;
+}
+const A = agg(R, DR);
+const avgOfIn = (rows, k) => mean(rows.map((r) => r[k]));
+
+/* 기간 버튼 + 상단 카드 */
+document.getElementById("period").textContent = `WHOOP 기록 ${md(FIRST)} ~ ${md(END)}`;
+const WEEK_START = (() => { const e = new Date(END + "T00:00:00Z"), dow = (e.getUTCDay() + 6) % 7; return addDays(END, -dow - 7 * (WEEKS - 1)); })();
+const LABEL_FIRST = [0, 1, 2, 3];  // 정의 먼저 보여줄 카드
+function recCard(rows) {  // Recovery 평균 + WHOOP 고정 색 구간별 날 수
+  const sc = rows.map((r) => r.recovery), band = (lo, hi) => sc.filter((v) => v >= lo && v <= hi).length;
+  const sq = (c) => `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(${c});margin-right:6px"></i>`;
+  const cal = rows.filter((r) => r.calibrating).length;
+  const avg = Math.round(mean(sc)), c = avg >= 67 ? "--rec-green" : avg >= 34 ? "--rec-yellow" : "--rec-red";
+  return [`<i style="display:inline-block;width:14px;height:14px;border-radius:3px;background:var(${c});margin-right:8px;vertical-align:1px"></i>${avg}%`, "Recovery 평균",
+    `${sq("--rec-green")}67~100% ${band(67, 100)}일<br>${sq("--rec-yellow")}34~66% ${band(34, 66.999)}일<br>${sq("--rec-red")}0~33% ${band(0, 33.999)}일` +
+    (cal ? `<br>초기 적응 기간 ${cal}일 포함 <span class="nw">(정확도 낮음)</span>` : "")];
+}
+function renderKpis(n) {
+  const rows = ALL_R.filter(inWin(n)), a = agg(rows, ALL_D.filter(inWin(n)));
+  document.getElementById("segrange").textContent = rangeText(n);
+  document.querySelectorAll("#seg button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.n === n)));
+  if (!rows.length) { document.getElementById("kpis").innerHTML = `<div class="kpi" style="grid-column:1/-1"><div class="k">이 기간에는 수면 기록이 없어요</div></div>`; return; }
+  const inbedM = Math.round(avgOfIn(rows, "inbed")), actualM = Math.round(a.avgActual);
+  const K = [
+    [hm(a.avgActual), "평균 수면 시간", `<span class="nw">누워 있던 ${hm(inbedM)} 중</span> <span class="nw">깬 ${hm(inbedM - actualM)} 제외</span>`],
+    [hm(a.avgNeed), "필요 수면 평균", `= 기본 ${hm(avgOfIn(rows, "baseNeed"))}<br>+ 밀린 잠 ${hm(avgOfIn(rows, "debt"))}<br>+ 활동량 보정 ${hm(avgOfIn(rows, "strainNeed"))}${avgOfIn(rows, "napNeed") ? `<br>− 낮잠 ${hm(Math.abs(avgOfIn(rows, "napNeed")))}` : ""}`],
+    [`${a.nNights}일 중 ${a.shortNights}일`, "수면 부족일",
+      a.shortNights === 0 ? "필요 수면만큼 충분히 잤어요"
+        : `필요 수면보다 <span class="nw">하루 평균 ${hm(a.avgShort)} 부족</span>${a.shortNights < a.nNights ? "<br>(충분히 잔 날은 0분으로 계산)" : ""}`],
+    recCard(rows),
+  ];
+  document.getElementById("kpis").innerHTML = K.map(([v, k, nn], i) => LABEL_FIRST.includes(i)
+    ? `<div class="kpi"><div class="k" style="margin-top:0">${k}</div><div class="v">${v}</div><div class="n">${nn}</div></div>`
+    : `<div class="kpi"><div class="v">${v}</div><div class="k">${k}</div><div class="n">${nn}</div></div>`).join("");
+}
+document.getElementById("seg").innerHTML = [[7, "7일"], [14, "14일"], [30, "30일"], [0, "전체"]]
+  .map(([n, t]) => `<button type="button" data-n="${n}">${t}</button>`).join("");
+document.querySelectorAll("#seg button").forEach((b) => b.addEventListener("click", () => renderKpis(+b.dataset.n)));
+renderKpis(DAYS);
+
+/* 하단 섹션 기간 표시 (오른쪽 위) */
+document.querySelectorAll("[data-range]").forEach((sec) => {
+  const h = sec.querySelector("h2, summary"), sp = document.createElement("span");
+  sp.className = "range"; sp.textContent = sec.dataset.range === "week" ? weekRangeText() : rangeText(DAYS);
+  h.appendChild(sp);
+});
+function weekRangeText() { return `${md(WEEK_START)} ~ ${md(END)} (8주)`; }
+
+/* 한눈에 보기 (최근 14일) */
+
+const latest = R.reduce((a, r) => (r.bed > a.bed ? r : a));
+const earliest = R.reduce((a, r) => (r.bed < a.bed ? r : a));
+const sum = [
+  A.shortNights === 0 ? `${A.nNights}일 모두 WHOOP이 계산한 필요 수면 시간만큼 충분히 잤어요.`
+    : `${A.nNights}일 중 ${A.shortNights}일은 WHOOP이 계산한 필요 수면 시간보다 적게 잤어요. 하루 평균으로 ${hm(A.avgShort)}이 모자랐어요${A.shortNights < A.nNights ? " (충분히 잔 날은 0분으로 계산)" : ""}.`,
+  `잠자리에 든 시각은 가장 이른 ${clock18(earliest.bed)}(${earliest.date})부터 가장 늦은 ${clock18(latest.bed)}(${latest.date})까지 ${hm(A.bedSpread)} 차이가 났어요.`,
+  `주말(기상일 토·일)에는 주중보다 수면 중간 시각이 ${hm(Math.abs(A.social))} ${A.social > 0 ? "늦었어요" : "빨랐어요"}.`,
+];
+if (A.workout.yes && A.workout.no)
+  sum.push(`운동한 날 밤에는 평균 ${hm(A.workout.yes.actual)}, 운동하지 않은 날 밤에는 평균 ${hm(A.workout.no.actual)} 잤어요 (각 ${A.workout.yes.n}일·${A.workout.no.n}일 기준).`);
+document.getElementById("summary").innerHTML = sum.map((t) => `<li>${t}</li>`).join("");
+
+/* 언제 자고 일어났나 · 얼마나 일정했나 — 왼쪽 칸: 날짜 / 시각 / 침대·실제 */
+const hmShort = (m) => { m = Math.round(m); const h = Math.floor(m / 60); return h ? `${h}h ${m % 60}m` : `${m}m`; };
+(function () {
+  const box = document.getElementById("tmerge");
+  if (!R.length) { box.innerHTML = '<div class="nodata">이 기간 기록 없음</div>'; return; }
+  const st = (key) => { const v = R.map((r) => r[key]), avg = mean(v); return { avg, dev: mean(v.map((x) => Math.abs(x - avg))) }; };
+  const B = st("bed"), Wk = st("wake");
+  document.getElementById("tmSum").innerHTML =
+    [["취침", B, "bed"], ["기상", Wk, "wake"]].map(([n, x, key]) => { const v = R.map((r) => r[key]);
+      return `<div><b>${n}</b> 평균 <b>${clock18(x.avg)}</b> · 보통 <b>${hm(x.dev)}</b> 정도 차이</div>` +
+        `<div class="rng">가장 이른 ${clock18(Math.min(...v))} · 가장 늦은 ${clock18(Math.max(...v))}</div>`; }).join("");
+  const lo = Math.floor((Math.min(...R.map((r) => r.bed), B.avg - B.dev) - 20) / 60) * 60;
+  const hi = Math.ceil((Math.max(...R.map((r) => r.wake), Wk.avg + Wk.dev) + 20) / 60) * 60;
+  const pct = (m) => ((m - lo) / (hi - lo)) * 100;
+  let ticks = "", grid = "";
+  for (let m = Math.ceil(lo / 120) * 120; m <= hi; m += 120) {
+    ticks += `<span style="left:${pct(m)}%">${clock18(m)}</span>`;
+    grid += `<div class="tmg" style="left:${pct(m)}%"></div>`;
+  }
+  const avgLines = `<div class="tmavg" style="left:${pct(B.avg)}%"></div><div class="tmavg" style="left:${pct(Wk.avg)}%"></div>`;
+  const avgLabels = `<div class="tavgl"><span style="left:${pct(B.avg)}%">${clock18(B.avg)}</span><span style="left:${pct(Wk.avg)}%">${clock18(Wk.avg)}</span></div>`;
+  const bar = (r) => `<div class="tbar" style="left:${pct(r.bed)}%;width:${pct(r.wake) - pct(r.bed)}%"></div>`;
+  const rows = [...R].reverse();
+  box.innerHTML = `<div class="tm tmB">
+    <div></div><div class="taxis">${ticks}</div>
+    <div></div>${avgLabels}
+    <div class="tmbg">${grid}${avgLines}</div>
+    ${rows.map((r) => `<div class="tmlab"><b>${label(r)}</b><span>${clock18(r.bed)} → ${clock18(r.wake)}</span><span>침대 ${hmShort(r.inbed)} · 실제 <b class="v">${hmShort(r.actual)}</b></span></div>
+      <div class="tmtrack">${bar(r)}</div>`).join("")}
+  </div>` + missingLine(R);
+  box.querySelector(".tmbg").style.left = box.querySelector(".tmlab").offsetWidth + 8 + "px";  // 왼쪽 칸 폭이 글자에 맞춰 변하므로
+})();
+
+/* 2. 실제 vs 필요 — 하루 한 줄, 숫자 항상 표시 */
+(function () {
+  const max = Math.ceil(Math.max(...R.map((r) => Math.max(r.need, r.actual))) / 60) * 60, pct = (m) => (m / max) * 100;
+  const missing = missingDays(R);
+  document.getElementById("needMore").hidden = !R.some((r) => r.actual > r.need);
+  document.getElementById("needchart").innerHTML = [...R].reverse().map((r) => {
+    const gap = r.need - r.actual;
+    return `<div class="drow">
+      <div class="dtop"><b>${label(r)}</b><span>실제 <b>${hm(r.actual)}</b> / 필요 ${hm(r.need)}</span></div>
+      <div class="dline"><div class="dtrack"><div class="dneed hatch" style="width:${pct(r.need)}%"></div><div class="dfill${gap < 0 ? " flat" : ""}" style="width:${pct(Math.min(r.actual, r.need))}%"></div>${gap < 0 ? `<div class="dmore" style="left:${pct(r.need)}%;width:${pct(-gap)}%"></div>` : ""}</div>
+        <span class="dgap">${gap > 0 ? `<b>${hm(gap)}</b> 부족` : gap < 0 ? `<b>${hm(-gap)}</b> 더 잠` : "부족 없음"}</span></div>
+    </div>`;
+  }).join("") + missingLine(R);
+})();
+
+/* 수면 단계 비율 — 하루 한 줄, 숫자 항상 표시 */
+(function () {
+  const parts = [["deep", "깊은 수면", "--series-1"], ["rem", "REM 수면", "--series-2"], ["light", "얕은 수면", "--series-3"]];
+  document.getElementById("stages").innerHTML = [...R].reverse().map((r) => { const v = { deep: r.deep, rem: r.rem, light: 100 - r.deep - r.rem };
+    return `<div class="drow">
+      <div class="dtop"><b>${label(r)}</b><span>실제 수면 <b>${hmShort(r.actual)}</b></span></div>
+      <div class="dstack">${parts.map(([k, , c]) => `<div style="width:${v[k]}%;background:var(${c})"></div>`).join("")}</div>
+      <div class="dparts sp">${parts.map(([k, name, c]) => `<span class="dpart" title="${name}"><i style="background:var(${c})"></i><b>${Math.round(v[k])}%</b> (${hmShort(r.actual * v[k] / 100)})</span>`).join("")}</div>
+    </div>`; }).join("") + missingLine(R);
+})();
+
+/* 4. Recovery (WHOOP 고정 색) — 폰 폭 기준 (수면 성과와 같은 방식) */
+vbars("recovery", R, { W: Math.max(300, document.getElementById("recovery").clientWidth), H: 200,
+  val: (r) => r.recovery, max: 100, ticks: [0, 33, 66, 100],
+  color: (r) => (r.recovery >= 67 ? "--rec-green" : r.recovery >= 34 ? "--rec-yellow" : "--rec-red"),
+  fmt: (r) => `${Math.round(r.recovery)}${r.calibrating ? "*" : ""}` });
+document.getElementById("recovery").insertAdjacentHTML("beforeend", missingLine(R));
+
+/* 5. 평소 대비 (기준선 0, 위·아래 막대) */
+function diverge(id, key, baseKey, rawKey, fmtVal) {
+  const W = Math.max(300, document.getElementById(id).clientWidth), H = 214, top = 20, bottom = 44, left = 40, right = 4;
+  const s = svg(id, W, H), vals = R.map((r) => r[key]).filter((v) => v != null);
+  const m = Math.max(1, ...vals.map(Math.abs)), lim = Math.ceil(m), mid = top + (H - top - bottom) / 2;
+  const sy = (v) => mid - (v / lim) * ((H - top - bottom) / 2), bw = (W - left - right) / R.length;
+  el("line", { x1: left, x2: W - right, y1: mid, y2: mid, stroke: css("--text-muted") }, s);
+  el("text", { x: left - 4, y: sy(lim) + 4, "text-anchor": "end" }, s).textContent = `+${lim}`;
+  el("text", { x: left - 4, y: mid + 4, "text-anchor": "end" }, s).textContent = "평소";
+  el("text", { x: left - 4, y: sy(-lim) + 4, "text-anchor": "end" }, s).textContent = `−${lim}`;
+  const bases = R.map((r) => r[baseKey]).filter((v) => v != null);
+  if (bases.length) el("text", { x: left - 4, y: mid + 16, "text-anchor": "end", style: "font-size:10px" }, s)
+    .textContent = fmtVal(mean(bases));
+  R.forEach((r, i) => {
+    const x = left + i * bw, w = Math.min(16, bw - 6), cx = x + bw / 2, g = el("g", {}, s), v = r[key];
+    if (R.length <= 12 || i % 2 === 0) el("text", { x: cx, y: H - 6, "text-anchor": "middle" }, s).textContent = r.date;
+    if (v == null) {
+      el("text", { x: cx, y: mid - 4, "text-anchor": "middle", style: "font-size:10px" }, s).textContent = "–";
+      return;
+    }
+    if (v >= 0) bar(g, cx - w / 2, sy(v), w, mid - sy(v), css("--series-1"));
+    else bar(g, cx - w / 2, mid, w, sy(v) - mid, css("--series-1"), false);
+    el("text", { x: cx, y: v >= 0 ? sy(v) - 5 : sy(v) + 13, "text-anchor": "middle", class: "val", style: "font-size:10px" }, s)
+      .textContent = fmtVal(r[rawKey]);
+  });
+}
+diverge("hrv", "hrvDiff", "hrvBase", "hrv", f1);
+diverge("rhr", "rhrDiff", "rhrBase", "rhr", f1);
+
+/* 6. 낮 활동 → 그날 밤 수면 */
+function cmp(id, items) {
+  const W = 340, rowH = 34, left = 92, right = 70, H = items.length * rowH + 6;
+  const s = svg(id, W, H), max = Math.max(...items.map((d) => (d.g ? d.g.actual : 0))), sx = (m) => (m / max) * (W - left - right);
+  items.forEach((d, i) => {
+    const y = i * rowH + 4, g = el("g", {}, s);
+    el("text", { x: 0, y: y + 15 }, s).textContent = d.label;
+    if (!d.g) { el("text", { x: left, y: y + 15 }, s).textContent = "해당 날 없음"; return; }
+    hbar(g, left, y + 5, sx(d.g.actual), 14, css("--series-1"));
+    el("text", { x: left + sx(d.g.actual) + 6, y: y + 16, class: "val" }, s).textContent = hm(d.g.actual);
+    el("text", { x: 0, y: y + 29, style: "font-size:10px" }, s).textContent = `${d.g.n}일 기준`;
+    el("rect", { class: "hit", x: 0, y, width: W, height: rowH }, g);
+    hover(g, `${d.label}\n그날 밤 실제 수면 평균 ${hm(d.g.actual)}\n수면 효율 평균 ${f1(d.g.eff)}%\n${d.g.n}일 기준`);
+  });
+  if (items.every((d) => d.g)) {
+    const diff = items[0].g.actual - items[1].g.actual, p = document.createElement("p");
+    p.className = "notes"; p.style.paddingLeft = "0";
+    p.textContent = Math.abs(diff) < 1 ? "차이: 1분 미만 (거의 같음)" : `차이: ${items[0].label}이 ${hm(Math.abs(diff))} ${diff > 0 ? "더 잠" : "덜 잠"}`;
+    document.getElementById(id).appendChild(p);
+  }
+}
+cmp("cmpWorkout", [{ label: "운동한 날", g: A.workout.yes }, { label: "운동 안 한 날", g: A.workout.no }]);
+document.getElementById("strainLabel").textContent = `하루 Strain (중앙값 ${f1(A.strainCmp.median)} 기준)`;
+cmp("cmpStrain", [{ label: "Strain 높은 날", g: A.strainCmp.hi }, { label: "Strain 낮은 날", g: A.strainCmp.lo }]);
+
+/* ---- 공통: 세로 막대 / 점 ---- */
+function vbars(id, items, o) {
+  const W = o.W || 700, H = o.H || 190, top = o.top || 18, bottom = 30, left = 40, right = 8;
+  const s = svg(id, W, H), vals = items.map(o.val).filter((v) => v != null);
+  const max = o.max || Math.max(1, ...vals) * 1.12, sy = (v) => H - bottom - (v / max) * (H - top - bottom), bw = (W - left - right) / items.length;
+  (o.ticks || [0, max / 2, max]).forEach((t) => { el("line", { x1: left, x2: W - right, y1: sy(t), y2: sy(t), stroke: css("--grid") }, s);
+    el("text", { x: left - 6, y: sy(t) + 4, "text-anchor": "end" }, s).textContent = o.tickFmt ? o.tickFmt(t) : Math.round(t); });
+  if (o.ref != null) { el("line", { x1: left, x2: W - right, y1: sy(o.ref), y2: sy(o.ref), stroke: "#d03b3b", "stroke-dasharray": "4 3" }, s);
+    el("text", { x: W - right, y: sy(o.ref) - 4, "text-anchor": "end", style: "fill:#d03b3b" }, s).textContent = o.refLabel; }
+  items.forEach((it, i) => {
+    const x = left + i * bw, w = Math.min(28, bw - 8), cx = x + bw / 2, g = el("g", {}, s), v = o.val(it);
+    if (items.length <= 12 || i % 2 === 0) el("text", { x: cx, y: H - bottom + 16, "text-anchor": "middle" }, s).textContent = it.date;
+    if (v == null) {
+      el("text", { x: cx, y: sy(0) - 6, "text-anchor": "middle", style: `font-size:10px;${o.nullStyle || ""}` }, s).textContent = o.nullText || "–";
+    } else {
+      const b = bar(g, cx - w / 2, sy(v), w, sy(0) - sy(v), css(o.color ? o.color(it) : "--series-1"));
+      if (b && o.faded && o.faded(it)) b.setAttribute("opacity", ".35");
+      if (o.fmt) { // 배열이면 칸이 좁을 때 줄바꿈 (예: 4회 / 8분)
+        const f = o.fmt(it), lines = Array.isArray(f) ? (bw < 56 ? f : [f.join(" · ")]) : [f];
+        const t = el("text", { x: cx, y: sy(v) - 5 - (lines.length - 1) * 12, "text-anchor": "middle", class: "val", style: "font-size:10px" }, s);
+        lines.forEach((ln, k) => { el("tspan", { x: cx, dy: k ? 12 : 0 }, t).textContent = ln; });
+      }
+    }
+    if (o.tip) { el("rect", { class: "hit", x, y: top, width: bw, height: H - top - bottom }, g); hover(g, o.tip(it)); }
+  });
+}
+function dots(id, items, o) {
+  const W = Math.max(300, document.getElementById(id).clientWidth), H = 190, top = 24, bottom = 30, left = 40, right = 10;
+  const s = svg(id, W, H), vals = items.map(o.val), lo = Math.min(...vals), hi = Math.max(...vals), pad = Math.max(0.2, (hi - lo) * 0.25);
+  const y0 = lo - pad, y1 = hi + pad, sy = (v) => H - bottom - ((v - y0) / (y1 - y0)) * (H - top - bottom), bw = (W - left - right) / items.length;
+  [y0, (y0 + y1) / 2, y1].forEach((t) => { el("line", { x1: left, x2: W - right, y1: sy(t), y2: sy(t), stroke: css("--grid") }, s);
+    el("text", { x: left - 4, y: sy(t) + 4, "text-anchor": "end" }, s).textContent = f1(t); });
+  let path = "";
+  items.forEach((it, i) => { const cx = left + i * bw + bw / 2; path += `${i ? "L" : "M"}${cx},${sy(o.val(it))}`; });
+  el("path", { d: path, fill: "none", stroke: css("--series-1"), "stroke-width": 2, opacity: ".5" }, s);
+  items.forEach((it, i) => {
+    const x = left + i * bw, cx = x + bw / 2, g = el("g", {}, s), v = o.val(it);
+    el("circle", { cx, cy: sy(v), r: 4, fill: css("--series-1"), stroke: css("--surface-1"), "stroke-width": 2 }, g);
+    el("text", { x: cx, y: sy(v) - 10, "text-anchor": "middle", class: "val", style: "font-size:10px" }, s).textContent = f1(v);
+    if (items.length <= 12 || i % 2 === 0) el("text", { x: cx, y: H - bottom + 16, "text-anchor": "middle" }, s).textContent = it.date;
+  });
+}
+
+/* 필요 수면 구성 — 하루 한 줄, 숫자 항상 표시 */
+(function () {
+  const max = Math.max(...R.map((r) => r.baseNeed + r.debt + r.strainNeed)), pct = (m) => (m / max) * 100;
+  const parts = [["baseNeed", "기본 필요 수면", "--series-1"], ["debt", "수면 부채", "--series-2"], ["strainNeed", "활동량 보정", "--series-3"]];
+  document.getElementById("needparts").innerHTML = [...R].reverse().map((r) => `<div class="drow">
+      <div class="dtop"><b>${label(r)}</b><span>필요 <b>${hm(r.need)}</b></span></div>
+      <div class="dstack">${r.napNeed ? `<div class="nhatch" style="width:${pct(-r.napNeed)}%"></div>` : ""}${parts.map(([k, , c]) => `<div style="width:${pct(k === "baseNeed" ? r[k] + r.napNeed : r[k])}%;background:var(${c})"></div>`).join("")}</div>
+      <div class="dparts">${parts.map(([k, name, c]) => `<span title="${name}"><i style="background:var(${c})"></i>${hm(r[k])}</span>`).join("")}<span title="낮잠 보정"><i class="nhatch"></i>${r.napNeed ? hm(-r.napNeed) : "0분"}</span></div>
+    </div>`).join("") + missingLine(R);
+})();
+
+vbars("perf", R, { W: Math.max(300, document.getElementById("perf").clientWidth), H: 170, val: (r) => r.perf, color: (r) => (r.perf >= 85 ? "--rec-green" : r.perf >= 70 ? "--rec-yellow" : "--rec-red"), max: 100, ticks: [0, 50, 100], fmt: (r) => `${Math.round(r.perf)}` });
+document.getElementById("perf").insertAdjacentHTML("beforeend", missingLine(R));
+vbars("consistency", R, { val: (r) => r.consistency, max: 100, ticks: [0, 50, 100], fmt: (r) => `${Math.round(r.consistency)}`,
+  nullText: "측정 불가", nullStyle: "fill:#d03b3b;font-weight:700",
+  tip: (r) => `${label(r)}\n${r.consistency == null ? "측정 불가 (WHOOP 값 0%)" : `수면 일관성 ${f1(r.consistency)}%`}` });
+/* 수면 방해 횟수 · 깬 시간 — 하루 한 줄(숫자) + 막대 2개 위아래 */
+(function () {
+  const mc = Math.max(...R.map((r) => r.disturb)), ma = Math.max(...R.map((r) => r.awake));
+  const track = (v, max, c) => `<div class="dtrack2"><div style="width:${(v / max) * 100}%;background:var(${c})"></div></div>`;
+  document.getElementById("disturb").innerHTML = [...R].reverse().map((r) => `<div class="drow">
+      <div class="dtop"><b>${label(r)}</b><span>방해 <b>${r.disturb}회</b> · 깬 시간 <b>${hm(r.awake)}</b></span></div>
+      ${track(r.disturb, mc, "--series-1")}${track(r.awake, ma, "--series-2")}
+    </div>`).join("") + missingLine(R);
+})();
+/* 측정이 끊긴 시간 — 하루 한 줄, 판정 없이 사실만 */
+(function () {
+  const box = document.getElementById("nodata");
+  if (R.every((r) => r.noData === 0)) { box.innerHTML = `<div class="nodata">모든 날 0분 — 측정이 끊긴 시간 없음</div>`; return; }
+  const max = Math.max(...R.map((r) => r.noData));
+  box.innerHTML = [...R].reverse().map((r) => `<div class="drow">
+      <div class="dtop"><b>${label(r)}</b><span>미수신 <b>${hm(r.noData)}</b>${r.noData ? ` (침대 시간의 ${f1(r.reliab)}%)` : ""}</span></div>
+      ${r.noData ? `<div class="dtrack2"><div style="width:${(r.noData / max) * 100}%;background:var(--series-1)"></div></div>` : ""}
+    </div>`).join("") + missingLine(R);
+})();
+
+diverge("resp", "respDiff", "respBase", "resp", f1);
+diverge("skin", "skinDiff", "skinBase", "skin", f1);
+document.getElementById("cmpmiss").innerHTML = missingLine(R).replace('class="dmiss"', 'class="dmiss top"');
+dots("spo2", R, { val: (r) => r.spo2 });
+document.getElementById("spo2").insertAdjacentHTML("beforeend", missingLine(R));
+
+/* 낮 활동 (사이클 기준 16일) */
+vbars("strain", DR, { W: 340, H: 180, val: (d) => d.strain, max: 21, ticks: [0, 7, 14, 21], tip: (d) => `${d.date}(${d.wd})\n하루 Strain ${d.strain == null ? "-" : f1(d.strain)}` });
+vbars("steps", DR, { W: 340, H: 180, val: (d) => d.steps, tickFmt: (t) => `${Math.round(t / 1000)}k`,
+  tip: (d) => `${d.date}(${d.wd})\n걸음 수 ${d.steps == null ? "-" : d.steps.toLocaleString()}걸음\n소모 에너지 ${d.kcal == null ? "-" : d.kcal.toLocaleString() + " kcal"}` });
+document.getElementById("wolist").innerHTML = "<tr><th>날짜</th><th>종목</th><th>시간</th><th>운동 Strain</th><th>심박 4·5존</th><th>운동 종료 → 그날 밤 취침</th></tr>" +
+  DR.flatMap((d) => d.workouts.map((w, k) => `<tr><td>${d.date}(${d.wd})</td><td>${w.sport}</td><td>${w.start}~${w.end} (${hm(w.dur)})</td><td>${f1(w.strain)}</td><td>${w.z45 ? hm(w.z45) : "없음"}</td>` +
+    `<td>${k === d.workouts.length - 1 ? (d.gapToBed == null ? "그날 밤 수면 기록 없음" : hm(d.gapToBed)) : ""}</td></tr>`)).join("");
+
+/* 부하와 회복 */
+const WEEKS_R = DATA.weeks.filter((w) => w.iso >= WEEK_START);
+document.getElementById("weekrange").textContent = weekRangeText();
+document.getElementById("balanceSub").textContent = `회복 점수가 낮은(0~33%) 날 중 그날 하루 Strain이 기간 평균(${f1(A.meanStrain)})보다 높은 날 · 높은 기준은 가안`;
+(function () {
+  const lr = A.lowRec, over = lr.filter((d) => d.over);
+  document.getElementById("balance").textContent = `회복 낮은 날 ${lr.length}일 중 Strain 높은 날 ${over.length}일` +
+    (lr.length ? ` (${lr.map((d) => `${d.date} Strain ${f1(d.strain)}${d.calibrating ? ", 초기 적응 기간" : ""}`).join(" / ")})` : "") + ` · 회복·Strain 둘 다 있는 날 ${A.nRecStrain}일 기준`;
+  const W = 700, rowH = 28, left = 110, right = 150, H = WEEKS_R.length * rowH + 4, s = svg("weeks", W, H);
+  const max = Math.max(...WEEKS_R.map((w) => w.strainSum)), sx = (v) => (v / max) * (W - left - right);
+  WEEKS_R.forEach((w, i) => { const y = i * rowH + 4, g = el("g", {}, s);
+    el("text", { x: 0, y: y + 14 }, s).textContent = w.label;
+    hbar(g, left, y + 3, sx(w.strainSum), 14, css("--series-1"));
+    el("text", { x: left + sx(w.strainSum) + 6, y: y + 14, class: "val" }, s).textContent = `${f1(w.strainSum)} (${w.nDays}일)`;
+    el("text", { x: W, y: y + 14, "text-anchor": "end" }, s).textContent = `수면 부채 ${w.debt == null ? "-" : hm(w.debt)}`;
+    el("rect", { class: "hit", x: 0, y, width: W, height: rowH }, g);
+    hover(g, `${w.label}\n하루 Strain 합 ${f1(w.strainSum)} (끝난 날 ${w.nDays}일)\n그 주 마지막 수면 부채 ${w.debt == null ? "-" : hm(w.debt)}`); });
+})();
+
+document.getElementById("stepsLabel").textContent = `걸음 수 (중앙값 ${Math.round(A.stepsCmp.median).toLocaleString()}걸음 기준)`;
+cmp("cmpSteps", [{ label: "걸음 적은 날", g: A.stepsCmp.lo }, { label: "걸음 많은 날", g: A.stepsCmp.hi }]);
+cmp("cmpSport", [{ label: A.sportCmp.name || "운동", g: A.sportCmp.main }, { label: "기타 운동", g: A.sportCmp.other }]);
+document.getElementById("latehi").textContent = A.lateHi.n
+  ? `늦은 고강도 운동(${DATA.eveningH}시 이후 종료 + 심박 4·5존 시간 있음) ${A.lateHi.n}일`
+  : `늦은 고강도 운동: 해당 운동 없음 — ${DATA.eveningH}시 이후 끝난 운동 ${A.lateHi.lateAll}건 모두 심박 4·5존 시간이 없어 비교할 날이 없어요 ('저녁' 기준 ${DATA.eveningH}시는 가안)`;
+document.getElementById("napcard").textContent = DATA.naps ? `낮잠 ${DATA.naps}건` : "기록 없음 — 이 기간 WHOOP이 낮잠으로 분류한 기록이 0건이에요.";
+
+/* 지표 31개 위치 */
+(function () {
+  const L = [
+    [1, "방해 횟수", "수면 방해 횟수 · 깬 시간"], [2, "수면 일관성", "수면 일관성 (⚠ 사용 여부 판단 필요)"], [3, "침대에 있던 시간", "언제 자고 일어났나 · 얼마나 일정했나"],
+    [4, "필요 수면 시간 (합계)", "실제 수면 시간 vs 필요 수면 시간"], [5, "수면 부채", "필요 수면 시간은 어떻게 정해졌나"], [6, "수면 성과", "수면 성과"],
+    [7, "데이터 미수신 시간", "측정이 끊긴 시간"], [8, "피부 온도", "몸 상태, 평소와 비교"], [9, "산소포화도", "산소포화도"],
+    [10, "기본 필요 수면 / 활동량 보정 / 낮잠 보정", "필요 수면 시간은 어떻게 정해졌나"], [11, "낮잠 기록", "만들 수 없는 지표 (기록 없음)"], [12, "하루 Strain", "하루 Strain · 걸음 수"],
+    [13, "운동 시작·종료 시각", "운동 기록"], [14, "실제 수면 시간", "실제 수면 시간 vs 필요 수면 시간"], [15, "수면 부족량", "실제 수면 시간 vs 필요 수면 시간"],
+    [16, "수면 단계 비율", "수면 단계 비율"], [17, "평소 대비 변화", "몸 상태, 평소와 비교"], [18, "데이터 신뢰도", "측정이 끊긴 시간"],
+    [19, "낮잠 횟수·시간", "만들 수 없는 지표 (기록 없음)"], [20, "취침·기상 시각 변동폭", "언제 자고 일어났나 · 얼마나 일정했나"], [21, "목표 대비 실제", "만들 수 없는 지표 (앱 데이터 필요)"],
+    [22, "체감과 측정 차이", "만들 수 없는 지표 (앱 데이터 필요)"], [23, "주중·주말 차이", "주중 vs 주말 수면 시각"], [24, "낮 부하 → 그날 밤 수면", "낮 활동과 그날 밤 수면"],
+    [25, "부하 vs 회복 균형", "부하와 회복"], [26, "주간 누적 부하 vs 수면 부채", "부하와 회복"], [27, "운동 종료 ~ 취침 간격", "운동 기록"],
+    [28, "늦은 고강도 운동", "낮 활동과 그날 밤 수면 (해당 운동 없음)"], [29, "운동한 날 vs 안 한 날 수면", "낮 활동과 그날 밤 수면"], [30, "운동 종목별 수면 영향", "낮 활동과 그날 밤 수면"],
+    [31, "하루 활동량 → 수면", "낮 활동과 그날 밤 수면"], [32, "회복 점수", "Recovery"]];
+  document.getElementById("index").innerHTML = "<tr><th>번호</th><th>지표</th><th>위치</th></tr>" + L.map(([n, a, b]) => `<tr><td>${n}</td><td style="text-align:left">${a}</td><td>${b}</td></tr>`).join("");
+})();
+
+
+
+/* 주중 vs 주말 (주 단위 섹션: 최근 8주) */
+(function () {
+  const rows = ALL_R.filter((r) => r.iso >= WEEK_START && r.iso <= END);
+  const we = rows.filter((r) => "토일".includes(r.wd)), wk = rows.filter((r) => !"토일".includes(r.wd)), box = document.getElementById("weekendBars");
+  if (!we.length || !wk.length) { box.innerHTML = `<div class="nodata">이 기간에는 ${we.length ? "주중" : "주말"} 기록이 없어 비교할 수 없어요</div>`; return; }
+  const g2 = [["주중", wk, "--series-1"], ["주말", we, "--series-2"]].map(([n, rs, c]) => ({ n, c, k: rs.length, bed: mean(rs.map((r) => r.bed)), wake: mean(rs.map((r) => r.wake)) }));
+  const lo = Math.floor((Math.min(...g2.map((g) => g.bed)) - 30) / 60) * 60, hi = Math.ceil((Math.max(...g2.map((g) => g.wake)) + 30) / 60) * 60;
+  const pct = (m) => ((m - lo) / (hi - lo)) * 100;
+  let ticks = "", grid = "";
+  for (let m = Math.ceil(lo / 120) * 120; m <= hi; m += 120) {
+    ticks += `<span style="left:${pct(m)}%">${clock18(m)}</span>`;
+    grid += `<div class="tmg" style="left:${pct(m)}%"></div>`;
+  }
+  box.innerHTML = `<div class="tm tmB">
+    <div></div><div class="taxis">${ticks}</div>
+    <div class="tmbg" style="top:18px">${grid}</div>
+    ${g2.map((g) => `<div class="tmlab"><b>${g.n} <small class="cnt">· ${g.k}일 기록</small></b><span>${clock18(g.bed)} → ${clock18(g.wake)}</span></div>
+      <div class="tmtrack"><div class="tbar" style="left:${pct(g.bed)}%;width:${pct(g.wake) - pct(g.bed)}%;background:var(${g.c})"></div></div>`).join("")}
+  </div>`;
+  box.querySelector(".tmbg").style.left = box.querySelector(".tmlab").offsetWidth + 8 + "px";
+  const db = g2[1].bed - g2[0].bed, dw = g2[1].wake - g2[0].wake;
+  const say = (d, a, b) => (Math.abs(d) < 1 ? "차이 없음" : `${hm(Math.abs(d))} ${d > 0 ? a : b}`);
+  document.getElementById("weekendNote").textContent = `주말은 주중보다 취침 ${say(db, "늦음", "빠름")} · 기상 ${say(dw, "늦음", "빠름")}`;
+})();
+
+/* 표 */
+document.getElementById("table").innerHTML =
+  "<tr><th>날짜</th><th>잠자리</th><th>기상</th><th>실제 수면</th><th>필요 수면</th><th>깊은 수면</th><th>REM</th><th>Recovery</th><th>HRV 평소 대비</th><th>안정시 심박 평소 대비</th></tr>" +
+  R.map((r) => `<tr><td>${label(r)}</td><td>${r.bedT}</td><td>${r.wakeT}</td><td>${hm(r.actual)}</td><td>${hm(r.need)}</td><td>${f1(r.deep)}%</td><td>${f1(r.rem)}%</td><td>${f1(r.recovery)}%${r.calibrating ? "*" : ""}</td>` +
+    `<td>${r.hrvDiff == null ? "-" : `${f1(Math.abs(r.hrvDiff))} ms ${r.hrvDiff >= 0 ? "높음" : "낮음"}`}</td><td>${r.rhrDiff == null ? "-" : `${f1(Math.abs(r.rhrDiff))} bpm ${r.rhrDiff >= 0 ? "높음" : "낮음"}`}</td></tr>`).join("");
+</script>
+<script>
+/* 앱 연동판: 사이클·운동 기록을 아직 저장하지 않아 '낮 활동' 묶음은 숨긴다(값이 전부 비어 있어 오해를 줌). */
+(function () {
+  if (DATA.drows.some((d) => d.strain != null)) return;
+  const secs = [...document.querySelectorAll(".sec")];
+  const start = secs.find((el) => el.textContent.trim() === "낮 활동");
+  if (!start) return;
+  const notice = document.createElement("div");
+  notice.className = "nodata";
+  notice.textContent = "낮 활동(하루 Strain · 걸음 수 · 운동 기록 · 부하와 회복)은 아직 준비 중이에요. 지금은 수면·몸 상태만 보여요.";
+  let el = start.nextElementSibling;
+  start.after(notice);
+  while (el && !el.classList.contains("sec")) { const next = el.nextElementSibling; el.remove(); el = next; }
+})();
+</script>
+</body>
+</html>

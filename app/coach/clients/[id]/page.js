@@ -165,7 +165,12 @@ export default async function CoachClientDetail({ params }) {
             </Panel>
 
             {WHOOP_LINKED.includes(whoop.status) ? (
-              <Panel title="WHOOP · 최근 2주" right={<WhoopStatusIcon status={whoop.status} />}>
+              <Panel title="WHOOP · 최근 2주" right={
+                <div className="flex items-center gap-2">
+                  <Link href={`/coach/clients/${id}/whoop-report`} target="_blank" className="text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-[#d9dce1] text-[#3a3f48] whitespace-nowrap">상세 리포트</Link>
+                  <WhoopStatusIcon status={whoop.status} />
+                </div>
+              }>
                 <WhoopSyncBar athleteRef={athlete.pageId || id} lastCheckedAt={whoop.lastCheckedAt ? new Date(whoop.lastCheckedAt).toISOString() : null} lastCheckSource={whoop.lastCheckSource} />
                 <div className="p-4">
                   <WhoopCharts days={whoopDays} compact />
