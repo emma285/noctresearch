@@ -25,6 +25,7 @@
      | `drizzle/0005_vengeful_kree.sql` | WHOOP 테이블 3개 (whoop_connections / whoop_sleep / whoop_recovery) |
      | `drizzle/0006_early_malcolm_colcord.sql` | whoop_connections에 마지막 확인 시각·방식 컬럼 |
      | `drizzle/0007_access_logs.sql` | 접속 기록 테이블 + 수정·기간 전 삭제 금지 트리거 |
+     | `drizzle/0008_sleepy_corsair.sql` | 낮 활동 표 2개 (whoop_cycle / whoop_workout) |
    - main에 같은 번호(0005~0007)가 이미 생겼다면 번호를 다시 생성해야 함.
    - 운영 DB의 `drizzle.__drizzle_migrations`에 0000~0004가 기록돼 있는지 먼저 확인.
    - ⚠️ `drizzle-kit push` 사용 금지. 운영 DB에는 코드에 정의 없는 테이블(shift_assessments / shift_events)이 있어서 지워질 수 있음. **WHOOP·접속 기록 테이블만 직접 추가.**
@@ -103,7 +104,7 @@
 
 - **웹훅 응답 시간**: 로컬 측정 0.6~1.0초 (WHOOP 권장 "1초 이내"). 실서버가 오래 쉬다 깨어날 때는 더 걸릴 수 있음. 늦어서 실패해도 WHOOP 재전송(약 1시간 5회) + 매일 정기 동기화(최근 3일)로 복구. → 운영 후 Vercel 로그로 확인.
 - **정기 동기화 범위**: 최근 3일만 다시 가져옴. 3일 넘게 자동 작업이 멈추면 그 사이 기록은 재연결 전까지 빠질 수 있음.
-- **cycle(Strain)·운동 미저장**: WHOOP가 cycle 알림을 보내지 않음. 현재 cycle·workout은 저장하지 않음 (권한은 있음).
+- **낮 활동(하루 Strain·걸음 수·운동)은 알림 없이 하루 1회만**: WHOOP가 cycle 알림(웹훅)을 보내지 않아 매일 정기 동기화(12:00 KST)와 코치 [지금 동기화]로만 들어온다. 실시간 반영은 안 됨. 아직 안 끝난 하루(사이클 end가 비어 있음)는 값이 확정 전이라 리포트에서 뺀다.
 - **신체 정보(키·몸무게·최대 심박)**: `read:body_measurement` 권한을 요청하지 않음. 추가하면 기존 연결 선수는 재연결 필요.
 - **WHOOP 테스트 등급(Sandbox)**: 최대 10명 연결. 그 이상은 WHOOP 심사(Build 등급) 필요.
 - **연결 직후 대기 시간**: 연결 완료 화면이 30일 백필이 끝날 때까지 기다림. 실측 안 함.

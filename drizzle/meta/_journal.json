@@ -57,6 +57,13 @@
       "when": 1792997370663,
       "tag": "0007_access_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793691788517,
+      "tag": "0008_sleepy_corsair",
+      "breakpoints": true
     }
   ]
 }

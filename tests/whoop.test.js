@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { randomBytes } from 'node:crypto'
 import { encryptToken, decryptToken, newOAuthState, verifyOAuthState } from '../lib/whoop/crypto'
-import { buildAuthorizeUrl, mapSleep, mapRecovery, WHOOP_SCOPES } from '../lib/whoop/api'
+import { buildAuthorizeUrl, mapSleep, mapRecovery, mapCycle, mapWorkout, WHOOP_SCOPES } from '../lib/whoop/api'
 import { createHmac } from 'node:crypto'
 import { verifyWebhookSignature, planWebhookAction } from '../lib/whoop/webhook'
 import { buildWhoopDays, sleepTimesForDate } from '../lib/whoop/days'
@@ -265,5 +265,39 @@ describe('수면일지 미리 채우기 — 기상일 기준 누운·깬 시각'
     // 런던(+01:00) 10/15 06:30 기상 = 한국 10/15 14:30
     const t = sleepTimesForDate([sl('2026-10-14T22:00:00+01:00', '2026-10-15T06:30:00+01:00', { tzOffset: '+01:00' })], '2026-10-15')
     expect(t).toEqual({ bedMin: 22 * 60, wakeMin: 6 * 60 + 30 })
+  })
+})
+
+describe('낮 활동 변환 (사이클·운동)', () => {
+  it('사이클 → Strain·걸음 수·소모 에너지', () => {
+    const row = mapCycle({
+      id: 93845, start: '2026-10-07T19:00:00.000Z', end: '2026-10-08T19:00:00.000Z',
+      timezone_offset: '+09:00', score_state: 'SCORED', step_count: 8702,
+      score: { strain: 7.5, kilojoule: 5817.5, average_heart_rate: 72, max_heart_rate: 140 },
+    }, 'a@b.com')
+    expect(row.cycleId).toBe(93845)
+    expect(row.strain).toBe(7.5)
+    expect(row.stepCount).toBe(8702)
+    expect(row.kilojoule).toBe(5817.5)
+  })
+
+  it('점수가 아직 없으면(PENDING) 값은 null, 원본은 보존', () => {
+    const row = mapCycle({ id: 1, start: '2026-10-07T19:00:00.000Z', end: null, timezone_offset: '+09:00', score_state: 'PENDING_SCORE' }, 'a@b.com')
+    expect(row.strain).toBeNull()
+    expect(row.endTs).toBeNull()
+    expect(row.raw.id).toBe(1)
+  })
+
+  it('운동 → 종목·심박 4·5존 시간', () => {
+    const row = mapWorkout({
+      id: 'w-1', cycle_id: 93845, sport_name: 'golf',
+      start: '2026-10-08T06:30:00.000Z', end: '2026-10-08T07:54:00.000Z', timezone_offset: '+09:00',
+      score_state: 'SCORED',
+      score: { strain: 4.9, kilojoule: 1200, average_heart_rate: 98, max_heart_rate: 150, distance_meter: 5200, zone_durations: { zone_four_milli: 60000, zone_five_milli: 30000 } },
+    }, 'a@b.com')
+    expect(row.sportName).toBe('golf')
+    expect(row.zone4Ms).toBe(60000)
+    expect(row.zone5Ms).toBe(30000)
+    expect(row.distanceM).toBe(5200)
   })
 })
