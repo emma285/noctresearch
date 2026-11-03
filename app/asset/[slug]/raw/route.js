@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isCoachEmail } from "../../../../lib/coach";
-import { getAthleteByEmail, getExposedAssetSlugs } from "../../../../lib/master";
+import { getAthleteByEmail, getVisibleAssetSlugs } from "../../../../lib/master";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
 
     if (!isCoachEmail(email)) {
       const athlete = email ? await getAthleteByEmail(email) : null;
-      const exposed = athlete ? await getExposedAssetSlugs(athlete.pageId) : [];
+      const exposed = await getVisibleAssetSlugs(athlete);
       if (!exposed.includes(slug)) return new NextResponse("아직 볼 수 없는 자료예요.", { status: 403 });
     }
 

@@ -3,7 +3,7 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import AppShell from "../../../components/app/AppShell";
 import { isCoachEmail } from "../../../lib/coach";
-import { getAthleteByEmail, getExposedAssetSlugs } from "../../../lib/master";
+import { getAthleteByEmail, getVisibleAssetSlugs } from "../../../lib/master";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "자료 | NOCT" };
@@ -24,7 +24,7 @@ export default async function AssetPage({ params }) {
   let allowed = isCoachEmail(email);
   if (!allowed && email && valid) {
     const athlete = await getAthleteByEmail(email);
-    const exposed = athlete ? await getExposedAssetSlugs(athlete.pageId) : [];
+    const exposed = await getVisibleAssetSlugs(athlete);
     allowed = exposed.includes(slug);
   }
 

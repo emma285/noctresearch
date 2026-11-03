@@ -158,8 +158,10 @@ export default async function PortalPage({ searchParams }) {
     : [[], []];
   // 선수에겐 코치가 공개한 세션만 노출 (비공개=코치 검토 중은 목록에서 숨김)
   const sessions = allSessions.filter((s) => s.published);
-  const effectiveCount = allSessions.length || (searchParams?.stage === "ongoing" ? 1 : 0);
-  const nextOrdinal = effectiveCount + 1;
+  // 진행 세션 = 실제로 끝난 세션(노트 있음/공개)만. 코치가 만들어만 둔 예정 회차는 세지 않음.
+  const heldSessions = allSessions.filter((s) => s.published || s.hasNote);
+  const effectiveCount = heldSessions.length || (searchParams?.stage === "ongoing" ? 1 : 0);
+  const nextOrdinal = heldSessions.length ? Math.floor(Math.max(...heldSessions.map((s) => s.n || 0))) + 1 : effectiveCount + 1;
   const upcoming = calEvents.filter((e) => e.kind === "event" && (e.end || e.start).slice(0, 10) >= kstToday()).slice(0, 4);
 
   // WHOOP — 연결한 선수에게만 홈 요약 카드 (미연결 선수 화면은 그대로)
@@ -187,7 +189,9 @@ export default async function PortalPage({ searchParams }) {
     </>
   ) : null;
 
-  const statusLabel = ongoing ? "코칭 진행중" : intakeDone ? "첫 세션 준비 중" : "시작 준비";
+  // 종료 = 코치가 수동 지정. 화면은 ongoing 홈을 쓰되 다음 세션 대신 종료 안내.
+  const ended = athlete?.status === "종료";
+  const statusLabel = ended ? "코칭 종료" : ongoing ? "코칭 진행중" : intakeDone ? "첫 세션 준비 중" : "시작 준비";
   const showMetrics = intakeDone || ongoing;
 
   return (
@@ -200,7 +204,7 @@ export default async function PortalPage({ searchParams }) {
       >
         {showMetrics ? (
           <MetricRow>
-            <Metric value={ddayText} label="다음 세션" valueClassName="text-accent" labelClassName="text-white/60" />
+            <Metric value={ended ? "종료" : ddayText} label="다음 세션" valueClassName="text-accent" labelClassName="text-white/60" />
             <Metric value={effectiveCount} unit="회" label="진행 세션" valueClassName="text-white" labelClassName="text-white/60" />
             <Metric value={programLabel} label="프로그램" valueClassName="text-white" labelClassName="text-white/60" />
           </MetricRow>
@@ -226,7 +230,15 @@ export default async function PortalPage({ searchParams }) {
         ) : (
           /* ── 정식 세션 홈 (첫 세션 후) / 첫 세션 준비 중 ── */
           <>
-            <SectionHeader title="다음 세션" className="mt-6" />
+            <SectionHeader title={ended ? "코칭 종료" : "다음 세션"} className="mt-6" />
+            {ended ? (
+            <Surface>
+              <div className="p-4">
+                <div className="text-lg font-bold text-foreground tracking-[-0.3px]">코칭이 종료됐어요</div>
+                <div className="text-[13px] text-muted-foreground mt-1">{effectiveCount ? `총 ${effectiveCount}회 세션을 함께했어요. ` : ""}지난 세션 노트와 리포트는 계속 볼 수 있어요.</div>
+              </div>
+            </Surface>
+            ) : (
             <Surface>
               <div className="p-4">
                 <div className="flex items-center gap-2.5 text-primary">
@@ -242,9 +254,10 @@ export default async function PortalPage({ searchParams }) {
               </div>
               <Row icon={Upload} action sub title="코칭 준비 자료 올리기" href="/prep" />
             </Surface>
+            )}
             {whoopCard}
 
-            {ongoing ? (
+            {ongoing && !ended ? (
               <>
                 <SectionHeader title="다가오는 일정" right={<Link href="/schedule" className="text-[13px] font-semibold text-primary">전체</Link>} />
                 <Surface>
