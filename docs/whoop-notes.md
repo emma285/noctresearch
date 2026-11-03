@@ -10,6 +10,12 @@
 
 순서대로 진행. 각 단계 전에 main·실서비스 영향 확인.
 
+> **진행 기록 (2026-11-03)**
+> - main(17커밋) → feat/whoop 머지 완료, 충돌 3개 양쪽 유지. 테스트 서버에서 코치 화면 확인(WHOOP 패널 + 세션 추가·삭제 동작).
+> - 1단계 완료: 운영 DB에 표 4개(whoop_connections/sleep/recovery + access_logs) + 접속기록 보호 트리거 2개 적용. drizzle.__drizzle_migrations에 0001~0007 기록 보강(0000만 있었음). `drizzle-kit push` 미사용.
+> - 2단계 완료: Vercel Production에 WHOOP_CLIENT_ID/SECRET/REDIRECT_URI/TOKEN_ENC_KEY + CRON_SECRET 등록(모두 Config 타입, Production 전용). Preview(feat/whoop) 4개는 그대로 유지.
+> - 5단계 완료: 개인정보처리방침 시행일 2026-10-22 → 2026-11-03.
+
 1. **DB 마이그레이션 (운영 DB)**
    - 이 브랜치에서 추가한 마이그레이션 3개. 전부 새 테이블·새 컬럼 추가만, 기존 데이터 변경 없음.
      | 파일 | 내용 |
