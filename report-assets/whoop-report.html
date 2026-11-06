@@ -72,6 +72,14 @@ svg .val { fill: var(--text-primary); font-weight: 600; }
 details { margin-top: 14px; font-size: 13px; }
 summary { cursor: pointer; color: var(--text-secondary); }
 .tablewrap { overflow-x: auto; }
+.naptbl { font-size: 10.5px; width: 100%; table-layout: fixed; }
+.naptbl td, .naptbl th { text-align: left; }
+.naptbl th { white-space: normal; line-height: 1.25; word-break: keep-all; }
+.naptbl col.c1 { width: 21%; } .naptbl col.c2 { width: 24%; } .naptbl col.c3 { width: 22%; }
+.naptbl col.c4 { width: 18%; } .naptbl col.c5 { width: 15%; }
+.tgttbl col.t1 { width: 17%; } .tgttbl col.t2 { width: 23%; } .tgttbl col.t3 { width: 23%; } .tgttbl col.t4 { width: 23%; } .tgttbl col.t5 { width: 14%; }
+.naptbl .muted { color: var(--text-muted); }
+.naptbl td, .naptbl th { padding: 5px 4px; }
 table { border-collapse: collapse; width: 100%; margin-top: 8px; font-size: 12px; white-space: nowrap; }
 th, td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: right; }
 th:first-child, td:first-child { text-align: left; }
@@ -170,7 +178,7 @@ footer { font-size: 11px; color: var(--text-muted); margin-top: 18px; }
   </section>
 
   <details class="card" style="margin-top:14px">
-    <summary><b>지표 33개가 어디에 있나</b> (펼치기)</summary>
+    <summary><b>지표 34개가 어디에 있나</b> (펼치기)</summary>
     <div class="tablewrap"><table class="idx" id="index"></table></div>
   </details>
 
@@ -221,6 +229,38 @@ footer { font-size: 11px; color: var(--text-muted); margin-top: 18px; }
     <div id="consistency"></div>
   </section>
 
+  <section class="card" data-range="day">
+    <h2>목표 수면과 실제 기록 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">코치가 정한 취침·기상 시각과 실제 기록이 얼마나 벌어졌나</p>
+    <div class="legend"><b class="lk">지표:</b><span>목표 대비 실제</span></div>
+    <p class="notes" id="tgtSum" style="padding-left:0;margin:0 0 8px"></p>
+    <div id="tgtList"></div>
+    <ul class="sec-note" style="margin:8px 0 0">
+      <li>실제 취침·기상은 WHOOP 측정 기준 (취침 = 잠자리에 누운 시각)</li>
+      <li>+ = 목표보다 늦음, − = 목표보다 이름 · 30분 넘게 벗어나면 빨강</li>
+    </ul>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>낮잠 기록 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">낮잠과 그날 밤 수면 시간의 관계</p>
+    <div class="cmp">
+      <div>
+        <div class="legend"><b class="lk">지표:</b><span>낮잠 기록 (횟수·시간 포함)</span></div>
+        <p class="notes" id="napSum" style="padding-left:0;margin:0 0 8px"></p>
+        <div id="napList"></div>
+        <ul class="sec-note" style="margin:8px 0 0">
+          <li>낮잠 판정은 WHOOP 센서 기준</li>
+          <li>밤잠까지 간격 = 낮잠에서 깬 뒤 그날 밤 잠자리에 들기까지 걸린 시간</li>
+        </ul>
+      </div>
+      <div>
+        <div class="legend"><b class="lk">지표:</b><span>낮잠 잔 날 vs 안 잔 날 평균 수면 시간</span></div>
+        <div id="napCmp"></div>
+      </div>
+    </div>
+  </section>
+
   <div class="sec">수면의 질</div>
   <ul class="sec-note"><li>날짜 = 잠에서 깬 날 (예: 10/13 = 10/12 밤에 잠들어 10/13 아침에 깬 잠)</li></ul>
   <section class="card" data-range="day">
@@ -242,6 +282,18 @@ footer { font-size: 11px; color: var(--text-muted); margin-top: 18px; }
     <p class="sub">자는 중 기기 신호가 끊긴 시간<br>이 시간은 실제 수면 시간에서 빠짐</p>
     <div class="legend"><b class="lk">지표:</b><span>데이터 미수신 시간 · 미수신 비율</span></div>
     <div id="nodata"></div>
+  </section>
+
+  <section class="card" data-range="day">
+    <h2>체감과 측정 기록 <span class="whoop">DATA BY WHOOP</span></h2>
+    <p class="sub">선수가 느낀 밤과 WHOOP이 잰 밤의 차이</p>
+    <div class="legend"><b class="lk">지표:</b><span>체감과 측정 차이</span></div>
+    <p class="notes" id="senseSum" style="padding-left:0;margin:0 0 8px"></p>
+    <div id="senseList"></div>
+    <ul class="sec-note" style="margin:8px 0 0">
+      <li>체감 = 선수가 앱 수면일지에서 고른 값 (깨어 있던 시간은 구간 선택)</li>
+      <li>WHOOP 방해 횟수는 기억에 남지 않는 짧은 각성까지 세므로 체감보다 큰 게 정상</li>
+    </ul>
   </section>
 
   <div class="sec">몸 상태</div>
@@ -281,10 +333,10 @@ footer { font-size: 11px; color: var(--text-muted); margin-top: 18px; }
     <h2>낮 활동에 따른 수면 비교 <span class="whoop">DATA BY WHOOP</span></h2>
     <p class="sub">낮 활동 기준으로 날을 나눠, 그 밤의 실제 수면 시간 평균 비교</p>
     <div class="cmp">
-      <div><div class="legend"><span>운동 여부</span><em>지표: 운동한 날 vs 안 한 날 수면 시간</em></div><div id="cmpWorkout"></div></div>
-      <div><div class="legend"><span>하루 부하 (Strain)</span><small id="strainDef"></small><em>지표: 부하 구간별 수면 시간</em></div><div id="cmpStrain"></div></div>
-      <div><div class="legend"><span>걸음 수</span><small id="stepsDef"></small><em>지표: 걸음 수 구간별 수면 시간</em></div><div id="cmpSteps"></div></div>
-      <div><div class="legend"><span>운동 종목</span><small id="sportDef"></small><em>지표: 운동 종목별 수면 시간</em></div><div id="cmpSport"></div></div>
+      <div><div class="legend"><span>운동 여부</span><em>지표: 운동한 날 vs 안 한 날 평균 수면 시간</em></div><div id="cmpWorkout"></div></div>
+      <div><div class="legend"><span>하루 부하 (Strain)</span><small id="strainDef"></small><em>지표: 부하 구간별 평균 수면 시간</em></div><div id="cmpStrain"></div></div>
+      <div><div class="legend"><span>걸음 수</span><small id="stepsDef"></small><em>지표: 걸음 수 구간별 평균 수면 시간</em></div><div id="cmpSteps"></div></div>
+      <div><div class="legend"><span>운동 종목</span><small id="sportDef"></small><em>지표: 운동 종목별 평균 수면 시간</em></div><div id="cmpSport"></div></div>
     </div>
   </section>
 
@@ -308,27 +360,13 @@ footer { font-size: 11px; color: var(--text-muted); margin-top: 18px; }
 
   <section class="card" data-range="day">
     <h2>운동 기록 <span class="whoop">DATA BY WHOOP</span></h2>
-    <p class="sub">운동 한 건마다 종목 · 운동한 시간 · 강도 · 운동 후 잠자리까지 걸린 시간</p>
+    <p class="sub">운동 한 건마다 종목 · 운동한 시간 · 강도 · 운동 후 밤잠까지 걸린 시간</p>
     <ul class="sec-note" style="margin:0 0 8px">
       <li>운동 부하 = 운동 하나에 매겨진 부하 (하루 부하와 별개, 0~21)</li>
       <li>고강도 시간 = 운동 중 심박이 높은 구간에 머문 시간 (WHOOP 심박 4·5존 = 여유 심박의 80% 이상)</li>
     </ul>
-    <div class="legend"><b class="lk">지표:</b><span>운동 시작·종료 시각 · 운동 후 잠자리까지</span></div>
+    <div class="legend"><b class="lk">지표:</b><span>운동 시작·종료 시각 · 운동 후 밤잠까지 간격</span></div>
     <div id="wolist"></div>
-  </section>
-
-  <div class="sec">이번 데이터로는 만들 수 없는 지표</div>
-  <section class="card">
-    <h2>목표 대비 실제 (프로토콜 이행)</h2>
-    <div class="nodata">계산 불가 — 앱에서 코치가 정한 목표 수면(취침·기상)이 필요해요. WHOOP 기록만으로는 만들 수 없어요.</div>
-  </section>
-  <section class="card">
-    <h2>체감과 측정 차이</h2>
-    <div class="nodata">계산 불가 — 앱 수면일지(깬 횟수·깬 시간·아침 컨디션)가 필요해요. WHOOP 기록만으로는 만들 수 없어요.</div>
-  </section>
-  <section class="card">
-    <h2>낮잠 기록 · 낮잠 횟수·시간</h2>
-    <div class="nodata" id="napcard"></div>
   </section>
 
   <details>
@@ -633,6 +671,7 @@ function diverge(id, key, baseKey, rawKey, fmtVal) {
   const s = svg(id, W, H), vals = R.map((r) => r[key]).filter((v) => v != null);
   const m = Math.max(1, ...vals.map(Math.abs)), lim = Math.ceil(m), mid = top + (H - top - bottom) / 2;
   const sy = (v) => mid - (v / lim) * ((H - top - bottom) / 2), bw = (W - left - right) / R.length;
+  const dstep = Math.max(1, Math.ceil(34 / bw));  // 날짜+요일 글자가 칸에 들어가는지로 간격 결정
   el("line", { x1: left, x2: W - right, y1: mid, y2: mid, stroke: css("--text-muted") }, s);
   el("text", { x: left - 4, y: sy(lim) + 4, "text-anchor": "end" }, s).textContent = `+${lim}`;
   el("text", { x: left - 4, y: mid + 4, "text-anchor": "end" }, s).textContent = "평소";
@@ -642,7 +681,8 @@ function diverge(id, key, baseKey, rawKey, fmtVal) {
     .textContent = fmtVal(mean(bases));
   R.forEach((r, i) => {
     const x = left + i * bw, w = Math.min(16, bw - 6), cx = x + bw / 2, g = el("g", {}, s), v = r[key];
-    if (R.length <= 12 || i % 2 === 0) el("text", { x: cx, y: H - 6, "text-anchor": "middle" }, s).textContent = r.date;
+    if (i % dstep === 0) el("text", { x: cx, y: H - 6, "text-anchor": "middle" }, s)
+      .textContent = `${(i > 0 && R[i - 1].iso.slice(5, 7) !== r.iso.slice(5, 7)) || i === 0 ? r.date : +r.iso.slice(8, 10)}(${r.wd})`;
     if (v == null) {
       el("text", { x: cx, y: mid - 4, "text-anchor": "middle", style: "font-size:10px" }, s).textContent = "–";
       return;
@@ -681,7 +721,7 @@ function cmp(id, items, noDiff) {
     document.getElementById(id).appendChild(p);
   }
 }
-cmp("cmpWorkout", [{ label: "운동한 날", g: A8.workout.yes }, { label: "운동 안 한 날", g: A8.workout.no }]);
+cmp("cmpWorkout", [{ label: "운동한 날", g: A8.workout.yes }, { label: "운동 안 한 날", g: A8.workout.no }], true);
 document.getElementById("strainDef").innerHTML = `* 하루 부하 = 하루 동안 심박이 어느 구간에 얼마나 머물렀는지로 매긴 값 (0~21)<br>* 구간은 WHOOP 공식 기준 (Light · Moderate · High · All Out)`;
 /* 구간별 비교: 구간을 전부 보여주고, 기록이 한 구간에만 몰리면 비교 불가 안내 */
 function zoneCmp(id, zones, what) {
@@ -794,7 +834,7 @@ document.getElementById("spo2").insertAdjacentHTML("beforeend", missingLine(R));
 const dayLab = (d) => (d.date.slice(3) === "01" ? d.date : d.date.slice(3));
 vbars("strain", DR_FULL, { W: 340, H: 180, val: (d) => d.strain, max: 21, ticks: [0, 7, 14, 21],
   everyDay: true, gap: 3, dateSize: 9, valSize: 9, dateFmt: dayLab, fmt: (d) => (d.strain == null ? "" : f1(d.strain)) });
-const kFmt = (v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${Math.round(v / 100) / 10}k`);
+const kFmt = (v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`);  // 1000 미만은 0k로 보이지 않게 숫자 그대로
 const stepMax = Math.max(5000, Math.ceil(Math.max(...DR_FULL.map((d) => d.steps || 0)) / 5000) * 5000);
 vbars("steps", DR_FULL, { W: 340, H: 180, val: (d) => d.steps, max: stepMax, ticks: Array.from({ length: stepMax / 5000 + 1 }, (_, i) => i * 5000),
   tickFmt: (t) => `${Math.round(t / 1000)}k`, everyDay: true, gap: 3, dateSize: 9, valSize: 9, dateFmt: dayLab, fmt: (d) => (d.steps == null ? "" : kFmt(d.steps)) });
@@ -807,7 +847,7 @@ vbars("steps", DR_FULL, { W: 340, H: 180, val: (d) => d.steps, max: stepMax, tic
   const rows = [...DR].reverse().flatMap((d) => d.workouts.map((w, k) => `<div class="drow">
       <div class="dtop"><b>${d.date}(${d.wd})</b><span><b>${sportKo(w.sport)}</b></span><span>운동 부하 <b>${f1(w.strain)}</b></span></div>
       <div class="dparts"><span>${w.start}~${w.end} (${hm(w.dur)})</span><span>고강도 ${w.z45 ? hm(w.z45) : "없음"}</span>${
-        k === d.workouts.length - 1 ? `<span>운동 후 잠자리까지 <b>${d.gapToBed == null ? "수면 기록 없음" : hm(d.gapToBed)}</b></span>` : ""}</div>
+        k === d.workouts.length - 1 ? `<span>운동 후 밤잠까지 간격 <b>${d.gapToBed == null ? "수면 기록 없음" : hm(d.gapToBed)}</b></span>` : ""}</div>
     </div>`));
   document.getElementById("wolist").innerHTML = rows.length ? rows.join("") : `<div class="nodata">이 기간에 기록된 운동 없음</div>`;
 })();
@@ -868,22 +908,106 @@ document.getElementById("sportDef").textContent = "* 각 줄은 그 종목만 �
     box.appendChild(p);
   }
 })();
-document.getElementById("napcard").textContent = DATA.naps ? `낮잠 ${DATA.naps}건` : "기록 없음 — 이 기간 WHOOP이 낮잠으로 분류한 기록이 0건이에요.";
+/* 목표 대비 실제 (프로토콜 이행) */
+(function () {
+  const all = DATA.targetRows || [], rows = all.filter(inWin(DAYS)), sum = DATA.targetSum || {};
+  const box = document.getElementById("tgtList"), line = document.getElementById("tgtSum");
+  if (!rows.length) {
+    line.textContent = "";
+    box.innerHTML = `<div class="nodata">${all.length || sum.nTargets ? "이 기간에는 코치가 정한 목표 수면이 없어요." : "코치가 앱에서 목표 취침·기상을 정하면 여기에 이행 결과가 나와요."}</div>`;
+    return;
+  }
+  const TOL = sum.tol || 30;
+  const avg = (k) => { const v = rows.map((r) => r[k]).filter((x) => x != null); return v.length ? mean(v) : null; };
+  const sgn = (m) => `${m > 0 ? "+" : m < 0 ? "−" : ""}${hm(Math.abs(Math.round(m)))}`;
+  const kept = rows.filter((r) => r.kept).length;
+  const ba = avg("bedDiff"), wa = avg("wakeDiff");
+  line.textContent = `목표 있던 날 ${rows.length}일 · 취침 평균 ${ba == null ? "-" : sgn(ba)} · 기상 평균 ${wa == null ? "-" : sgn(wa)} · ${TOL}분 안에 든 날 ${kept}일`;
+  const sgnp = (m) => m == null ? "" : ` (${sgn(m)})`;
+  const col = (m) => m != null && Math.abs(m) > TOL ? ' style="color:#d03b3b"' : "";
+  const blk = (r) => `<div class="drow">
+      <div class="dtop"><b>${r.date}(${r.wd})</b><span>${r.label || "-"}</span><span>수면 <b>${hm(r.actual)}</b></span></div>
+      <div class="dparts">
+        <span>취침 ${r.bedTargetT || "-"} → <b${col(r.bedDiff)}>${r.bedActualT}</b>${sgnp(r.bedDiff)}</span>
+        <span>기상 ${r.wakeTargetT || "-"} → <b${col(r.wakeDiff)}>${r.wakeActualT}</b>${sgnp(r.wakeDiff)}</span>
+      </div>
+    </div>`;
+  box.innerHTML = [...rows].reverse().map(blk).join("");
+})();
 
-/* 지표 33개 위치 */
+/* 체감과 측정 차이 */
+(function () {
+  const rows = (DATA.senseRows || []).filter(inWin(DAYS));
+  const line = document.getElementById("senseSum"), box = document.getElementById("senseList");
+  if (!rows.length) {
+    line.textContent = "";
+    box.innerHTML = `<div class="nodata">앱 수면일지가 쌓이면 체감과 측정을 나란히 보여줘요.</div>`;
+    return;
+  }
+  const avg = (k) => { const v = rows.map((r) => r[k]).filter((x) => x != null); return v.length ? mean(v) : null; };
+  // 체감은 선택지(범주)라 대표값 = 최빈값. 측정은 숫자라 평균.
+  const mode = (k, fmt) => {
+    const c = {};
+    rows.forEach((r) => { const v = r[k]; if (v != null) c[v] = (c[v] || 0) + 1; });
+    const top = Object.keys(c).sort((a, b) => c[b] - c[a])[0];
+    return top == null ? null : (fmt ? fmt(top) : top);
+  };
+  const wokeMode = mode("wokeFelt", (v) => `${v}번${+v >= 3 ? " 이상" : ""}`), wasoMode = mode("wasoFelt");
+  const db = avg("disturb"), aw = avg("awake");
+  line.innerHTML = `일지 쓴 날 ${rows.length}일<br>깬 횟수 체감 주로 ${wokeMode || "-"} / 측정 평균 ${db == null ? "-" : f1(db) + "회"}<br>깨어 있던 시간 체감 주로 ${wasoMode || "-"} / 측정 평균 ${aw == null ? "-" : hm(aw)}`;
+  box.innerHTML = [...rows].reverse().map((r) => `<div class="drow">
+      <div class="dtop"><b>${r.date}(${r.wd})</b><span>회복 <b>${r.recovery == null ? "-" : Math.round(r.recovery) + "%"}</b></span></div>
+      <div class="dparts"><span>아침 컨디션 <b>${r.feel.length ? r.feel.join(" · ") : "기록 없음"}</b></span></div>
+      <div class="dparts">
+        <span>깬 횟수 체감 <b>${r.wokeFelt == null ? "-" : r.wokeFelt + "번"}</b> → 측정 <b>${r.disturb}회</b></span>
+        <span>깨어 있던 시간 체감 <b>${r.wasoFelt || "안 깼다고 기록"}</b> → 측정 <b>${hm(r.awake)}</b></span>
+      </div>
+    </div>`).join("");
+})();
+
+/* 낮잠 기록 */
+(function () {
+  const naps = (DATA.napRows || []).filter(inWin(DAYS));
+  const sum = document.getElementById("napSum"), list = document.getElementById("napList"), cmpBox = document.getElementById("napCmp");
+  if (!naps.length) {
+    sum.textContent = `${DAYS}일 중 낮잠 기록 0일`;
+    list.innerHTML = `<div class="nodata">이 기간 WHOOP이 낮잠으로 분류한 기록이 0건이에요.</div>`;
+    cmpBox.innerHTML = `<div class="nodata">비교할 낮잠 기록 없음</div>`;
+    return;
+  }
+  const napDays = new Set(naps.map((n) => n.iso));
+  const tot = naps.reduce((a, n) => a + n.actual, 0);
+  sum.textContent = `${DAYS}일 중 ${napDays.size}일 낮잠 (${naps.length}건) · 총 ${hm(tot)} · 평균 ${hm(tot / naps.length)}`;
+  list.innerHTML = `<div class="tablewrap"><table class="naptbl">
+      <colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"></colgroup>
+      <tr><th>날짜</th><th>낮잠 시각</th><th>낮잠 (깊은 잠)</th><th>밤잠까지 간격</th><th>밤 수면</th></tr>` +
+    [...naps].reverse().map((n) => `<tr><td>${n.date}(${n.wd})</td><td>${n.startT}~${n.endT}</td>` +
+      `<td>${hmShort(n.actual)} <span class="muted">(${hmShort(n.deep)})</span></td>` +
+      `<td>${n.gapToBed == null ? "-" : hmShort(n.gapToBed)}</td>` +
+      `<td>${n.nextActual == null ? "-" : hmShort(n.nextActual)}</td></tr>`).join("") + `</table></div>`;
+  // 같은 14일 창에서: 낮잠 잔 날 vs 안 잔 날의 그날 밤(다음 날 깬) 실제 수면
+  const days = Array.from({ length: DAYS }, (_, i) => addDays(winStart(DAYS), i));
+  const grpNap = (ds) => { const ns = ds.map((d) => ROW_BY_ISO[addDays(d, 1)]).filter(Boolean);
+    return ns.length ? { n: ns.length, actual: mean(ns.map((r) => r.actual)) } : null; };
+  const yes = grpNap(days.filter((d) => napDays.has(d))), no = grpNap(days.filter((d) => !napDays.has(d)));
+  // 한쪽이 3일 미만이면 "차이: …" 문장은 숨긴다 (표본이 적어 과장으로 읽힘)
+  cmp("napCmp", [{ label: "낮잠 잔 날", g: yes }, { label: "낮잠 안 잔 날", g: no }], !yes || yes.n < 3);
+})();
+
+/* 지표 34개 위치 */
 (function () {
   const L = [
     [1, "방해 횟수", "수면 방해 횟수 · 깬 시간"], [2, "수면 일관성", "수면 일관성 (⚠ 사용 여부 판단 필요)"], [3, "침대에 있던 시간", "언제 자고 일어났나 · 얼마나 일정했나"],
     [4, "필요 수면 시간 (합계)", "실제 수면 시간 vs 필요 수면 시간"], [5, "수면 부채", "필요 수면 시간은 어떻게 정해졌나"], [6, "수면 성과", "수면 성과"],
     [7, "데이터 미수신 시간", "측정이 끊긴 시간"], [8, "피부 온도", "몸 상태, 평소와 비교"], [9, "산소포화도", "산소포화도"],
-    [10, "기본 필요 수면 / 활동량 보정 / 낮잠 보정", "필요 수면 시간은 어떻게 정해졌나"], [11, "낮잠 기록", "만들 수 없는 지표 (기록 없음)"], [12, "하루 부하", "하루 부하 · 걸음 수"],
+    [10, "기본 필요 수면 / 활동량 보정 / 낮잠 보정", "필요 수면 시간은 어떻게 정해졌나"], [11, "낮잠 기록 (횟수·시간 포함)", "낮잠 기록"], [12, "하루 부하", "하루 부하 · 걸음 수"],
     [13, "운동 시작·종료 시각", "운동 기록"], [14, "실제 수면 시간", "실제 수면 시간 vs 필요 수면 시간"], [15, "수면 부족량", "실제 수면 시간 vs 필요 수면 시간"],
     [16, "수면 단계 비율", "수면 단계 비율"], [17, "평소 대비 변화", "몸 상태, 평소와 비교"], [18, "데이터 신뢰도", "측정이 끊긴 시간"],
-    [19, "낮잠 횟수·시간", "만들 수 없는 지표 (기록 없음)"], [20, "취침·기상 시각 변동폭", "언제 자고 일어났나 · 얼마나 일정했나"], [21, "목표 대비 실제", "만들 수 없는 지표 (앱 데이터 필요)"],
-    [22, "체감과 측정 차이", "만들 수 없는 지표 (앱 데이터 필요)"], [23, "주중·주말 차이", "주중 vs 주말 수면 시각"], [24, "부하 구간별 수면 시간", "낮 활동에 따른 수면 비교"],
-    [25, "부하 vs 회복 균형", "사용 안 함 (수면 코칭에 쓰임 없음)"], [26, "주간 누적 부하 · 수면 부채", "훈련 부하와 수면"], [27, "운동 후 잠자리까지", "운동 기록"],
-    [28, "늦은 고강도 운동", "운동 기록 (운동 종료 시각 · 취침까지 간격)"], [29, "운동한 날 vs 안 한 날 수면 시간", "낮 활동에 따른 수면 비교"], [30, "운동 종목별 수면 시간", "낮 활동에 따른 수면 비교"],
-    [31, "걸음 수 구간별 수면 시간", "낮 활동에 따른 수면 비교"], [32, "회복 점수", "Recovery"], [33, "부하 구간별 수면의 질", "훈련 부하와 수면"]];
+    [19, "낮잠 횟수·시간", "11번과 합침"], [20, "취침·기상 시각 변동폭", "언제 자고 일어났나 · 얼마나 일정했나"], [21, "목표 대비 실제", "목표 수면과 실제 기록"],
+    [22, "체감과 측정 차이", "체감과 측정 기록"], [23, "주중·주말 차이", "주중 vs 주말 수면 시각"], [24, "부하 구간별 평균 수면 시간", "낮 활동에 따른 수면 비교"],
+    [25, "부하 vs 회복 균형", "사용 안 함 (수면 코칭에 쓰임 없음)"], [26, "주간 누적 부하 · 수면 부채", "훈련 부하와 수면"], [27, "운동 후 밤잠까지 간격", "운동 기록"],
+    [28, "늦은 고강도 운동", "운동 기록 (운동 종료 시각 · 취침까지 간격)"], [29, "운동한 날 vs 안 한 날 평균 수면 시간", "낮 활동에 따른 수면 비교"], [30, "운동 종목별 평균 수면 시간", "낮 활동에 따른 수면 비교"],
+    [31, "걸음 수 구간별 평균 수면 시간", "낮 활동에 따른 수면 비교"], [32, "회복 점수", "Recovery"], [33, "부하 구간별 수면의 질", "훈련 부하와 수면"], [34, "낮잠 잔 날 vs 안 잔 날 평균 수면 시간", "낮잠 기록"]];
   document.getElementById("index").innerHTML = "<tr><th>번호</th><th>지표</th><th>위치</th></tr>" + L.map(([n, a, b]) => `<tr><td>${n}</td><td style="text-align:left">${a}</td><td>${b}</td></tr>`).join("");
 })();
 
@@ -932,7 +1056,9 @@ document.getElementById("table").innerHTML =
   notice.textContent = "낮 활동(하루 Strain · 걸음 수 · 운동 기록 · 부하와 회복)은 아직 준비 중이에요. 지금은 수면·몸 상태만 보여요.";
   let el = start.nextElementSibling;
   start.after(notice);
-  while (el && !el.classList.contains("sec")) { const next = el.nextElementSibling; el.remove(); el = next; }
+  // 다음 섹션 전까지 지우되, 섹션이 마지막일 때 아래 표·꼬리말은 남긴다
+  const keep = (x) => x.classList.contains("sec") || x.tagName === "DETAILS" || x.tagName === "FOOTER";
+  while (el && !keep(el)) { const next = el.nextElementSibling; el.remove(); el = next; }
 })();
 </script>
 </body>

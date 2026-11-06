@@ -32,7 +32,7 @@ export async function GET(request, { params }) {
     const athlete = await getAthleteByRef(id);
     if (!athlete?.email) return page("선수를 찾을 수 없어요.");
 
-    const data = await buildReportData(athlete.email);
+    const data = await buildReportData(athlete.email, athlete.pageId);
     if (!data) return page("아직 WHOOP 수면 기록이 없어요. 선수가 연결한 뒤 기록이 쌓이면 보여요.");
 
     await logAccess({
